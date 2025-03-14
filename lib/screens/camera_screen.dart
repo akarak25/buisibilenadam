@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/services/camera_service.dart';
 import 'package:palm_analysis/screens/analysis_screen.dart';
+import 'package:palm_analysis/widgets/camera_guide_overlay.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -16,12 +17,23 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   final CameraService _cameraService = CameraService();
   bool _isCameraReady = false;
   bool _isProcessing = false;
+  double _currentExposure = 0.0;
+  bool _isHandDetected = false;
+  
+  // El pozisyonu rehberinin durumu
+  bool _isHandAligned = false;
+  
+  // Işık durumu
+  bool _hasGoodLighting = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeCamera();
+    
+    // Test için: Kamera çalıştıktan 3 saniye sonra el algılamayı simüle et
+    Future.delayed(const Duration(seconds: 3), _simulateHandDetection);
   }
 
   Future<void> _initializeCamera() async {
@@ -30,6 +42,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       setState(() {
         _isCameraReady = true;
       });
+      
+      // Kamera başlatıldıktan sonra ışık seviyesini kontrol etmeye başla
+      _startLightLevelDetection();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Kamera başlatılamadı: $e')),
@@ -56,9 +71,57 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     _cameraService.dispose();
     super.dispose();
   }
+  
+  // Işık seviyesini kontrol etme
+  void _startLightLevelDetection() {
+    if (!_isCameraReady || _cameraService.controller == null) return;
+    
+    // Basit bir simülasyon - gerçek uygulamada kamera parametrelerinden analiz yapılabilir
+    try {
+      if (mounted) {
+        _cameraService.hasGoodLighting().then((bool hasGoodLight) {
+          setState(() {
+            _hasGoodLighting = hasGoodLight;
+          });
+        });
+      }
+      
+      // Her 2 saniyede bir ışık seviyesini kontrol et
+      Future.delayed(const Duration(seconds: 2), _startLightLevelDetection);
+    } catch (e) {
+      print('Işık seviyesi ölçme hatası: $e');
+    }
+  }
+  
+  // El algılama fonksiyonu (burada basit bir simülasyon yapıyoruz)
+  // Gerçek uygulamada tensorflow lite veya benzer bir kütüphane kullanabilirsiniz
+  void _simulateHandDetection() {
+    if (mounted) {
+      setState(() {
+        // Burada gerçek el algılama yapılmalı, şu an rastgele simüle ediyoruz
+        _isHandDetected = true;
+        _isHandAligned = true;
+      });
+    }
+  }
 
   Future<void> _takePicture() async {
     if (!_isCameraReady || _isProcessing) return;
+
+    // Eğer el pozisyonu hizalı değilse ve ışık yeterli değilse uyarı göster
+    if (!_isHandAligned || !_hasGoodLighting) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            !_isHandAligned 
+                ? 'Lütfen elinizi rehber içine yerleştirin' 
+                : 'Işık seviyesi düşük, daha aydınlık ortamda çekim yapın'
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _isProcessing = true;
@@ -115,6 +178,35 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
+  // Işık seviyesi göstergesi
+  Widget _buildLightIndicator() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 32.0),
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _hasGoodLighting ? Icons.wb_sunny : Icons.wb_cloudy,
+            color: _hasGoodLighting ? Colors.yellow : Colors.white70,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _hasGoodLighting 
+                ? 'Işık seviyesi iyi' 
+                : 'Daha fazla ışık gerekiyor',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,7 +221,27 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         children: [
           Expanded(
             child: _isCameraReady
-                ? CameraPreview(_cameraService.controller!)
+                ? Stack(
+                    children: [
+                      // Kamera önizleme
+                      CameraPreview(_cameraService.controller!),
+                      
+                      // Rehber overlay'i
+                      CameraGuideOverlay(
+                        isHandDetected: _isHandDetected,
+                        isHandAligned: _isHandAligned,
+                        hasGoodLighting: _hasGoodLighting,
+                      ),
+                      
+                      // Işık durumu gösterge
+                      Positioned(
+                        top: 20,
+                        left: 0,
+                        right: 0,
+                        child: _buildLightIndicator(),
+                      ),
+                    ],
+                  )
                 : const Center(
                     child: CircularProgressIndicator(
                       color: AppTheme.primaryColor,
