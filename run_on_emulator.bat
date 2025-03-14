@@ -1,0 +1,3 @@
+@echo off
+echo Emülatörde Palm Analysis uygulaması başlatılıyor...
+flutter run -d emulator-5554 --no-fast-start
