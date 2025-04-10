@@ -5,6 +5,7 @@ import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/services/camera_service.dart';
 import 'package:palm_analysis/screens/analysis_screen.dart';
 import 'package:palm_analysis/widgets/camera_guide_overlay.dart';
+import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -198,8 +199,8 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           const SizedBox(width: 8),
           Text(
             _hasGoodLighting 
-                ? 'Işık seviyesi iyi' 
-                : 'Daha fazla ışık gerekiyor',
+                ? '${AppLocalizations.of(context).currentLanguage.lightTheme} ${AppLocalizations.of(context).currentLanguage.analyzeHand}' 
+                : '${AppLocalizations.of(context).currentLanguage.darkTheme} ${AppLocalizations.of(context).currentLanguage.analyzeHand}',
             style: const TextStyle(color: Colors.white),
           ),
         ],
@@ -214,7 +215,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: const Text('El Fotoğrafı Çek'),
+        title: Text(AppLocalizations.of(context).currentLanguage.takePicture),
         elevation: 0,
       ),
       body: Column(

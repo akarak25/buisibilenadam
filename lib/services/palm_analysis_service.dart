@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../providers/locale_provider.dart';
 
 class PalmAnalysisService {
   final String apiKey;
@@ -16,7 +20,7 @@ class PalmAnalysisService {
     return apiKey.isNotEmpty && apiKey != 'dummy_key_for_testing' && apiKey != 'your_claude_api_key_here';
   }
 
-  Future<String> analyzeHandImage(File imageFile) async {
+  Future<String> analyzeHandImage(File imageFile, {BuildContext? context}) async {
     try {
       // API anahtarı geçerli değilse hata mesajı döndür
       if (!_isApiKeyValid()) {
@@ -42,6 +46,23 @@ class PalmAnalysisService {
         // API anahtarı geçerli değilse burada zaten yukarıdaki if bloğunda kontrol edildi
         // Demo modu kaldırıldı
         
+        // Aktif dilin sistem promtunu belirleme
+        String systemPrompt = Constants.systemPrompt; // Varsayılan olarak Türkçe
+        
+        if (context != null) {
+          try {
+            // Aktif dili al
+            final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+            final appLocalizations = AppLocalizations(localeProvider.locale);
+            
+            // Aktif dilin sistem promptunu kullan
+            systemPrompt = appLocalizations.currentLanguage.systemPrompt;
+          } catch (e) {
+            print("Dil ayarlarını alma hatası: $e");
+            // Hata durumunda varsayılan prompt kullanılacak
+          }
+        }
+        
         // API'nin yanıt vermeme durumunu ele almak için timeout koy
         final response = await http.post(
           Uri.parse('https://api.anthropic.com/v1/messages'),
@@ -62,7 +83,7 @@ class PalmAnalysisService {
                   {
                     'type': 'text',
                     'text':
-                        '${Constants.systemPrompt}\n\nBu avuç içi fotoğrafımı analiz et ve el çizgilerim hakkında detaylı bilgi ver. Her el çizgisinin başlığını ## EL ÇİZGİSİ ## formatında belirt, örneğin "## KADER ÇİZGİSİ ##" şeklinde yazıp sonrasında yorumunu yap. Başlıkları büyük harflerle belirtmen önemli. Numaralı maddeler kullanıyorsan, 1., 2., 3. gibi düzgün formatlama kullan. Fotoğrafımda net görünmeyen veya belirsiz olan çizgiler varsa bile, görebildiğin kadarıyla en iyi yorumu yap ve bunu belirt.',
+                        '$systemPrompt\n\nBu avuç içi fotoğrafımı analiz et ve el çizgilerim hakkında detaylı bilgi ver. Her el çizgisinin başlığını ## EL ÇİZGİSİ ## formatında belirt, örneğin "## KADER ÇİZGİSİ ##" şeklinde yazıp sonrasında yorumunu yap. Başlıkları büyük harflerle belirtmen önemli. Numaralı maddeler kullanıyorsan, 1., 2., 3. gibi düzgün formatlama kullan. Fotoğrafımda net görünmeyen veya belirsiz olan çizgiler varsa bile, görebildiğin kadarıyla en iyi yorumu yap ve bunu belirt.',
                   },
                   {
                     'type': 'image',

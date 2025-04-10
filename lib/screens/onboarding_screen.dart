@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/utils/constants.dart';
 import 'package:palm_analysis/screens/home_screen.dart';
+import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -15,8 +16,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   List<Widget> _buildDots() {
+    final onboardingContent = AppLocalizations.of(context).currentLanguage.onboardingContent;
     List<Widget> dots = [];
-    for (int i = 0; i < Constants.onboardingContent.length; i++) {
+    for (int i = 0; i < onboardingContent.length; i++) {
       dots.add(
         AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -56,11 +58,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     _currentPage = page;
                   });
                 },
-                itemCount: Constants.onboardingContent.length,
+                itemCount: AppLocalizations.of(context).currentLanguage.onboardingContent.length,
                 itemBuilder: (context, index) {
+                  final onboardingContent = AppLocalizations.of(context).currentLanguage.onboardingContent;
                   return OnboardingPage(
-                    title: Constants.onboardingContent[index]['title']!,
-                    description: Constants.onboardingContent[index]['description']!,
+                    title: onboardingContent[index]['title']!,
+                    description: onboardingContent[index]['description']!,
                     index: index,
                   );
                 },
@@ -77,7 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   const SizedBox(height: 32),
                   ElevatedButton(
                     onPressed: () {
-                      if (_currentPage == Constants.onboardingContent.length - 1) {
+                      if (_currentPage == AppLocalizations.of(context).currentLanguage.onboardingContent.length - 1) {
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(builder: (_) => const HomeScreen()),
                         );
@@ -92,20 +95,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       minimumSize: const Size(double.infinity, 56),
                     ),
                     child: Text(
-                      _currentPage == Constants.onboardingContent.length - 1
-                          ? 'Başla'
-                          : 'Devam Et',
+                      _currentPage == AppLocalizations.of(context).currentLanguage.onboardingContent.length - 1
+                          ? AppLocalizations.of(context).currentLanguage.takePicture
+                          : AppLocalizations.of(context).currentLanguage.analyzeHand,
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
-                  if (_currentPage != Constants.onboardingContent.length - 1)
+                  if (_currentPage != AppLocalizations.of(context).currentLanguage.onboardingContent.length - 1)
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(builder: (_) => const HomeScreen()),
                         );
                       },
-                      child: const Text('Atla', style: TextStyle(fontSize: 16)),
+                      child: Text(AppLocalizations.of(context).currentLanguage.settings, style: const TextStyle(fontSize: 16)),
                     ),
                 ],
               ),

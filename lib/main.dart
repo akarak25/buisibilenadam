@@ -6,6 +6,10 @@ import 'package:palm_analysis/screens/splash_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:palm_analysis/providers/locale_provider.dart';
+import 'package:palm_analysis/l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,7 +66,15 @@ void main() async {
       // Uygulama burada çökmesin, devam etsin
     }
     
-    runApp(const PalmAnalysisApp());
+    // Önce locale provider'ı başlat
+    final localeProvider = LocaleProvider();
+    await localeProvider.initialize();
+    
+    // Uygulamayı çalıştır
+    runApp(ChangeNotifierProvider(
+      create: (_) => localeProvider,
+      child: const PalmAnalysisApp(),
+    ));
   } catch (e, stackTrace) {
     print("Uygulama başlatılırken hata: $e");
     print("Stack trace: $stackTrace");
@@ -120,11 +132,23 @@ class PalmAnalysisApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     try {
+      // Locale provider'ı dinle
+      final localeProvider = Provider.of<LocaleProvider>(context);
+      final appLocalizations = AppLocalizations(localeProvider.locale);
+      
       return MaterialApp(
-        title: 'El Çizgisi Analizi',
+        title: appLocalizations.currentLanguage.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const SplashScreen(),
+        locale: localeProvider.locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizationsDelegate(),
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
       );
     } catch (e) {
       // UI oluşturulurken hata olursa daha iyi bir hata ekranı göster

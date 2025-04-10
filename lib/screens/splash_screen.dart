@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/utils/constants.dart';
 import 'package:palm_analysis/screens/onboarding_screen.dart';
+import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -153,10 +154,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         ),
                       ),
                       const SizedBox(height: 24),
-                        const Text(
-                          'Claude Yapay Zeka ile El Çizgisi Analizi',
+                        Text(
+                          'Claude ${AppLocalizations.of(context).currentLanguage.appName}',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.primaryColor,
@@ -164,7 +165,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         ),
                       const SizedBox(height: 8),
                       Text(
-                        Constants.appDescription,
+                        AppLocalizations.of(context).currentLanguage.appDescription,
                         style: const TextStyle(
                           fontSize: 16,
                           color: AppTheme.textColorLight,

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
 import 'package:palm_analysis/utils/string_utils.dart';
+import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -74,7 +75,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       setState(() {});
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Analiz silindi')),
+        SnackBar(content: Text(AppLocalizations.of(context).currentLanguage.analysisSaved)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -115,9 +116,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
               const SizedBox(height: 16),
               
               // Başlık
-              const Text(
-                'Analiz Detayı',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context).currentLanguage.analysisDetail,
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.primaryColor,
@@ -171,7 +172,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Geçmiş Analizlerim'),
+        title: Text(AppLocalizations.of(context).currentLanguage.historyTitle),
         actions: [
           if (_analyses.isNotEmpty)
             IconButton(
@@ -179,14 +180,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('Tüm Analizleri Sil'),
-                    content: const Text(
-                      'Tüm analizleriniz silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?',
+                    title: Text(AppLocalizations.of(context).currentLanguage.deleteAllAnalyses),
+                    content: Text(
+                      AppLocalizations.of(context).currentLanguage.deleteAllConfirmation,
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(ctx).pop(),
-                        child: const Text('İptal'),
+                        child: Text(AppLocalizations.of(context).currentLanguage.cancel),
                       ),
                       TextButton(
                         onPressed: () async {
@@ -198,9 +199,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             _analyses = [];
                           });
                         },
-                        child: const Text(
-                          'Tümünü Sil',
-                          style: TextStyle(color: Colors.red),
+                        child: Text(
+                          AppLocalizations.of(context).currentLanguage.deleteAll,
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ),
                     ],
@@ -229,18 +230,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         color: AppTheme.textColorLight,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Henüz analiz bulunmuyor',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context).currentLanguage.noAnalysisYet,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textColor,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'El çizginizi analiz etmek için ana ekrana dönün',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context).currentLanguage.analyzeHandFromHome,
+                        style: const TextStyle(
                           fontSize: 16,
                           color: AppTheme.textColorLight,
                         ),
@@ -249,7 +250,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ElevatedButton.icon(
                         onPressed: () => Navigator.of(context).pop(),
                         icon: const Icon(Icons.home),
-                        label: const Text('Ana Ekrana Dön'),
+                        label: Text(AppLocalizations.of(context).currentLanguage.goToHome),
                       ),
                     ],
                   ),
@@ -272,21 +273,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                       ),
                       onDismissed: (direction) {
-                        _deleteAnalysis(index);
+                      _deleteAnalysis(index);
                       },
                       child: Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16),
-                          onTap: () => _showAnalysisDetail(analysis),
-                          title: Text(
-                            'El Çizgisi Analizi',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
+                      elevation: 2,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      onTap: () => _showAnalysisDetail(analysis),
+                      title: Text(
+                      AppLocalizations.of(context).currentLanguage.palmReadingAnalysis,
+                      style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      ),
+                      ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

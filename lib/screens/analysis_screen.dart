@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:palm_analysis/widgets/shimmer_loading.dart';
 import 'package:palm_analysis/utils/markdown_formatter.dart';
+import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class AnalysisScreen extends StatefulWidget {
   final File imageFile;
@@ -68,7 +69,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       }
       
       // Resmi analiz et
-      final analysis = await _analysisService.analyzeHandImage(widget.imageFile);
+      final analysis = await _analysisService.analyzeHandImage(widget.imageFile, context: context);
 
       if (!mounted) return;
       
@@ -146,7 +147,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       return Scaffold(
         backgroundColor: AppTheme.backgroundColor,
         appBar: AppBar(
-          title: const Text('El Çizgisi Analizi'),
+          title: Text(AppLocalizations.of(context).currentLanguage.appName),
           actions: [
             IconButton(
               icon: const Icon(Icons.home),
@@ -197,16 +198,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     color: AppTheme.primaryColor,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.psychology,
                         color: Colors.white,
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Text(
-                        'Analiz Sonuçları',
-                        style: TextStyle(
+                        AppLocalizations.of(context).currentLanguage.analysisComplete,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -298,7 +299,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         );
                       },
                       icon: const Icon(Icons.share),
-                      label: const Text('Analizi Paylaş'),
+                      label: Text(AppLocalizations.of(context).currentLanguage.shareAnalysis),
                     ),
                   ),
                 
@@ -313,7 +314,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         Navigator.of(context).pop();
                       },
                       icon: const Icon(Icons.camera_alt_outlined),
-                      label: const Text('Yeni Analiz'),
+                      label: Text(AppLocalizations.of(context).currentLanguage.analyzeHand),
                     ),
                   ),
                 
@@ -328,7 +329,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text('Hata'),
+          title: Text(AppLocalizations.of(context).currentLanguage.errorTitle),
           actions: [
             IconButton(
               icon: const Icon(Icons.home),
@@ -349,9 +350,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   size: 80,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Bir Hata Oluştu',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context).currentLanguage.errorTitle,
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -370,7 +371,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ElevatedButton.icon(
                   onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
                   icon: const Icon(Icons.home),
-                  label: const Text('Ana Sayfaya Dön'),
+                  label: Text(AppLocalizations.of(context).currentLanguage.tryAgain),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                   ),

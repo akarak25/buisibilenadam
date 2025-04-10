@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:palm_analysis/utils/theme.dart';
+import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class CameraGuideOverlay extends StatelessWidget {
   final bool isHandDetected;
@@ -45,9 +46,9 @@ class CameraGuideOverlay extends StatelessWidget {
                       color: Colors.black54,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text(
-                      'Avuç içinizi bu alana yerleştirin',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context).currentLanguage.placeYourHand,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                       ),
@@ -74,20 +75,26 @@ class CameraGuideOverlay extends StatelessWidget {
             child: Column(
               children: [
                 _buildStatusItem(
+                  context: context,
                   icon: Icons.pan_tool_outlined,
                   text: 'El algılama',
+                  translationKey: 'handDetection',
                   isActive: isHandDetected,
                 ),
                 const SizedBox(height: 8),
                 _buildStatusItem(
+                  context: context,
                   icon: Icons.center_focus_strong,
                   text: 'El pozisyonu',
+                  translationKey: 'handPosition',
                   isActive: isHandAligned,
                 ),
                 const SizedBox(height: 8),
                 _buildStatusItem(
+                  context: context,
                   icon: Icons.wb_sunny,
                   text: 'Işık seviyesi',
+                  translationKey: 'lightLevel',
                   isActive: hasGoodLighting,
                 ),
               ],
@@ -99,8 +106,10 @@ class CameraGuideOverlay extends StatelessWidget {
   }
 
   Widget _buildStatusItem({
+    required BuildContext context,
     required IconData icon,
     required String text,
+    required String translationKey,
     required bool isActive,
   }) {
     return Row(
@@ -126,7 +135,12 @@ class CameraGuideOverlay extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          text,
+          // Dil desteği için uygun anahtarı seç
+          translationKey == 'handDetection'
+              ? AppLocalizations.of(context).currentLanguage.handDetection
+              : translationKey == 'handPosition'
+                  ? AppLocalizations.of(context).currentLanguage.handPosition
+                  : AppLocalizations.of(context).currentLanguage.lightLevel,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 14,
