@@ -262,7 +262,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                     color: AppTheme.textColor,
                                     height: 1.5,
                                   ),
+                                  listBullet: const TextStyle(
+                                    fontSize: 16,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                  listIndent: 24.0,
+                                  listBulletPadding: const EdgeInsets.only(right: 8),
                                 ),
+
                               );
                             } catch (e) {
                               print('Markdown render hatası: $e');

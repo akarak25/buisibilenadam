@@ -8,13 +8,30 @@ class PalmAnalysisService {
   final String apiKey;
 
   PalmAnalysisService({String? apiKey})
-    : apiKey = apiKey ?? dotenv.get('CLAUDE_API_KEY', fallback: '');
+    : apiKey = apiKey ?? dotenv.get('CLAUDE_API_KEY', fallback: 'dummy_key_for_testing');
+
+  // Claude API anahtarının geçerli olup olmadığını kontrol et
+  bool _isApiKeyValid() {
+    // API anahtarı boş değilse ve varsayılan değer değilse geçerli kabul et
+    return apiKey.isNotEmpty && apiKey != 'dummy_key_for_testing' && apiKey != 'your_claude_api_key_here';
+  }
 
   Future<String> analyzeHandImage(File imageFile) async {
     try {
-      // API anahtarı boşsa hata mesajı döndür
-      if (apiKey.isEmpty) {
-        return '# API Anahtarı Eksik\n\nLütfen .env dosyasında geçerli bir Claude API anahtarı tanımlayın.';
+      // API anahtarı geçerli değilse hata mesajı döndür
+      if (!_isApiKeyValid()) {
+        return '# API Anahtarı Geçerli Değil\n\nLütfen .env dosyasında geçerli bir Claude API anahtarı tanımlayın. API anahtarınızı https://console.anthropic.com adresinden alabilirsiniz.\n\nBu uygulama demo modunda çalışıyor. Lütfen gerçek bir analiz için API anahtarı ekleyin.';
+      }
+      
+      // Görüntü dosyasının varlığını kontrol et
+      if (!await imageFile.exists()) {
+        return '# Dosya Bulunamadı\n\nAnaliz edilecek görüntü bulunamadı. Lütfen tekrar bir fotoğraf çekin veya seçin.';
+      }
+      
+      // Dosya boyutunu kontrol et
+      final fileSize = await imageFile.length();
+      if (fileSize <= 0) {
+        return '# Geçersiz Dosya\n\nFotoğraf boş veya bozuk. Lütfen yeni bir fotoğraf çekin.';
       }
 
       // Görüntüyü base64'e dönüştür
@@ -22,7 +39,13 @@ class PalmAnalysisService {
       final base64Image = base64Encode(bytes);
 
       try {
-        // UTF-8 karakter kodlamasını doğru şekilde kullanarak API isteği gönder
+        // Demo modda API çağrısı yapmadan örnek yanıt döndür
+        if (!_isApiKeyValid()) {
+          // Test için örnek yanıt
+          return "## DEMO MOD ##\n\nGörüntüyü inceledim, ancak gönderdiğiniz fotoğrafta net bir avuç içi görüntüsü bulunmuyor.\n\nFotoğraf oldukça düşük çözünürlüklü ve piksellenmiş görünüyor, yeşil tonlarında bloklar şeklinde.\n\nBu görüntüden el çizgilerini ayırt etmek mümkün değil.\n\nDoğru bir el falı analizi yapabilmem için lütfen:\n\n1. Avuç içinizin tamamını gösteren\n2. İyi aydınlatılmış\n3. Yüksek çözünürlüklü\n4. Net odaklanmış\n\nbir fotoğraf çekip göndermenizi rica ediyorum.\n\nAvuç içinizi düz bir şekilde açarak, tüm çizgilerin görünmesini sağlayabilirsiniz.\n\nFotoğrafı çekerken doğal ışık kullanmanız ve avuç içinize paralel tutmanız en iyi sonucu verecektir.\n\nDaha net bir görüntü ile size kalp çizgisi, akıl çizgisi, yaşam çizgisi, kader çizgisi, evlilik çizgisi ve zenginlik çizgisi hakkında detaylı ve kişisel bir analiz sunabilirim.";
+        }
+        
+        // API'nin yanıt vermeme durumunu ele almak için timeout koy
         final response = await http.post(
           Uri.parse('https://api.anthropic.com/v1/messages'),
           headers: {
@@ -42,7 +65,7 @@ class PalmAnalysisService {
                   {
                     'type': 'text',
                     'text':
-                        '${Constants.systemPrompt}\n\nBu avuç içi fotoğrafımı analiz et ve el çizgilerim hakkında detaylı bilgi ver. Her el çizgisinin başlığını ## EL ÇİZGİSİ ## formatında belirt, örneğin "## KADER ÇİZGİSİ ##" şeklinde yazıp sonrasında yorumunu yap. Başlıkları büyük harflerle belirtmen önemli.',
+                        '${Constants.systemPrompt}\n\nBu avuç içi fotoğrafımı analiz et ve el çizgilerim hakkında detaylı bilgi ver. Her el çizgisinin başlığını ## EL ÇİZGİSİ ## formatında belirt, örneğin "## KADER ÇİZGİSİ ##" şeklinde yazıp sonrasında yorumunu yap. Başlıkları büyük harflerle belirtmen önemli. Numaralı maddeler kullanıyorsan, 1., 2., 3. gibi düzgün formatlama kullan.',
                   },
                   {
                     'type': 'image',
@@ -56,7 +79,9 @@ class PalmAnalysisService {
               },
             ],
           }),
-        );
+        ).timeout(const Duration(seconds: 30), onTimeout: () {
+          throw Exception("API yanıt vermedi, bağlantı zaman aşımına uğradı.");
+        });
 
         if (response.statusCode == 200) {
           try {
@@ -69,8 +94,22 @@ class PalmAnalysisService {
                 data['content'] is List &&
                 data['content'].isNotEmpty &&
                 data['content'][0].containsKey('text')) {
-              // Metin içeriğini doğrudan dön
-              return data['content'][0]['text'];
+              // Claude API'sinden gelen metin yanıtı
+              String textContent = data['content'][0]['text'];
+              
+              // Sıralı listelerdeki numaralara boşluk ekle
+              textContent = textContent.replaceAllMapped(
+                RegExp(r'(\d+)\.(\S)'),
+                (match) => '${match.group(1)}. ${match.group(2)}'
+              );
+              
+              // Tek satırdaki listeleri ayrı satırlara böl
+              textContent = textContent.replaceAllMapped(
+                RegExp(r'(\d+)\. ([^\n]+?)(?=(\d+)\. |$)'),
+                (match) => '${match.group(1)}. ${match.group(2)}\n'
+              );
+              
+              return textContent;
             } else {
               print("API yanıtı beklenen formatta değil: $data");
               return "API yanıtı beklenmeyen formatta. Lütfen tekrar deneyin.";

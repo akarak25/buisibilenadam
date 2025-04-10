@@ -16,13 +16,33 @@ class MarkdownFormatter {
       return '\n## $heading\n';
     });
     
+    // Numaralı listeleri düzelt
+    // Şu şekilde formatları düzeltir: 
+    // "1. item" -> "1. item"
+    // Her numaralı öğe için yeni satır ekler
+    final numberedListPattern = RegExp(r'(^|\n|\s)(\d+)\.\s*([^\n]+)', multiLine: true);
+    result = result.replaceAllMapped(numberedListPattern, (match) {
+      final prefix = match.group(1) ?? '';
+      final number = match.group(2) ?? '';
+      final content = match.group(3) ?? '';
+      
+      // Eğer zaten satır başındaysa veya öncesi boşluksa düzgün formatta
+      if (prefix == '\n' || prefix.trim().isEmpty) {
+        return '$prefix$number. $content\n';
+      }
+      // Değilse, yeni satır ekle
+      return '$prefix\n$number. $content\n';
+    });
+    
     // Liste öğelerini düzelt
     result = result.replaceAll('* ', '\n* ');
     
     // Paragrafları düzelt (satır sonlarını)
-    result = result.replaceAll('. ', '.\n\n').trim();
-    result = result.replaceAll('! ', '!\n\n').trim();
-    result = result.replaceAll('? ', '?\n\n').trim();
+    // Cümle bitişlerinden sonra paragraf oluştur, ancak numaralandırılmış listeleri bozma
+    final sentenceEndPattern = RegExp(r'([.!?])\s+(?!\d+\.\s)', multiLine: true);
+    result = result.replaceAllMapped(sentenceEndPattern, (match) {
+      return '${match.group(1)}\n\n';
+    });
     
     // Fazla boş satırları temizle
     result = result.replaceAll(RegExp(r'\n{3,}'), '\n\n');
