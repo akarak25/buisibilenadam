@@ -39,11 +39,8 @@ class PalmAnalysisService {
       final base64Image = base64Encode(bytes);
 
       try {
-        // Demo modda API çağrısı yapmadan örnek yanıt döndür
-        if (!_isApiKeyValid()) {
-          // Test için örnek yanıt
-          return "## DEMO MOD ##\n\nGörüntüyü inceledim, ancak gönderdiğiniz fotoğrafta net bir avuç içi görüntüsü bulunmuyor.\n\nFotoğraf oldukça düşük çözünürlüklü ve piksellenmiş görünüyor, yeşil tonlarında bloklar şeklinde.\n\nBu görüntüden el çizgilerini ayırt etmek mümkün değil.\n\nDoğru bir el falı analizi yapabilmem için lütfen:\n\n1. Avuç içinizin tamamını gösteren\n2. İyi aydınlatılmış\n3. Yüksek çözünürlüklü\n4. Net odaklanmış\n\nbir fotoğraf çekip göndermenizi rica ediyorum.\n\nAvuç içinizi düz bir şekilde açarak, tüm çizgilerin görünmesini sağlayabilirsiniz.\n\nFotoğrafı çekerken doğal ışık kullanmanız ve avuç içinize paralel tutmanız en iyi sonucu verecektir.\n\nDaha net bir görüntü ile size kalp çizgisi, akıl çizgisi, yaşam çizgisi, kader çizgisi, evlilik çizgisi ve zenginlik çizgisi hakkında detaylı ve kişisel bir analiz sunabilirim.";
-        }
+        // API anahtarı geçerli değilse burada zaten yukarıdaki if bloğunda kontrol edildi
+        // Demo modu kaldırıldı
         
         // API'nin yanıt vermeme durumunu ele almak için timeout koy
         final response = await http.post(
@@ -65,7 +62,7 @@ class PalmAnalysisService {
                   {
                     'type': 'text',
                     'text':
-                        '${Constants.systemPrompt}\n\nBu avuç içi fotoğrafımı analiz et ve el çizgilerim hakkında detaylı bilgi ver. Her el çizgisinin başlığını ## EL ÇİZGİSİ ## formatında belirt, örneğin "## KADER ÇİZGİSİ ##" şeklinde yazıp sonrasında yorumunu yap. Başlıkları büyük harflerle belirtmen önemli. Numaralı maddeler kullanıyorsan, 1., 2., 3. gibi düzgün formatlama kullan.',
+                        '${Constants.systemPrompt}\n\nBu avuç içi fotoğrafımı analiz et ve el çizgilerim hakkında detaylı bilgi ver. Her el çizgisinin başlığını ## EL ÇİZGİSİ ## formatında belirt, örneğin "## KADER ÇİZGİSİ ##" şeklinde yazıp sonrasında yorumunu yap. Başlıkları büyük harflerle belirtmen önemli. Numaralı maddeler kullanıyorsan, 1., 2., 3. gibi düzgün formatlama kullan. Fotoğrafımda net görünmeyen veya belirsiz olan çizgiler varsa bile, görebildiğin kadarıyla en iyi yorumu yap ve bunu belirt.',
                   },
                   {
                     'type': 'image',
