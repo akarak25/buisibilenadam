@@ -60,7 +60,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Context için güvenli bir yer
+    // Context için güvenli bir yer - uygulamada dil değişirse burada bir şeyler yapılabilir
+    if (!_isAnalyzing) {
+      // Analiz tamamlanmışsa, arayüzü güncelleyebiliriz
+      // örneğin, burada dil değişikliklerini uygulayabiliriz
+    }
   }
 
   Future<void> _analyzeImage() async {
@@ -79,9 +83,32 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       // PalmAnalysisService'ı burada başlat
       _analysisService = PalmAnalysisService();
       
-      // Resmi analiz et - şu anki cihaz dilini gönder
-      final locale = Localizations.localeOf(context);
-      final analysis = await _analysisService.analyzeHandImage(widget.imageFile, locale: locale);
+      // Mevcut dili al (mümkünse)
+      String deviceLanguage = 'tr'; // Varsayılan Türkçe
+      try {
+        if (mounted) {
+          // Mounted ise (widget ek devreden çıkarılmamışsa), context'ten dili almayı dene
+          final BuildContext ctx = context;  // Yerel bir değişkene referansı kaydet
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              try {
+                final locale = Localizations.localeOf(ctx);
+                deviceLanguage = locale.languageCode;
+              } catch (e) {
+                print('Dil alınırken hata: $e');
+              }
+            }
+          });
+        }
+      } catch (e) {
+        print('Dil işleme hatası: $e');
+      }
+      
+      // Dil parametresiyle resmi analiz et
+      final analysis = await _analysisService.analyzeHandImage(
+        widget.imageFile, 
+        locale: Locale(deviceLanguage)
+      );
 
       if (!mounted) return;
       
@@ -192,7 +219,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       return Scaffold(
         backgroundColor: AppTheme.backgroundColor,
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context).currentLanguage.appName),
+          title: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.appName)),
           actions: [
             IconButton(
               icon: const Icon(Icons.home),
@@ -254,14 +281,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       _isAnalyzing
                       ? Row(
                           children: [
-                            Text(
+                            Builder(builder: (context) => Text(
                               AppLocalizations.of(context).currentLanguage.analyzing,
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
-                            ),
+                            )),
                             const SizedBox(width: 8),
                             SizedBox(
                               width: 20,
@@ -273,14 +300,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                             ),
                           ],
                         )
-                      : Text(
+                      : Builder(builder: (context) => Text(
                           AppLocalizations.of(context).currentLanguage.analysisComplete,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
-                        ),
+                        )),
                     ],
                   ),
                 ),
@@ -302,7 +329,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     ],
                   ),
                   child: _isAnalyzing
-                      ? const ShimmerLoading()
+                      ? const ShimmerLoading(
+                          loadingText: 'Analyzing...',
+                        )
                       : Builder(
                           builder: (context) {
                             try {
@@ -367,7 +396,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         );
                       },
                       icon: const Icon(Icons.share),
-                      label: Text(AppLocalizations.of(context).currentLanguage.shareAnalysis),
+                      label: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.shareAnalysis)),
                     ),
                   ),
                 
@@ -382,7 +411,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         Navigator.of(context).pop();
                       },
                       icon: const Icon(Icons.camera_alt_outlined),
-                      label: Text(AppLocalizations.of(context).currentLanguage.analyzeHand),
+                      label: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.analyzeHand)),
                     ),
                   ),
                 
@@ -397,7 +426,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context).currentLanguage.errorTitle),
+          title: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.errorTitle)),
           actions: [
             IconButton(
               icon: const Icon(Icons.home),
@@ -428,21 +457,21 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Uygulama ekranı oluşturulurken hata meydana geldi: $e',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
+                'Uygulama ekranı oluşturulurken hata meydana geldi: $e',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+                ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
-                  onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                  icon: const Icon(Icons.home),
-                  label: Text(AppLocalizations.of(context).currentLanguage.tryAgain),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                  ),
+                onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                icon: const Icon(Icons.home),
+                label: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.tryAgain)),
+                style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                ),
                 ),
               ],
             ),

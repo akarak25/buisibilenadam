@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:palm_analysis/utils/theme.dart';
-import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class ShimmerLoading extends StatefulWidget {
-  const ShimmerLoading({super.key});
+  final String loadingText;
+
+  const ShimmerLoading({
+    super.key,
+    this.loadingText = 'Analyzing...',  // Default English text, will be shown if no translation provided
+  });
 
   @override
   State<ShimmerLoading> createState() => _ShimmerLoadingState();
@@ -181,7 +185,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading> with SingleTickerProvid
               ),
               const SizedBox(height: 12),
               Text(
-                AppLocalizations.of(context).currentLanguage.analyzingPalm,
+                widget.loadingText,
                 style: const TextStyle(
                   color: AppTheme.primaryColor,
                   fontWeight: FontWeight.bold,
