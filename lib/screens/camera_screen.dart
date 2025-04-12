@@ -4,8 +4,10 @@ import 'package:camera/camera.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/services/camera_service.dart';
 import 'package:palm_analysis/screens/analysis_screen.dart';
+import 'package:palm_analysis/screens/premium_screen.dart';
 import 'package:palm_analysis/widgets/camera_guide_overlay.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
+import 'package:palm_analysis/services/usage_service.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -16,6 +18,7 @@ class CameraScreen extends StatefulWidget {
 
 class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
   final CameraService _cameraService = CameraService();
+  final UsageService _usageService = UsageService();
   bool _isCameraReady = false;
   bool _isProcessing = false;
   double _currentExposure = 0.0;
@@ -109,14 +112,24 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   Future<void> _takePicture() async {
     if (!_isCameraReady || _isProcessing) return;
 
+    // Kullanım hakkı kontrolü
+    bool canPerformAnalysis = await _usageService.canPerformAnalysis();
+    if (!canPerformAnalysis) {
+      // Kullanım limiti dolmuşsa premium ekranına yönlendir
+      if (mounted) {
+        _showLimitReachedDialog();
+      }
+      return;
+    }
+
     // Eğer el pozisyonu hizalı değilse ve ışık yeterli değilse uyarı göster
     if (!_isHandAligned || !_hasGoodLighting) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             !_isHandAligned 
-                ? 'Lütfen elinizi rehber içine yerleştirin' 
-                : 'Işık seviyesi düşük, daha aydınlık ortamda çekim yapın'
+                ? AppLocalizations.of(context).currentLanguage.placeYourHand 
+                : '${AppLocalizations.of(context).currentLanguage.lightLevel} ${AppLocalizations.of(context).currentLanguage.darkTheme}'
           ),
           duration: const Duration(seconds: 2),
         ),
@@ -131,6 +144,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     try {
       final File? imageFile = await _cameraService.takePicture();
       if (imageFile != null && mounted) {
+        // Kullanım sayısını artır
+        await _usageService.incrementUsage();
+        
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => AnalysisScreen(imageFile: imageFile),
@@ -153,6 +169,16 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   Future<void> _pickImageFromGallery() async {
     if (_isProcessing) return;
 
+    // Kullanım hakkı kontrolü
+    bool canPerformAnalysis = await _usageService.canPerformAnalysis();
+    if (!canPerformAnalysis) {
+      // Kullanım limiti dolmuşsa premium ekranına yönlendir
+      if (mounted) {
+        _showLimitReachedDialog();
+      }
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
     });
@@ -160,6 +186,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     try {
       final File? imageFile = await _cameraService.pickImageFromGallery();
       if (imageFile != null && mounted) {
+        // Kullanım sayısını artır
+        await _usageService.incrementUsage();
+
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => AnalysisScreen(imageFile: imageFile),
@@ -168,7 +197,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Galeriden resim seçilemedi: $e')),
+        SnackBar(content: Text(AppLocalizations.of(context).currentLanguage.generalError)),
       );
     } finally {
       if (mounted) {
@@ -202,6 +231,43 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                 ? '${AppLocalizations.of(context).currentLanguage.lightTheme} ${AppLocalizations.of(context).currentLanguage.analyzeHand}' 
                 : '${AppLocalizations.of(context).currentLanguage.darkTheme} ${AppLocalizations.of(context).currentLanguage.analyzeHand}',
             style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Limit diyaloğu gösterildiğinde kullanıcıya premium teklifini gösterme
+  void _showLimitReachedDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context).currentLanguage.limitReached),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              size: 48,
+              color: Colors.amber,
+            ),
+            SizedBox(height: 16),
+            Text(AppLocalizations.of(context).currentLanguage.usageLimit),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(AppLocalizations.of(context).currentLanguage.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => PremiumScreen()),
+              );
+            },
+            child: Text(AppLocalizations.of(context).currentLanguage.upgradeToPremium),
           ),
         ],
       ),

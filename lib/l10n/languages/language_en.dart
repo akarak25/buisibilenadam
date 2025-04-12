@@ -210,6 +210,58 @@ class LanguageEn implements AppLanguage {
   @override
   String get placeYourHand => 'Place your palm in this area';
   
+  // Premium/Subscription
+  @override
+  String get premium => 'Premium';
+  
+  @override
+  String get premiumFeatures => 'Premium Features';
+  
+  @override
+  String get unlimitedAnalyses => 'Unlimited Palm Analyses';
+  
+  @override
+  String get noAds => 'No Advertisements';
+  
+  @override
+  String get compareAnalyses => 'Compare Multiple Analyses';
+  
+  @override
+  String get prioritySupport => 'Priority Customer Support';
+  
+  @override
+  String get subscribe => 'Subscribe Now';
+  
+  @override
+  String get restorePurchases => 'Restore Purchases';
+  
+  @override
+  String get purchaseError => 'There was an error with your purchase. Please try again.';
+  
+  @override
+  String get purchaseRestored => 'Your purchases have been restored.';
+  
+  @override
+  String get premiumActive => 'Premium Active';
+  
+  @override
+  String get premiumInactive => 'Premium Inactive';
+  
+  @override
+  String get remainingAnalyses => '{count} analyses remaining this month';
+  
+  @override
+  String get limitReached => 'Monthly Limit Reached';
+  
+  @override
+  String get upgradeToPremium => 'Upgrade to Premium';
+  
+  @override
+  String get backToApp => 'Back to App';
+  
+  @override
+  String get usageLimit => 'Free users can perform 3 analyses per month. Upgrade to premium for unlimited analyses.';
+  
   // System prompt for Claude API requests
   @override
   String get systemPrompt => '''

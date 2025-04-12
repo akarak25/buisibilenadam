@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:palm_analysis/utils/theme.dart';
@@ -58,6 +59,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
       
       // Silinecek analizi listeden kaldır
       final deletedAnalysis = _analyses.removeAt(index);
+      
+      // Kayıtlı resim dosyasını sil
+      if (deletedAnalysis.imagePath != null) {
+        try {
+          final imageFile = File(deletedAnalysis.imagePath!);
+          if (await imageFile.exists()) {
+            await imageFile.delete();
+            print('Resim dosyası silindi: ${deletedAnalysis.imagePath}');
+          }
+        } catch (e) {
+          print('Resim silme hatası: $e');
+          // Resim silme hatası olsa bile devam ediyoruz
+        }
+      }
       
       // Güncellenmiş listeyi kaydet
       final updatedJsonList = _analyses
@@ -132,6 +147,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   color: AppTheme.textColorLight,
                 ),
               ),
+              
+              // Resim gösterimi - eğer resim yolu varsa
+              if (analysis.imagePath != null) ...[  
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 200,
+                    width: double.infinity,
+                    child: _buildAnalysisImage(analysis.imagePath!),
+                  ),
+                ),
+              ],
+              
               const SizedBox(height: 24),
               
               // Markdown içerik
@@ -192,6 +221,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       TextButton(
                         onPressed: () async {
                           Navigator.of(ctx).pop();
+                          
+                          // Tüm kayıtlı resim dosyalarını sil
+                          for (var analysis in _analyses) {
+                            if (analysis.imagePath != null) {
+                              try {
+                                final imageFile = File(analysis.imagePath!);
+                                if (await imageFile.exists()) {
+                                  await imageFile.delete();
+                                  print('Resim dosyası silindi: ${analysis.imagePath}');
+                                }
+                              } catch (e) {
+                                print('Resim silme hatası: $e');
+                                // Devam et
+                              }
+                            }
+                          }
+                          
+                          // SharedPreferences'dan analizleri kaldır
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.remove('analyses');
                           await prefs.setInt('total_analyses', 0);
@@ -276,48 +323,116 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       _deleteAnalysis(index);
                       },
                       child: Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      onTap: () => _showAnalysisDetail(analysis),
-                      title: Text(
-                      AppLocalizations.of(context).currentLanguage.palmReadingAnalysis,
-                      style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      ),
-                      ),
-                          subtitle: Column(
+                        elevation: 2,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: InkWell(
+                          onTap: () => _showAnalysisDetail(analysis),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const SizedBox(height: 4),
-                              Text(
-                                DateFormat('dd MMMM yyyy, HH:mm')
-                                    .format(analysis.createdAt),
-                                style: const TextStyle(
-                                  color: AppTheme.textColorLight,
+                              // Resmi gösterme - eğer kayıtlı resim yolu varsa
+                              if (analysis.imagePath != null)
+                                Container(
+                                  height: 120,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(4),
+                                      topRight: Radius.circular(4),
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(4),
+                                      topRight: Radius.circular(4),
+                                    ),
+                                    child: _buildAnalysisImage(analysis.imagePath!),
+                                  ),
+                                ),
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      AppLocalizations.of(context).currentLanguage.palmReadingAnalysis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      DateFormat('dd MMMM yyyy, HH:mm')
+                                          .format(analysis.createdAt),
+                                      style: const TextStyle(
+                                        color: AppTheme.textColorLight,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      _getAnalysisPreview(analysis.analysis),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(color: Colors.black87),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: const [
+                                        Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 16,
+                                          color: AppTheme.primaryColor,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _getAnalysisPreview(analysis.analysis),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(color: Colors.black87),
-                              ),
                             ],
-                          ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
-                            color: AppTheme.primaryColor,
                           ),
                         ),
                       ),
                     );
                   },
                 ),
+    );
+  }
+
+  // Resmi görüntülemek için
+  Widget _buildAnalysisImage(String imagePath) {
+    try {
+      final file = File(imagePath);
+      if (file.existsSync()) {
+        return Image.file(
+          file,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print('Resim yükleme hatası: $error');
+            return _buildImagePlaceholder();
+          },
+        );
+      } else {
+        return _buildImagePlaceholder();
+      }
+    } catch (e) {
+      print('Resim yükleme hatası: $e');
+      return _buildImagePlaceholder();
+    }
+  }
+
+  // Resim yüklenemezse gösterilecek placeholder
+  Widget _buildImagePlaceholder() {
+    return Container(
+      color: Colors.grey[200],
+      child: const Center(
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          color: Colors.grey,
+          size: 40,
+        ),
+      ),
     );
   }
 

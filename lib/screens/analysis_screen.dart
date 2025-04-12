@@ -10,6 +10,8 @@ import 'dart:convert';
 import 'package:palm_analysis/widgets/shimmer_loading.dart';
 import 'package:palm_analysis/utils/markdown_formatter.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 class AnalysisScreen extends StatefulWidget {
   final File imageFile;
@@ -78,8 +80,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         String formattedAnalysis = MarkdownFormatter.format(analysis);
         
         try {
-          // Metni kullanarak analiz nesnesini oluştur
-          final palmAnalysis = PalmAnalysis(analysis: formattedAnalysis);
+          // Geçici bir klasöre resmi kopyala ve yolunu sakla
+          final String imagePath = await _saveImageFile(widget.imageFile);
+          
+          // Metni ve resim yolunu kullanarak analiz nesnesini oluştur
+          final palmAnalysis = PalmAnalysis(
+            analysis: formattedAnalysis,
+            imagePath: imagePath,
+          );
           await _saveAnalysis(palmAnalysis);
         } catch (e) {
           print('Analiz kaydetme hatası: $e');
@@ -109,6 +117,33 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           _analysis = '# Hata Oluştu\n\nEl çizgisi analizi yapılırken bir hata oluştu: $e';
         });
       }
+    }
+  }
+
+  // Resim dosyasını uygulamaya özel bir klasöre kaydet
+  Future<String> _saveImageFile(File imageFile) async {
+    try {
+      // Uygulama belge dizinini al
+      final appDir = await getApplicationDocumentsDirectory();
+      
+      // El analizleri için özel bir klasör oluştur
+      final palmImagesDir = Directory('${appDir.path}/palm_images');
+      if (!await palmImagesDir.exists()) {
+        await palmImagesDir.create(recursive: true);
+      }
+      
+      // Benzersiz bir dosya adı oluştur
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'palm_$timestamp.jpg';
+      final savedImagePath = path.join(palmImagesDir.path, fileName);
+      
+      // Resmi kopyala
+      final savedImage = await imageFile.copy(savedImagePath);
+      return savedImage.path;
+    } catch (e) {
+      print('Resim kaydetme hatası: $e');
+      // Hata durumunda orijinal yolu geri döndür (geçici dosya olabilir)
+      return imageFile.path;
     }
   }
 
@@ -189,30 +224,53 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 const SizedBox(height: 24),
                 
                 // Analiz başlığı
-                Container(
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 500),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor,
+                    color: _isAnalyzing ? Colors.orange : AppTheme.primaryColor,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.psychology,
+                      Icon(
+                        _isAnalyzing ? Icons.hourglass_top : Icons.psychology,
                         color: Colors.white,
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context).currentLanguage.analysisComplete,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      _isAnalyzing
+                      ? Row(
+                          children: [
+                            Text(
+                              AppLocalizations.of(context).currentLanguage.analyzing,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          AppLocalizations.of(context).currentLanguage.analysisComplete,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

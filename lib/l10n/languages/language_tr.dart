@@ -210,6 +210,58 @@ class LanguageTr implements AppLanguage {
   @override
   String get placeYourHand => 'Avuç içinizi bu alana yerleştirin';
   
+  // Premium/Subscription
+  @override
+  String get premium => 'Premium';
+  
+  @override
+  String get premiumFeatures => 'Premium Özellikler';
+  
+  @override
+  String get unlimitedAnalyses => 'Sınırsız El Analizi';
+  
+  @override
+  String get noAds => 'Reklamsız Deneyim';
+  
+  @override
+  String get compareAnalyses => 'Birden Fazla Analizi Karşılaştırma';
+  
+  @override
+  String get prioritySupport => 'Öncelikli Destek';
+  
+  @override
+  String get subscribe => 'Şimdi Abone Ol';
+  
+  @override
+  String get restorePurchases => 'Satın Almaları Geri Yükle';
+  
+  @override
+  String get purchaseError => 'Satın alma işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.';
+  
+  @override
+  String get purchaseRestored => 'Satın almalarınız geri yüklendi.';
+  
+  @override
+  String get premiumActive => 'Premium Aktif';
+  
+  @override
+  String get premiumInactive => 'Premium Aktif Değil';
+  
+  @override
+  String get remainingAnalyses => 'Bu ay kalan analiz hakkı: {count}';
+  
+  @override
+  String get limitReached => 'Aylık Limit Doldu';
+  
+  @override
+  String get upgradeToPremium => 'Premium\'a Yükselt';
+  
+  @override
+  String get backToApp => 'Uygulamaya Dön';
+  
+  @override
+  String get usageLimit => 'Ücretsiz kullanıcılar aylık 3 analiz yapabilir. Sınırsız analiz için premium\'a yükseltin.';
+  
   // Claude API istekleri için sistem mesajı
   @override
   String get systemPrompt => '''

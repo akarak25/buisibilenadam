@@ -1,11 +1,8 @@
-/// Tüm dil sınıfları için temel arayüz
-/// Bu sınıf, uygulamadaki tüm metinleri tanımlar ve her dil sınıfının bu metinleri uygulaması gerekir.
 abstract class AppLanguage {
-  // Uygulama genel
   String get appName;
   String get appDescription;
   
-  // El çizgisi türleri
+  // Palm line types
   String get heartLine;
   String get headLine;
   String get lifeLine;
@@ -14,13 +11,13 @@ abstract class AppLanguage {
   String get marriageLine;
   String get wealthLine;
   
-  // El çizgisi açıklamaları
+  // Palm line descriptions
   Map<String, String> get lineDescriptions;
   
-  // Splash ve Onboarding ekranı
+  // Onboarding screen texts
   List<Map<String, String>> get onboardingContent;
   
-  // Hata mesajları
+  // Error messages
   String get errorTitle;
   String get generalError;
   String get tryAgain;
@@ -28,21 +25,21 @@ abstract class AppLanguage {
   String get uiLoadError;
   String get contactDeveloper;
   
-  // Ana ekran
+  // Main screen
   String get takePicture;
   String get selectFromGallery;
   String get analyzeHand;
   String get analysisHistory;
   String get settings;
   
-  // Analiz ekranı
+  // Analysis screen
   String get analyzing;
   String get analysisComplete;
   String get analysisError;
   String get saveAnalysis;
   String get shareAnalysis;
   
-  // Ayarlar ekranı
+  // Settings screen
   String get settingsTitle;
   String get languageSettings;
   String get themeSettings;
@@ -54,12 +51,10 @@ abstract class AppLanguage {
   String get darkTheme;
   String get systemTheme;
   
-  // Dil seçimi
+  // Language selection
   String get selectLanguage;
   String get turkish;
   String get english;
-  // Artık sadece Türkçe ve İngilizce desteklenmektedir
-  // Arayüz bütünlüğü için diğer dil referansları korunmuştur
   String get german;
   String get french;
   String get spanish;
@@ -83,6 +78,25 @@ abstract class AppLanguage {
   String get lightLevel;
   String get placeYourHand;
   
-  // Claude API istekleri için sistem mesajı
+  // Premium/Subscription
+  String get premium;
+  String get premiumFeatures;
+  String get unlimitedAnalyses;
+  String get noAds;
+  String get compareAnalyses;
+  String get prioritySupport;
+  String get subscribe;
+  String get restorePurchases;
+  String get purchaseError;
+  String get purchaseRestored;
+  String get premiumActive;
+  String get premiumInactive;
+  String get remainingAnalyses;
+  String get limitReached;
+  String get upgradeToPremium;
+  String get backToApp;
+  String get usageLimit;
+  
+  // System prompt for Claude API requests
   String get systemPrompt;
 }

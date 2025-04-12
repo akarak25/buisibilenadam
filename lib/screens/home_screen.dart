@@ -4,8 +4,10 @@ import 'package:palm_analysis/utils/constants.dart';
 import 'package:palm_analysis/screens/camera_screen.dart';
 import 'package:palm_analysis/screens/history_screen.dart';
 import 'package:palm_analysis/screens/language_settings_screen.dart';
+import 'package:palm_analysis/screens/premium_screen.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:palm_analysis/services/usage_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +20,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
   int _totalAnalyses = 0;
+  bool _isPremium = false;
+  int _remainingQueries = 0;
+  final UsageService _usageService = UsageService();
 
   @override
   void initState() {
@@ -36,14 +41,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
     
     _animationController.repeat(reverse: true);
-    _loadAnalysisCount();
+    _loadData();
   }
 
-  Future<void> _loadAnalysisCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _totalAnalyses = prefs.getInt('total_analyses') ?? 0;
-    });
+  Future<void> _loadData() async {
+    try {
+      // Toplam analiz sayısını yükle
+      final prefs = await SharedPreferences.getInstance();
+      final totalAnalyses = prefs.getInt('total_analyses') ?? 0;
+      
+      // Premium durumunu ve kalan sorgu hakkını yükle
+      final isPremium = await _usageService.isPremium();
+      final remainingQueries = await _usageService.getRemainingQueries();
+      
+      if (mounted) {
+        setState(() {
+          _totalAnalyses = totalAnalyses;
+          _isPremium = isPremium;
+          _remainingQueries = remainingQueries;
+        });
+      }
+    } catch (e) {
+      print('Veri yükleme hatası: $e');
+    }
   }
 
   @override
@@ -127,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               MaterialPageRoute(
                                 builder: (_) => const CameraScreen(),
                               ),
-                            ).then((_) => _loadAnalysisCount());
+                            ).then((_) => _loadData());
                           },
                           child: Container(
                             width: 220,
@@ -178,6 +198,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
               const SizedBox(height: 32),
+              // Premium durumu ve kalan sorgular
+              _buildPremiumStatusCard(),
+              
+              const SizedBox(height: 16),
+              
               // Analiz Geçmişi butonu
               InkWell(
                 onTap: () {
@@ -185,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     MaterialPageRoute(
                       builder: (_) => const HistoryScreen(),
                     ),
-                  ).then((_) => _loadAnalysisCount());
+                  ).then((_) => _loadData());
                 },
                 child: Card(
                   elevation: 4,
@@ -237,6 +262,70 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildPremiumStatusCard() {
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PremiumScreen()),
+        ).then((_) => _loadData());
+      },
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        color: _isPremium ? Colors.amber.shade50 : Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    _isPremium ? Icons.star : Icons.star_border,
+                    color: _isPremium ? Colors.amber : Colors.grey,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _isPremium 
+                          ? AppLocalizations.of(context).currentLanguage.premiumActive
+                          : AppLocalizations.of(context).currentLanguage.premium,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: _isPremium ? Colors.amber.shade800 : AppTheme.textColor,
+                        ),
+                      ),
+                      if (!_isPremium)
+                        Text(
+                          AppLocalizations.of(context).currentLanguage.remainingAnalyses
+                            .replaceAll('{count}', _remainingQueries.toString()),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textColorLight,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: _isPremium ? Colors.amber.shade800 : AppTheme.primaryColor,
               ),
             ],
           ),
