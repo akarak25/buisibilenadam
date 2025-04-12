@@ -69,7 +69,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       }
       
       // Resmi analiz et
-      final analysis = await _analysisService.analyzeHandImage(widget.imageFile, context: context);
+      final analysis = await _analysisService.analyzeHandImage(widget.imageFile);
 
       if (!mounted) return;
       

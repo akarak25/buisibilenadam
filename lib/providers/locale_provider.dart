@@ -28,6 +28,12 @@ class LocaleProvider extends ChangeNotifier {
   Future<void> setLocale(Locale locale) async {
     if (_locale == locale) return;
     
+    // Sadece tr ve en dilleri destekleniyor
+    if (locale.languageCode != 'tr' && locale.languageCode != 'en') {
+      debugPrint('Desteklenmeyen dil: ${locale.languageCode}');
+      return;
+    }
+    
     _locale = locale;
     notifyListeners();
     

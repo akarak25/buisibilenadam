@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:palm_analysis/l10n/languages/language_tr.dart';
 import 'package:palm_analysis/l10n/languages/language_en.dart';
-import 'package:palm_analysis/l10n/languages/language_de.dart';
-import 'package:palm_analysis/l10n/languages/language_fr.dart';
-import 'package:palm_analysis/l10n/languages/language_es.dart';
 import 'package:palm_analysis/l10n/languages/app_language.dart';
 
 class AppLocalizations {
@@ -15,9 +12,6 @@ class AppLocalizations {
   static final Map<String, AppLanguage> _localizedValues = {
     'tr': LanguageTr(),
     'en': LanguageEn(),
-    'de': LanguageDe(),
-    'fr': LanguageFr(),
-    'es': LanguageEs(),
   };
   
   // Desteklenen dil listesi

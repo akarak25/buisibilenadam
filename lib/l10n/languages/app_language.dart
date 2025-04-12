@@ -58,6 +58,8 @@ abstract class AppLanguage {
   String get selectLanguage;
   String get turkish;
   String get english;
+  // Artık sadece Türkçe ve İngilizce desteklenmektedir
+  // Arayüz bütünlüğü için diğer dil referansları korunmuştur
   String get german;
   String get french;
   String get spanish;
