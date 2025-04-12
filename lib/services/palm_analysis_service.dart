@@ -52,7 +52,7 @@ class PalmAnalysisService {
           },
           body: jsonEncode({
             'model': 'claude-3-7-sonnet-20250219',
-            'max_tokens': 1000,
+            'max_tokens': 2000,
             'temperature': 0.5,
             'messages': [
               {
@@ -75,7 +75,7 @@ class PalmAnalysisService {
               },
             ],
           }),
-        ).timeout(const Duration(seconds: 30), onTimeout: () {
+        ).timeout(const Duration(seconds: 60), onTimeout: () {
           throw Exception("API yanıt vermedi, bağlantı zaman aşımına uğradı.");
         });
 
