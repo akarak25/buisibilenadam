@@ -113,6 +113,9 @@ class LanguageTr implements AppLanguage {
   @override
   String get shareAnalysis => 'Analizi Paylaş';
   
+  @override
+  String get analyzingPalm => 'El çizgileriniz analiz ediliyor...';
+  
   // Ayarlar ekranı
   @override
   String get settingsTitle => 'Ayarlar';

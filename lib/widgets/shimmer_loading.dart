@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:palm_analysis/utils/theme.dart';
+import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class ShimmerLoading extends StatefulWidget {
   const ShimmerLoading({super.key});
@@ -179,9 +180,9 @@ class _ShimmerLoadingState extends State<ShimmerLoading> with SingleTickerProvid
                 valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'El çizgileriniz analiz ediliyor...',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context).currentLanguage.analyzingPalm,
+                style: const TextStyle(
                   color: AppTheme.primaryColor,
                   fontWeight: FontWeight.bold,
                 ),

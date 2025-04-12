@@ -113,6 +113,9 @@ class LanguageEn implements AppLanguage {
   @override
   String get shareAnalysis => 'Share Analysis';
   
+  @override
+  String get analyzingPalm => 'Analyzing your palm lines...';
+  
   // Settings screen
   @override
   String get settingsTitle => 'Settings';

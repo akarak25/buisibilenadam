@@ -49,12 +49,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   
   bool _isAnalyzing = true;
   String _analysis = '';
-  final PalmAnalysisService _analysisService = PalmAnalysisService();
+  late PalmAnalysisService _analysisService;
   
   @override
   void initState() {
     super.initState();
     _analyzeImage();
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Context için güvenli bir yer
   }
 
   Future<void> _analyzeImage() async {
@@ -70,8 +76,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         return;
       }
       
-      // Resmi analiz et
-      final analysis = await _analysisService.analyzeHandImage(widget.imageFile);
+      // PalmAnalysisService'ı burada başlat
+      _analysisService = PalmAnalysisService();
+      
+      // Resmi analiz et - şu anki cihaz dilini gönder
+      final locale = Localizations.localeOf(context);
+      final analysis = await _analysisService.analyzeHandImage(widget.imageFile, locale: locale);
 
       if (!mounted) return;
       

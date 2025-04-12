@@ -77,7 +77,6 @@ class CameraGuideOverlay extends StatelessWidget {
                 _buildStatusItem(
                   context: context,
                   icon: Icons.pan_tool_outlined,
-                  text: 'El algılama',
                   translationKey: 'handDetection',
                   isActive: isHandDetected,
                 ),
@@ -85,7 +84,6 @@ class CameraGuideOverlay extends StatelessWidget {
                 _buildStatusItem(
                   context: context,
                   icon: Icons.center_focus_strong,
-                  text: 'El pozisyonu',
                   translationKey: 'handPosition',
                   isActive: isHandAligned,
                 ),
@@ -93,7 +91,6 @@ class CameraGuideOverlay extends StatelessWidget {
                 _buildStatusItem(
                   context: context,
                   icon: Icons.wb_sunny,
-                  text: 'Işık seviyesi',
                   translationKey: 'lightLevel',
                   isActive: hasGoodLighting,
                 ),
@@ -108,7 +105,6 @@ class CameraGuideOverlay extends StatelessWidget {
   Widget _buildStatusItem({
     required BuildContext context,
     required IconData icon,
-    required String text,
     required String translationKey,
     required bool isActive,
   }) {

@@ -38,6 +38,7 @@ abstract class AppLanguage {
   String get analysisError;
   String get saveAnalysis;
   String get shareAnalysis;
+  String get analyzingPalm;
   
   // Settings screen
   String get settingsTitle;
