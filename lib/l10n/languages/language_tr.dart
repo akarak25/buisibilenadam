@@ -264,7 +264,72 @@ class LanguageTr implements AppLanguage {
   
   @override
   String get usageLimit => 'Ücretsiz kullanıcılar aylık 3 analiz yapabilir. Sınırsız analiz için premium\'a yükseltin.';
-  
+
+  @override
+  String get comingSoon => 'Yakında';
+
+  // Profil ekranı
+  @override
+  String get profile => 'Profil';
+  @override
+  String get profileSettings => 'Profil Ayarları';
+  @override
+  String get personalInfo => 'Kişisel Bilgiler';
+  @override
+  String get fullName => 'Ad Soyad';
+  @override
+  String get email => 'E-posta';
+  @override
+  String get age => 'Yaş';
+  @override
+  String get gender => 'Cinsiyet';
+  @override
+  String get profession => 'Meslek';
+  @override
+  String get male => 'Erkek';
+  @override
+  String get female => 'Kadın';
+  @override
+  String get other => 'Diğer';
+  @override
+  String get select => 'Seçiniz';
+  @override
+  String get editProfile => 'Profili Düzenle';
+  @override
+  String get saveChanges => 'Değişiklikleri Kaydet';
+  @override
+  String get changePassword => 'Şifre Değiştir';
+  @override
+  String get currentPassword => 'Mevcut Şifre';
+  @override
+  String get newPassword => 'Yeni Şifre';
+  @override
+  String get confirmPassword => 'Şifre Tekrar';
+  @override
+  String get passwordsDontMatch => 'Şifreler eşleşmiyor';
+  @override
+  String get passwordTooShort => 'Şifre en az 6 karakter olmalı';
+  @override
+  String get deleteAccount => 'Hesabı Sil';
+  @override
+  String get deleteAccountConfirmation => 'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.';
+  @override
+  String get totalAnalyses => 'Toplam Analiz';
+  @override
+  String get memberSince => 'Üyelik Süresi';
+  @override
+  String get days => 'gün';
+  @override
+  String get logout => 'Çıkış Yap';
+  @override
+  String get logoutConfirmation => 'Çıkış yapmak istediğinize emin misiniz?';
+  @override
+  String get accountDeleted => 'Hesabınız silindi';
+  @override
+  String get profileUpdated => 'Profil güncellendi';
+  @override
+  String get account => 'Hesap';
+
   // Claude API istekleri için sistem mesajı
   @override
   String get systemPrompt => '''

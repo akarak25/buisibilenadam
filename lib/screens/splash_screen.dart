@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
-import 'package:palm_analysis/utils/constants.dart';
 import 'package:palm_analysis/screens/onboarding_screen.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
+import 'package:palm_analysis/services/auth_service.dart';
+import 'package:palm_analysis/screens/home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,186 +13,301 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  bool _hasError = false;
-  String _errorMessage = '';
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _logoController;
+  late AnimationController _textController;
+  late AnimationController _pulseController;
+
+  late Animation<double> _logoScale;
+  late Animation<double> _logoOpacity;
+  late Animation<double> _textOpacity;
+  late Animation<Offset> _textSlide;
+  late Animation<double> _pulseAnimation;
+
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
-    try {
-      _controller = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 1800),
-      );
+    _initAnimations();
+    _navigateAfterDelay();
+  }
 
-      _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.0, 0.7, curve: Curves.easeIn),
+  void _initAnimations() {
+    // Logo animation
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _logoController,
+        curve: Curves.elasticOut,
+      ),
+    );
+
+    _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _logoController,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
+    );
+
+    // Text animation
+    _textController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _textController,
+        curve: Curves.easeIn,
+      ),
+    );
+
+    _textSlide = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _textController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    // Pulse animation for loading
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 0.3, end: 0.6).animate(
+      CurvedAnimation(
+        parent: _pulseController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    // Start animations
+    _logoController.forward();
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _textController.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) _pulseController.repeat(reverse: true);
+    });
+  }
+
+  Future<void> _navigateAfterDelay() async {
+    await Future.delayed(const Duration(milliseconds: 2500));
+
+    if (!mounted) return;
+
+    // Check if user is logged in
+    final user = await _authService.loadStoredUser();
+
+    if (!mounted) return;
+
+    if (user != null) {
+      // User is logged in, go to home
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const HomeScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 500),
         ),
       );
-
-      _scaleAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.3, 1.0, curve: Curves.easeOutBack),
+    } else {
+      // User is not logged in, go to onboarding
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const OnboardingScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 500),
         ),
       );
-
-      _controller.forward();
-
-      // Daha güvenli geçiş için try-catch içine alalım
-      Future.delayed(const Duration(seconds: 3), () {
-        try {
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-            );
-          }
-        } catch (e) {
-          print("OnboardingScreen'e geçiş hatası: $e");
-          if (mounted) {
-            setState(() {
-              _hasError = true;
-              _errorMessage = "Uygulama başlatılamadı: $e";
-            });
-          }
-        }
-      });
-    } catch (e) {
-      print("SplashScreen initState hatası: $e");
-      setState(() {
-        _hasError = true;
-        _errorMessage = "Uygulama başlatılamadı: $e";
-      });
     }
   }
 
   @override
   void dispose() {
-    try {
-      _controller.dispose();
-    } catch (e) {
-      print("Controller dispose hatası: $e");
-    }
+    _logoController.dispose();
+    _textController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_hasError) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 80,
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Bir Hata Oluştu',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  _errorMessage,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
         ),
-      );
-    }
+        child: Stack(
+          children: [
+            // Soft overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.92),
+                    Colors.white.withOpacity(0.88),
+                  ],
+                ),
+              ),
+            ),
 
-    try {
-      return Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
-        body: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: Transform.scale(
-                  scale: _scaleAnimation.value,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primaryColor.withOpacity(0.3),
-                              blurRadius: 15,
-                              spreadRadius: 5,
+            // Decorative blobs
+            Positioned(
+              top: -80,
+              right: -80,
+              child: AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (context, child) {
+                  return Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryIndigo
+                          .withOpacity(_pulseAnimation.value * 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                  );
+                },
+              ),
+            ),
+            Positioned(
+              bottom: -60,
+              left: -60,
+              child: AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (context, child) {
+                  return Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryPurple
+                          .withOpacity(_pulseAnimation.value * 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Main content
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo with glow effect
+                  AnimatedBuilder(
+                    animation: _logoController,
+                    builder: (context, child) {
+                      return Opacity(
+                        opacity: _logoOpacity.value,
+                        child: Transform.scale(
+                          scale: _logoScale.value,
+                          child: Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              gradient: AppTheme.primaryGradient,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      AppTheme.primaryIndigo.withOpacity(0.4),
+                                  blurRadius: 30,
+                                  spreadRadius: 5,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.back_hand_outlined,
-                          size: 80,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                        Text(
-                          'Claude ${AppLocalizations.of(context).currentLanguage.appName}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor,
+                            child: const Icon(
+                              Icons.back_hand_rounded,
+                              size: 70,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      const SizedBox(height: 8),
-                      Text(
-                        AppLocalizations.of(context).currentLanguage.appDescription,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: AppTheme.textColorLight,
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // App name with gradient
+                  SlideTransition(
+                    position: _textSlide,
+                    child: FadeTransition(
+                      opacity: _textOpacity,
+                      child: Column(
+                        children: [
+                          ShaderMask(
+                            blendMode: BlendMode.srcIn,
+                            shaderCallback: (bounds) => AppTheme.primaryGradient
+                                .createShader(Rect.fromLTWH(
+                                    0, 0, bounds.width, bounds.height)),
+                            child: Text(
+                              AppLocalizations.of(context)
+                                  .currentLanguage
+                                  .appName,
+                              style: GoogleFonts.inter(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            AppLocalizations.of(context)
+                                .currentLanguage
+                                .appDescription,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 48),
+
+                  // Loading indicator
+                  FadeTransition(
+                    opacity: _textOpacity,
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppTheme.primaryIndigo.withOpacity(0.7),
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
-      );
-    } catch (e) {
-      // Widget build sırasında hata oluşursa basit bir hata ekranı göster
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: Text("UI oluşturulurken hata: $e"),
-        ),
-      );
-    }
+      ),
+    );
   }
 }

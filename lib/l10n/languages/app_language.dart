@@ -97,7 +97,40 @@ abstract class AppLanguage {
   String get upgradeToPremium;
   String get backToApp;
   String get usageLimit;
-  
+  String get comingSoon;
+
+  // Profile screen
+  String get profile;
+  String get profileSettings;
+  String get personalInfo;
+  String get fullName;
+  String get email;
+  String get age;
+  String get gender;
+  String get profession;
+  String get male;
+  String get female;
+  String get other;
+  String get select;
+  String get editProfile;
+  String get saveChanges;
+  String get changePassword;
+  String get currentPassword;
+  String get newPassword;
+  String get confirmPassword;
+  String get passwordsDontMatch;
+  String get passwordTooShort;
+  String get deleteAccount;
+  String get deleteAccountConfirmation;
+  String get totalAnalyses;
+  String get memberSince;
+  String get days;
+  String get logout;
+  String get logoutConfirmation;
+  String get accountDeleted;
+  String get profileUpdated;
+  String get account;
+
   // System prompt for Claude API requests
   String get systemPrompt;
 }

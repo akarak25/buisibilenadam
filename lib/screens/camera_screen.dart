@@ -1,13 +1,13 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/services/camera_service.dart';
 import 'package:palm_analysis/screens/analysis_screen.dart';
-import 'package:palm_analysis/screens/premium_screen.dart';
 import 'package:palm_analysis/widgets/camera_guide_overlay.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
-import 'package:palm_analysis/services/usage_service.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -16,18 +16,13 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
+class _CameraScreenState extends State<CameraScreen>
+    with WidgetsBindingObserver {
   final CameraService _cameraService = CameraService();
-  final UsageService _usageService = UsageService();
   bool _isCameraReady = false;
   bool _isProcessing = false;
-  double _currentExposure = 0.0;
   bool _isHandDetected = false;
-  
-  // El pozisyonu rehberinin durumu
   bool _isHandAligned = false;
-  
-  // Işık durumu
   bool _hasGoodLighting = false;
 
   @override
@@ -35,8 +30,8 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeCamera();
-    
-    // Test için: Kamera çalıştıktan 3 saniye sonra el algılamayı simüle et
+
+    // Simulate hand detection after 3 seconds
     Future.delayed(const Duration(seconds: 3), _simulateHandDetection);
   }
 
@@ -46,19 +41,22 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       setState(() {
         _isCameraReady = true;
       });
-      
-      // Kamera başlatıldıktan sonra ışık seviyesini kontrol etmeye başla
+
       _startLightLevelDetection();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kamera başlatılamadı: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Camera initialization failed: $e'),
+            backgroundColor: AppTheme.dangerRed,
+          ),
+        );
+      }
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Uygulama durumu değiştiğinde kamerayı yönet
     if (!_isCameraReady || _cameraService.controller == null) return;
 
     if (state == AppLifecycleState.inactive) {
@@ -75,12 +73,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     _cameraService.dispose();
     super.dispose();
   }
-  
-  // Işık seviyesini kontrol etme
+
   void _startLightLevelDetection() {
     if (!_isCameraReady || _cameraService.controller == null) return;
-    
-    // Basit bir simülasyon - gerçek uygulamada kamera parametrelerinden analiz yapılabilir
+
     try {
       if (mounted) {
         _cameraService.hasGoodLighting().then((bool hasGoodLight) {
@@ -89,20 +85,16 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           });
         });
       }
-      
-      // Her 2 saniyede bir ışık seviyesini kontrol et
+
       Future.delayed(const Duration(seconds: 2), _startLightLevelDetection);
     } catch (e) {
-      print('Işık seviyesi ölçme hatası: $e');
+      print('Light level detection error: $e');
     }
   }
-  
-  // El algılama fonksiyonu (burada basit bir simülasyon yapıyoruz)
-  // Gerçek uygulamada tensorflow lite veya benzer bir kütüphane kullanabilirsiniz
+
   void _simulateHandDetection() {
     if (mounted) {
       setState(() {
-        // Burada gerçek el algılama yapılmalı, şu an rastgele simüle ediyoruz
         _isHandDetected = true;
         _isHandAligned = true;
       });
@@ -112,25 +104,14 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   Future<void> _takePicture() async {
     if (!_isCameraReady || _isProcessing) return;
 
-    // Kullanım hakkı kontrolü
-    bool canPerformAnalysis = await _usageService.canPerformAnalysis();
-    if (!canPerformAnalysis) {
-      // Kullanım limiti dolmuşsa premium ekranına yönlendir
-      if (mounted) {
-        _showLimitReachedDialog();
-      }
-      return;
-    }
-
-    // Eğer el pozisyonu hizalı değilse ve ışık yeterli değilse uyarı göster
     if (!_isHandAligned || !_hasGoodLighting) {
+      final lang = AppLocalizations.of(context).currentLanguage;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            !_isHandAligned 
-                ? AppLocalizations.of(context).currentLanguage.placeYourHand 
-                : '${AppLocalizations.of(context).currentLanguage.lightLevel} ${AppLocalizations.of(context).currentLanguage.darkTheme}'
+            !_isHandAligned ? lang.placeYourHand : lang.lightLevel,
           ),
+          backgroundColor: AppTheme.warningAmber,
           duration: const Duration(seconds: 2),
         ),
       );
@@ -144,9 +125,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     try {
       final File? imageFile = await _cameraService.takePicture();
       if (imageFile != null && mounted) {
-        // Kullanım sayısını artır
-        await _usageService.incrementUsage();
-        
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => AnalysisScreen(imageFile: imageFile),
@@ -154,9 +132,14 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fotoğraf çekilemedi: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to take photo: $e'),
+            backgroundColor: AppTheme.dangerRed,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -169,16 +152,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   Future<void> _pickImageFromGallery() async {
     if (_isProcessing) return;
 
-    // Kullanım hakkı kontrolü
-    bool canPerformAnalysis = await _usageService.canPerformAnalysis();
-    if (!canPerformAnalysis) {
-      // Kullanım limiti dolmuşsa premium ekranına yönlendir
-      if (mounted) {
-        _showLimitReachedDialog();
-      }
-      return;
-    }
-
     setState(() {
       _isProcessing = true;
     });
@@ -186,9 +159,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     try {
       final File? imageFile = await _cameraService.pickImageFromGallery();
       if (imageFile != null && mounted) {
-        // Kullanım sayısını artır
-        await _usageService.incrementUsage();
-
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => AnalysisScreen(imageFile: imageFile),
@@ -196,9 +166,15 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).currentLanguage.generalError)),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(AppLocalizations.of(context).currentLanguage.generalError),
+            backgroundColor: AppTheme.dangerRed,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -208,187 +184,323 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
-  // Işık seviyesi göstergesi
-  Widget _buildLightIndicator() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32.0),
-      padding: const EdgeInsets.all(12.0),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            _hasGoodLighting ? Icons.wb_sunny : Icons.wb_cloudy,
-            color: _hasGoodLighting ? Colors.yellow : Colors.white70,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            _hasGoodLighting 
-                ? '${AppLocalizations.of(context).currentLanguage.lightTheme} ${AppLocalizations.of(context).currentLanguage.analyzeHand}' 
-                : '${AppLocalizations.of(context).currentLanguage.darkTheme} ${AppLocalizations.of(context).currentLanguage.analyzeHand}',
-            style: const TextStyle(color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Limit diyaloğu gösterildiğinde kullanıcıya premium teklifini gösterme
-  void _showLimitReachedDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context).currentLanguage.limitReached),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              size: 48,
-              color: Colors.amber,
-            ),
-            SizedBox(height: 16),
-            Text(AppLocalizations.of(context).currentLanguage.usageLimit),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(AppLocalizations.of(context).currentLanguage.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => PremiumScreen()),
-              );
-            },
-            child: Text(AppLocalizations.of(context).currentLanguage.upgradeToPremium),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context).currentLanguage;
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(AppLocalizations.of(context).currentLanguage.takePicture),
-        elevation: 0,
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: _isCameraReady
-                ? Stack(
+          // Camera preview or loading
+          _isCameraReady
+              ? Stack(
+                  children: [
+                    // Camera preview
+                    Positioned.fill(
+                      child: CameraPreview(_cameraService.controller!),
+                    ),
+
+                    // Guide overlay
+                    CameraGuideOverlay(
+                      isHandDetected: _isHandDetected,
+                      isHandAligned: _isHandAligned,
+                      hasGoodLighting: _hasGoodLighting,
+                    ),
+                  ],
+                )
+              : Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Kamera önizleme
-                      CameraPreview(_cameraService.controller!),
-                      
-                      // Rehber overlay'i
-                      CameraGuideOverlay(
-                        isHandDetected: _isHandDetected,
-                        isHandAligned: _isHandAligned,
-                        hasGoodLighting: _hasGoodLighting,
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppTheme.primaryIndigo,
+                        ),
                       ),
-                      
-                      // Işık durumu gösterge
-                      Positioned(
-                        top: 20,
-                        left: 0,
-                        right: 0,
-                        child: _buildLightIndicator(),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Loading camera...',
+                        style: GoogleFonts.inter(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
-                  )
-                : const Center(
-                    child: CircularProgressIndicator(
-                      color: AppTheme.primaryColor,
-                    ),
                   ),
+                ),
+
+          // Top bar with gradient
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.7),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Row(
+                    children: [
+                      // Back button
+                      _buildGlassButton(
+                        icon: Icons.arrow_back_rounded,
+                        onTap: () => Navigator.of(context).pop(),
+                      ),
+                      const SizedBox(width: 12),
+                      // Title
+                      Text(
+                        lang.takePicture,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      // Light indicator
+                      _buildLightIndicator(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-          _buildCameraControls(),
+
+          // Bottom controls
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.8),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Hint text
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          lang.placeYourHand,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Control buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Gallery button
+                          _buildControlButton(
+                            icon: Icons.photo_library_rounded,
+                            label: lang.selectFromGallery,
+                            onTap:
+                                _isProcessing ? null : _pickImageFromGallery,
+                          ),
+                          // Capture button
+                          _buildCaptureButton(),
+                          // Flip camera (placeholder)
+                          _buildControlButton(
+                            icon: Icons.flip_camera_ios_rounded,
+                            label: 'Flip',
+                            onTap: null, // Feature to be added
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCameraControls() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-      color: Colors.black,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // Galeri butonu
-          IconButton(
-            onPressed: _isProcessing ? null : _pickImageFromGallery,
-            icon: const Icon(
-              Icons.photo_library,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
-          // Fotoğraf çekme butonu
-          GestureDetector(
-            onTap: _isProcessing ? null : _takePicture,
-            child: Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
+  Widget _buildGlassButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
                 color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3,
-                ),
-              ),
-              child: Center(
-                child: Container(
-                  width: 55,
-                  height: 55,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: _isProcessing
-                      ? const Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: AppTheme.primaryColor,
-                              strokeWidth: 3,
-                            ),
-                          ),
-                        )
-                      : Container(),
-                ),
               ),
             ),
-          ),
-          // Kamera değiştirme
-          IconButton(
-            onPressed: _isProcessing
-                ? null
-                : () {
-                    // Kamera değiştirme özelliği ileride eklenebilir
-                  },
-            icon: const Icon(
-              Icons.flip_camera_ios,
+            child: Icon(
+              icon,
               color: Colors.white,
-              size: 32,
+              size: 22,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLightIndicator() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _hasGoodLighting ? Icons.wb_sunny_rounded : Icons.wb_cloudy,
+                color: _hasGoodLighting ? Colors.amber : Colors.white60,
+                size: 18,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _hasGoodLighting ? 'Good' : 'Low',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: _hasGoodLighting ? Colors.amber : Colors.white60,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    final isDisabled = onTap == null;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(isDisabled ? 0.1 : 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white.withOpacity(isDisabled ? 0.3 : 1),
+              size: 26,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: Colors.white.withOpacity(isDisabled ? 0.3 : 0.7),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCaptureButton() {
+    return GestureDetector(
+      onTap: _isProcessing ? null : _takePicture,
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: AppTheme.primaryGradient,
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryIndigo.withOpacity(0.5),
+              blurRadius: 20,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Container(
+          margin: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white,
+              width: 3,
+            ),
+          ),
+          child: Center(
+            child: _isProcessing
+                ? const SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
+                  )
+                : const Icon(
+                    Icons.camera_alt_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+          ),
+        ),
       ),
     );
   }

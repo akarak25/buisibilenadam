@@ -1,7 +1,8 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/services/palm_analysis_service.dart';
 import 'package:palm_analysis/models/palm_analysis.dart';
@@ -12,6 +13,7 @@ import 'package:palm_analysis/utils/markdown_formatter.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:palm_analysis/widgets/common/gradient_button.dart';
 
 class AnalysisScreen extends StatefulWidget {
   final File imageFile;
@@ -23,114 +25,56 @@ class AnalysisScreen extends StatefulWidget {
 }
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
-  // Markdown başlıklarını doğru formatta düzenler
-  String _formatMarkdownHeadings(String text) {
-    try {
-      // ## işaretini kaldır ve başlıkları düzelt
-      String result = text;
-      
-      // ## işaretleri arasındaki bölümleri başlık olarak düzenle
-      final headingPattern = RegExp(r'##\s*(.*?)\s*##', dotAll: true);
-      result = result.replaceAllMapped(headingPattern, (match) {
-        String heading = match.group(1) ?? '';
-        // Trim ve başlığı düzenle
-        heading = heading.trim();
-        
-        // Markdown başlık formatına dönüştür
-        return '\n### $heading\n';
-      });
-      
-      return result;
-    } catch (e) {
-      print('Markdown başlık düzenleme hatası: $e');
-      return text; // Hata durumunda orijinal metni döndür
-    }
-  }
-  
   bool _isAnalyzing = true;
   String _analysis = '';
+  String? _errorMessage;
   late PalmAnalysisService _analysisService;
-  
+
   @override
   void initState() {
     super.initState();
+    _analysisService = PalmAnalysisService();
     _analyzeImage();
-  }
-  
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Context için güvenli bir yer - uygulamada dil değişirse burada bir şeyler yapılabilir
-    if (!_isAnalyzing) {
-      // Analiz tamamlanmışsa, arayüzü güncelleyebiliriz
-      // örneğin, burada dil değişikliklerini uygulayabiliriz
-    }
   }
 
   Future<void> _analyzeImage() async {
     try {
-      // API anahtarını .env dosyasından al
-      final apiKey = dotenv.get('CLAUDE_API_KEY', fallback: '');
-      
-      if (apiKey.isEmpty || apiKey == 'your_api_key_here') {
-        setState(() {
-          _isAnalyzing = false;
-          _analysis = '# API Anahtarı Eksik\n\nLütfen bir Claude API anahtarı ekleyin.';
-        });
-        return;
-      }
-      
-      // PalmAnalysisService'ı burada başlat
-      _analysisService = PalmAnalysisService();
-      
-      // Mevcut dili al (mümkünse)
-      String deviceLanguage = 'tr'; // Varsayılan Türkçe
+      // Get current locale
+      String deviceLanguage = 'tr';
       try {
         if (mounted) {
-          // Mounted ise (widget ek devreden çıkarılmamışsa), context'ten dili almayı dene
-          final BuildContext ctx = context;  // Yerel bir değişkene referansı kaydet
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              try {
-                final locale = Localizations.localeOf(ctx);
-                deviceLanguage = locale.languageCode;
-              } catch (e) {
-                print('Dil alınırken hata: $e');
-              }
-            }
-          });
+          final locale = Localizations.localeOf(context);
+          deviceLanguage = locale.languageCode;
         }
       } catch (e) {
-        print('Dil işleme hatası: $e');
+        print('Language detection error: $e');
       }
-      
-      // Dil parametresiyle resmi analiz et
+
+      // Analyze image via backend API
       final analysis = await _analysisService.analyzeHandImage(
-        widget.imageFile, 
-        locale: Locale(deviceLanguage)
+        widget.imageFile,
+        locale: Locale(deviceLanguage),
       );
 
       if (!mounted) return;
-      
+
       try {
-        // Metni doğrudan markdown formatına dönüştür
+        // Format the analysis text
         String formattedAnalysis = MarkdownFormatter.format(analysis);
-        
+
+        // Save image and analysis
         try {
-          // Geçici bir klasöre resmi kopyala ve yolunu sakla
           final String imagePath = await _saveImageFile(widget.imageFile);
-          
-          // Metni ve resim yolunu kullanarak analiz nesnesini oluştur
+
           final palmAnalysis = PalmAnalysis(
             analysis: formattedAnalysis,
             imagePath: imagePath,
           );
           await _saveAnalysis(palmAnalysis);
         } catch (e) {
-          print('Analiz kaydetme hatası: $e');
-          // Kaydetme hatası olsa bile devam et
+          print('Save error: $e');
         }
-        
+
         if (mounted) {
           setState(() {
             _isAnalyzing = false;
@@ -138,48 +82,41 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           });
         }
       } catch (e) {
-        print('Analiz işleme hatası: $e');
+        print('Processing error: $e');
         if (mounted) {
           setState(() {
             _isAnalyzing = false;
-            _analysis = '# İşleme Hatası\n\nAnaliz sonucu işlenirken bir hata oluştu, ancak ham veriyi görebilirsiniz:\n\n$analysis';
+            _analysis = analysis; // Show raw text
           });
         }
       }
     } catch (e) {
-      print('Analiz hatası: $e');
+      print('Analysis error: $e');
       if (mounted) {
         setState(() {
           _isAnalyzing = false;
-          _analysis = '# Hata Oluştu\n\nEl çizgisi analizi yapılırken bir hata oluştu: $e';
+          _errorMessage = e.toString();
         });
       }
     }
   }
 
-  // Resim dosyasını uygulamaya özel bir klasöre kaydet
   Future<String> _saveImageFile(File imageFile) async {
     try {
-      // Uygulama belge dizinini al
       final appDir = await getApplicationDocumentsDirectory();
-      
-      // El analizleri için özel bir klasör oluştur
       final palmImagesDir = Directory('${appDir.path}/palm_images');
       if (!await palmImagesDir.exists()) {
         await palmImagesDir.create(recursive: true);
       }
-      
-      // Benzersiz bir dosya adı oluştur
+
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = 'palm_$timestamp.jpg';
       final savedImagePath = path.join(palmImagesDir.path, fileName);
-      
-      // Resmi kopyala
+
       final savedImage = await imageFile.copy(savedImagePath);
       return savedImage.path;
     } catch (e) {
-      print('Resim kaydetme hatası: $e');
-      // Hata durumunda orijinal yolu geri döndür (geçici dosya olabilir)
+      print('Image save error: $e');
       return imageFile.path;
     }
   }
@@ -187,297 +124,477 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   Future<void> _saveAnalysis(PalmAnalysis analysis) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
-      // Mevcut analizleri al
+
       final analysisListJson = prefs.getStringList('analyses') ?? [];
       final analysisList = analysisListJson
           .map((json) => PalmAnalysis.fromJson(jsonDecode(json)))
           .toList();
-      
-      // Yeni analizi ekle
+
       analysisList.add(analysis);
-      
-      // Analizleri JSON olarak kaydet
+
       final updatedJsonList = analysisList
           .map((analysis) => jsonEncode(analysis.toJson()))
           .toList();
-      
+
       await prefs.setStringList('analyses', updatedJsonList);
-      
-      // Toplam analiz sayısını artır
+
       final totalAnalyses = prefs.getInt('total_analyses') ?? 0;
       await prefs.setInt('total_analyses', totalAnalyses + 1);
     } catch (e) {
-      print('Analiz kaydedilemedi: $e');
-      // Burada hata atmıyoruz, sessizce devam ediyoruz
+      print('Analysis save error: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    try {
-      return Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
-        appBar: AppBar(
-          title: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.appName)),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.home),
-              onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-              tooltip: 'Ana Sayfaya Dön',
-            ),
-          ],
+    final lang = AppLocalizations.of(context).currentLanguage;
+
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
         ),
-        body: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // El resmi
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 250,
-                    child: Image.file(
-                      widget.imageFile,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        print('Resim yükleme hatası: $error');
-                        return Container(
-                          width: double.infinity,
-                          height: 250,
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
+        child: Stack(
+          children: [
+            // Soft overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.95),
+                    Colors.white.withOpacity(0.90),
+                  ],
+                ),
+              ),
+            ),
+
+            // Decorative elements
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryIndigo.withOpacity(0.12),
+                      AppTheme.primaryPurple.withOpacity(0.08),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+
+            // Main content
+            SafeArea(
+              child: Column(
+                children: [
+                  // App bar
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        _buildIconButton(
+                          icon: Icons.arrow_back_rounded,
+                          onTap: () => Navigator.of(context).pop(),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            lang.palmReadingAnalysis,
+                            style: GoogleFonts.inter(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
                           ),
-                        );
-                      },
+                        ),
+                        _buildIconButton(
+                          icon: Icons.home_rounded,
+                          onTap: () => Navigator.of(context)
+                              .popUntil((route) => route.isFirst),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Analiz başlığı
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 500),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _isAnalyzing ? Colors.orange : AppTheme.primaryColor,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _isAnalyzing ? Icons.hourglass_top : Icons.psychology,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 12),
-                      _isAnalyzing
-                      ? Row(
-                          children: [
-                            Builder(builder: (context) => Text(
-                              AppLocalizations.of(context).currentLanguage.analyzing,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            )),
-                            const SizedBox(width: 8),
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
+
+                  // Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Image preview
+                          _buildImageCard(),
+
+                          const SizedBox(height: 20),
+
+                          // Status card
+                          _buildStatusCard(lang),
+
+                          const SizedBox(height: 20),
+
+                          // Analysis content
+                          if (_errorMessage != null)
+                            _buildErrorCard(lang)
+                          else if (_isAnalyzing)
+                            _buildLoadingCard(lang)
+                          else
+                            _buildAnalysisCard(),
+
+                          const SizedBox(height: 24),
+
+                          // Action buttons
+                          if (!_isAnalyzing && _errorMessage == null) ...[
+                            GradientButton(
+                              text: lang.shareAnalysis,
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(lang.comingSoon),
+                                    backgroundColor: AppTheme.primaryIndigo,
+                                  ),
+                                );
+                              },
+                              icon: Icons.share_rounded,
+                            ),
+                            const SizedBox(height: 12),
+                            SecondaryButton(
+                              text: lang.analyzeHand,
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: Icons.camera_alt_rounded,
                             ),
                           ],
-                        )
-                      : Builder(builder: (context) => Text(
-                          AppLocalizations.of(context).currentLanguage.analysisComplete,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        )),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Analiz içeriği
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: _isAnalyzing
-                      ? const ShimmerLoading(
-                          loadingText: 'Analyzing...',
-                        )
-                      : Builder(
-                          builder: (context) {
-                            try {
-                              return MarkdownBody(
-                                data: _analysis,
-                                styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
-                                styleSheet: MarkdownStyleSheet(
-                                  blockSpacing: 16.0,
-                                  h2Padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-                                  h3Padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-                                  h1: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                  h2: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.5,
-                                    color: AppTheme.primaryColor,
-                                    height: 1.5,
-                                    backgroundColor: Color(0xFFF3E5F5),
-                                  ),
-                                  p: const TextStyle(
-                                    fontSize: 16,
-                                    color: AppTheme.textColor,
-                                    height: 1.5,
-                                  ),
-                                  listBullet: const TextStyle(
-                                    fontSize: 16,
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                  listIndent: 24.0,
-                                  listBulletPadding: const EdgeInsets.only(right: 8),
-                                ),
 
-                              );
-                            } catch (e) {
-                              print('Markdown render hatası: $e');
-                              return Text(
-                                'Analiz gösterilirken hata oluştu: $e\n\nHam metin:\n$_analysis',
-                                style: const TextStyle(color: Colors.red),
-                              );
-                            }
-                          },
-                        ),
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // Paylaşım butonu
-                if (!_isAnalyzing)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Paylaşma özelliği ileride eklenebilir
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Paylaşım özelliği yakında eklenecek!'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.share),
-                      label: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.shareAnalysis)),
+                          if (_errorMessage != null) ...[
+                            GradientButton(
+                              text: lang.tryAgain,
+                              onPressed: () {
+                                setState(() {
+                                  _isAnalyzing = true;
+                                  _errorMessage = null;
+                                  _analysis = '';
+                                });
+                                _analyzeImage();
+                              },
+                              icon: Icons.refresh_rounded,
+                            ),
+                            const SizedBox(height: 12),
+                            SecondaryButton(
+                              text: lang.goToHome,
+                              onPressed: () => Navigator.of(context)
+                                  .popUntil((route) => route.isFirst),
+                              icon: Icons.home_rounded,
+                            ),
+                          ],
+
+                          const SizedBox(height: 24),
+                        ],
+                      ),
                     ),
                   ),
-                
-                const SizedBox(height: 8),
-                
-                // Yeni analiz butonu
-                if (!_isAnalyzing)
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      icon: const Icon(Icons.camera_alt_outlined),
-                      label: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.analyzeHand)),
-                    ),
-                  ),
-                
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
-      );
-    } catch (e) {
-      // Herhangi bir hata durumunda basit bir hata ekranı göster
-      return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.errorTitle)),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.home),
-              onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-              tooltip: 'Ana Sayfaya Dön',
+                ],
+              ),
             ),
           ],
         ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 80,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  AppLocalizations.of(context).currentLanguage.errorTitle,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+      ),
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          shape: BoxShape.circle,
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: Icon(
+          icon,
+          color: AppTheme.textPrimary,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageCard() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryIndigo.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            Image.file(
+              widget.imageFile,
+              width: double.infinity,
+              height: 220,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: double.infinity,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceLight,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.broken_image_rounded,
+                      size: 64,
+                      color: AppTheme.textMuted,
+                    ),
+                  ),
+                );
+              },
+            ),
+            // Gradient overlay
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.5),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                'Uygulama ekranı oluşturulurken hata meydana geldi: $e',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-                ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                icon: const Icon(Icons.home),
-                label: Builder(builder: (context) => Text(AppLocalizations.of(context).currentLanguage.tryAgain)),
-                style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                ),
-                ),
-              ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusCard(dynamic lang) {
+    final isComplete = !_isAnalyzing && _errorMessage == null;
+    final hasError = _errorMessage != null;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: hasError
+            ? LinearGradient(
+                colors: [
+                  AppTheme.dangerRed.withOpacity(0.9),
+                  AppTheme.dangerRed,
+                ],
+              )
+            : isComplete
+                ? AppTheme.successGradient
+                : LinearGradient(
+                    colors: [
+                      AppTheme.warningAmber.withOpacity(0.9),
+                      AppTheme.warningAmber,
+                    ],
+                  ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: hasError
+                ? AppTheme.dangerRed.withOpacity(0.3)
+                : isComplete
+                    ? AppTheme.successGreen.withOpacity(0.3)
+                    : AppTheme.warningAmber.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            hasError
+                ? Icons.error_outline_rounded
+                : isComplete
+                    ? Icons.check_circle_rounded
+                    : Icons.psychology_rounded,
+            color: Colors.white,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            hasError
+                ? lang.analysisError
+                : isComplete
+                    ? lang.analysisComplete
+                    : lang.analyzing,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          if (_isAnalyzing) ...[
+            const Spacer(),
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingCard(dynamic lang) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.5),
+        ),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: ShimmerLoading(
+            loadingText: lang.analyzingPalm,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorCard(dynamic lang) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.dangerRed.withOpacity(0.2),
+        ),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            size: 64,
+            color: AppTheme.dangerRed.withOpacity(0.7),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            lang.analysisError,
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _errorMessage ?? lang.generalError,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalysisCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.5),
+        ),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: MarkdownBody(
+            data: _analysis,
+            styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
+            styleSheet: MarkdownStyleSheet(
+              blockSpacing: 16.0,
+              h2Padding:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 0),
+              h3Padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
+              h1: GoogleFonts.inter(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryIndigo,
+              ),
+              h2: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primaryIndigo,
+                height: 1.5,
+              ),
+              h3: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryPurple,
+              ),
+              p: GoogleFonts.inter(
+                fontSize: 15,
+                color: AppTheme.textPrimary,
+                height: 1.6,
+              ),
+              listBullet: GoogleFonts.inter(
+                fontSize: 15,
+                color: AppTheme.primaryIndigo,
+              ),
+              listIndent: 24.0,
+              listBulletPadding: const EdgeInsets.only(right: 8),
+              strong: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+              em: GoogleFonts.inter(
+                fontStyle: FontStyle.italic,
+                color: AppTheme.textSecondary,
+              ),
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
   }
 }

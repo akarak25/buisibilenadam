@@ -181,13 +181,13 @@ class _ShimmerLoadingState extends State<ShimmerLoading> with SingleTickerProvid
             children: [
               const SizedBox(height: 12),
               const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryIndigo),
               ),
               const SizedBox(height: 12),
               Text(
                 widget.loadingText,
                 style: const TextStyle(
-                  color: AppTheme.primaryColor,
+                  color: AppTheme.primaryIndigo,
                   fontWeight: FontWeight.bold,
                 ),
               ),

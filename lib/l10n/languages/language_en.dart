@@ -264,7 +264,72 @@ class LanguageEn implements AppLanguage {
   
   @override
   String get usageLimit => 'Free users can perform 3 analyses per month. Upgrade to premium for unlimited analyses.';
-  
+
+  @override
+  String get comingSoon => 'Coming Soon';
+
+  // Profile screen
+  @override
+  String get profile => 'Profile';
+  @override
+  String get profileSettings => 'Profile Settings';
+  @override
+  String get personalInfo => 'Personal Information';
+  @override
+  String get fullName => 'Full Name';
+  @override
+  String get email => 'Email';
+  @override
+  String get age => 'Age';
+  @override
+  String get gender => 'Gender';
+  @override
+  String get profession => 'Profession';
+  @override
+  String get male => 'Male';
+  @override
+  String get female => 'Female';
+  @override
+  String get other => 'Other';
+  @override
+  String get select => 'Select';
+  @override
+  String get editProfile => 'Edit Profile';
+  @override
+  String get saveChanges => 'Save Changes';
+  @override
+  String get changePassword => 'Change Password';
+  @override
+  String get currentPassword => 'Current Password';
+  @override
+  String get newPassword => 'New Password';
+  @override
+  String get confirmPassword => 'Confirm Password';
+  @override
+  String get passwordsDontMatch => 'Passwords do not match';
+  @override
+  String get passwordTooShort => 'Password must be at least 6 characters';
+  @override
+  String get deleteAccount => 'Delete Account';
+  @override
+  String get deleteAccountConfirmation => 'Are you sure you want to delete your account? This action cannot be undone.';
+  @override
+  String get totalAnalyses => 'Total Analyses';
+  @override
+  String get memberSince => 'Member Since';
+  @override
+  String get days => 'days';
+  @override
+  String get logout => 'Logout';
+  @override
+  String get logoutConfirmation => 'Are you sure you want to logout?';
+  @override
+  String get accountDeleted => 'Your account has been deleted';
+  @override
+  String get profileUpdated => 'Profile updated';
+  @override
+  String get account => 'Account';
+
   // System prompt for Claude API requests
   @override
   String get systemPrompt => '''

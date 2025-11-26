@@ -1,11 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/screens/splash_screen.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:palm_analysis/providers/locale_provider.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
@@ -13,108 +10,76 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
-    // Sistemin durum çubuğu rengini ayarla
+    // Set system UI overlay style
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
     ));
-    
-    // Ekran yönelimini dikey olarak sabitle
-    SystemChrome.setPreferredOrientations([
+
+    // Lock orientation to portrait
+    await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    
-    // .env dosyasını yüklemeyi dene, başarısız olursa alternatif yöntemle ilerle
-    bool envLoaded = false;
-    try {
-      await dotenv.load();
-      envLoaded = true;
-      print(".env dosyası başarıyla yüklendi");
-    } catch (e) {
-      print(".env dosyası yüklenemedi: $e");
-      // Alternatif olarak uygulama içinde varsayılan değerler kullanılacak
-    }
-    
-    if (!envLoaded) {
-      try {
-        // Uygulama bellek alanında env dosyası oluşturmayı dene
-        final appDocDir = await getApplicationDocumentsDirectory();
-        final envFile = File('${appDocDir.path}/.env');
-        
-        if (!await envFile.exists()) {
-          await envFile.writeAsString('CLAUDE_API_KEY=dummy_key_for_testing');
-          print("Geçici .env dosyası oluşturuldu: ${envFile.path}");
-        }
-        
-        await dotenv.load(fileName: envFile.path);
-        print("Alternatif .env dosyası yüklendi");
-      } catch (envError) {
-        print("Alternatif .env yükleme başarısız oldu: $envError");
-        // Bu durumda da uygulama çalışmaya devam etmeli
-      }
-    }
-    
-    // Tarih formatlaması için yerel dil desteğini yüklemeyi dene
+
+    // Initialize date formatting for Turkish locale
     try {
       await initializeDateFormatting('tr_TR', null);
-      print("Tarih formatlaması başarıyla yüklendi");
+      await initializeDateFormatting('en_US', null);
     } catch (e) {
-      print("Tarih formatlaması yüklenemedi: $e");
-      // Uygulama burada çökmesin, devam etsin
+      debugPrint('Date formatting initialization failed: $e');
     }
-    
-    // Önce locale provider'ı başlat
+
+    // Initialize locale provider
     final localeProvider = LocaleProvider();
     await localeProvider.initialize();
-    
-    // Uygulamayı çalıştır
+
+    // Run the app
     runApp(ChangeNotifierProvider(
       create: (_) => localeProvider,
       child: const PalmAnalysisApp(),
     ));
   } catch (e, stackTrace) {
-    print("Uygulama başlatılırken hata: $e");
-    print("Stack trace: $stackTrace");
-    
-    // Daha anlaşılır bir hata ekranı göster
+    debugPrint('App initialization error: $e');
+    debugPrint('Stack trace: $stackTrace');
+
+    // Show error screen
     runApp(MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.backgroundLight,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(24.0),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: Colors.red,
-                    size: 80,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Uygulama Başlatılamadı",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.dangerRed.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.error_outline_rounded,
+                      color: AppTheme.dangerRed,
+                      size: 64,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 24),
                   Text(
-                    "Hata: $e",
+                    'Uygulama Baslatılamadı',
+                    style: AppTheme.headlineMedium,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Lütfen uygulamayı yeniden başlatın veya geliştiriciyle iletişime geçin.",
+                  const SizedBox(height: 12),
+                  Text(
+                    'Lutfen uygulamayi yeniden baslatin.',
+                    style: AppTheme.bodyLarge,
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16),
                   ),
                 ],
               ),
@@ -131,71 +96,22 @@ class PalmAnalysisApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    try {
-      // Locale provider'ı dinle
-      final localeProvider = Provider.of<LocaleProvider>(context);
-      final appLocalizations = AppLocalizations(localeProvider.locale);
-      
-      return MaterialApp(
-        title: appLocalizations.currentLanguage.appName,
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: const SplashScreen(),
-        locale: localeProvider.locale,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: const [
-          AppLocalizationsDelegate(),
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-      );
-    } catch (e) {
-      // UI oluşturulurken hata olursa daha iyi bir hata ekranı göster
-      return MaterialApp(
-        title: 'Hata',
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      color: Colors.orange,
-                      size: 80,
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Arayüz Yüklenemedi",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Hata: $e",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Lütfen uygulamayı yeniden başlatın veya geliştiriciyle iletişime geçin.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    final localeProvider = Provider.of<LocaleProvider>(context);
+    final appLocalizations = AppLocalizations(localeProvider.locale);
+
+    return MaterialApp(
+      title: appLocalizations.currentLanguage.appName,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      home: const SplashScreen(),
+      locale: localeProvider.locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+    );
   }
 }

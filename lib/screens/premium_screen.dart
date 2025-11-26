@@ -1,345 +1,371 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:palm_analysis/services/billing_service.dart';
-import 'package:palm_analysis/services/usage_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
+import 'package:palm_analysis/widgets/common/gradient_button.dart';
 
-class PremiumScreen extends StatefulWidget {
-  const PremiumScreen({Key? key}) : super(key: key);
-
-  @override
-  State<PremiumScreen> createState() => _PremiumScreenState();
-}
-
-class _PremiumScreenState extends State<PremiumScreen> {
-  final BillingService _billingService = BillingService();
-  final UsageService _usageService = UsageService();
-  bool _isLoading = false;
-  bool _isPremium = false;
-  int _remainingQueries = 0;
-  ProductDetails? _monthlySubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await _billingService.initialize();
-      
-      final isPremium = await _billingService.isPremium();
-      final remainingQueries = await _usageService.getRemainingQueries();
-      final monthlySubscription = _billingService.getMonthlySubscriptionDetails();
-      
-      if (mounted) {
-        setState(() {
-          _isPremium = isPremium;
-          _remainingQueries = remainingQueries;
-          _monthlySubscription = monthlySubscription;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Premium ekranı başlatma hatası: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _subscribe() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-      
-      final success = await _billingService.buyMonthlySubscription();
-      
-      if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).currentLanguage.purchaseError)),
-        );
-      }
-      
-      // Satın alma durumu güncellendikten sonra ekranı yenilemek için 2 saniye bekleyin
-      await Future.delayed(const Duration(seconds: 2));
-      await _initialize();
-    } catch (e) {
-      print('Abonelik hatası: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Abonelik işlemi sırasında bir hata oluştu: $e')),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _restorePurchases() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-      
-      await _billingService.restorePurchases();
-      
-      // Satın alma durumu güncellendikten sonra ekranı yenilemek için 2 saniye bekleyin
-      await Future.delayed(const Duration(seconds: 2));
-      await _initialize();
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).currentLanguage.purchaseRestored)),
-      );
-    } catch (e) {
-      print('Satın alma geri yükleme hatası: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Satın almalar geri yüklenirken bir hata oluştu: $e')),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
+/// Premium screen showing "Coming Soon" message
+/// Payment system is currently disabled - all users are FREE tier
+class PremiumScreen extends StatelessWidget {
+  const PremiumScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context).currentLanguage;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context).currentLanguage.premium),
-      ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
-                    
-                    // Premium ikon
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: _isPremium ? Colors.amber.shade100 : Colors.grey.shade100,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _isPremium ? Icons.star : Icons.star_border,
-                        size: 80,
-                        color: _isPremium ? Colors.amber : Colors.grey,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Premium durum başlığı
-                    Text(
-                      _isPremium
-                          ? AppLocalizations.of(context).currentLanguage.premiumActive
-                          : AppLocalizations.of(context).currentLanguage.premiumInactive,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    // Kalan analizler
-                    if (!_isPremium)
-                      Text(
-                        AppLocalizations.of(context).currentLanguage.remainingAnalyses.replaceAll(
-                          '{count}', _remainingQueries.toString()),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    
-                    const SizedBox(height: 36),
-                    
-                    // Avantajlar listesi
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context).currentLanguage.premiumFeatures,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryColor,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildFeatureItem(
-                            context,
-                            Icons.repeat,
-                            AppLocalizations.of(context).currentLanguage.unlimitedAnalyses,
-                          ),
-                          _buildFeatureItem(
-                            context,
-                            Icons.cancel_outlined,
-                            AppLocalizations.of(context).currentLanguage.noAds,
-                          ),
-                          _buildFeatureItem(
-                            context,
-                            Icons.compare_arrows,
-                            AppLocalizations.of(context).currentLanguage.compareAnalyses,
-                          ),
-                          _buildFeatureItem(
-                            context,
-                            Icons.support_agent,
-                            AppLocalizations.of(context).currentLanguage.prioritySupport,
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 36),
-                    
-                    // Abonelik bilgileri
-                    if (!_isPremium && _monthlySubscription != null)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              _monthlySubscription!.title,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _monthlySubscription!.description,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _monthlySubscription!.price,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Abonelik butonu
-                    if (!_isPremium)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _subscribe,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: Text(
-                            AppLocalizations.of(context).currentLanguage.subscribe,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Restore purchases button
-                    TextButton(
-                      onPressed: _restorePurchases,
-                      child: Text(
-                        AppLocalizations.of(context).currentLanguage.restorePurchases,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Geri dönme butonu
-                    if (_isPremium || _remainingQueries > 0)
-                      OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(
-                          AppLocalizations.of(context).currentLanguage.backToApp,
-                        ),
-                      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Stack(
+          children: [
+            // Soft overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.95),
+                    Colors.white.withOpacity(0.90),
                   ],
                 ),
               ),
             ),
+
+            // Decorative elements
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryPurple.withOpacity(0.15),
+                      AppTheme.primaryIndigo.withOpacity(0.1),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -80,
+              left: -80,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.warningAmber.withOpacity(0.1),
+                      AppTheme.primaryPurple.withOpacity(0.08),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+
+            // Main content
+            SafeArea(
+              child: Column(
+                children: [
+                  // App bar
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.8),
+                              shape: BoxShape.circle,
+                              boxShadow: AppTheme.cardShadow,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              color: AppTheme.textPrimary,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          lang.premium,
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+
+                          // Premium icon with glow
+                          Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              gradient: AppTheme.premiumGradient,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.primaryPurple.withOpacity(0.4),
+                                  blurRadius: 30,
+                                  spreadRadius: 5,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 60,
+                              color: Colors.white,
+                            ),
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Coming soon badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppTheme.warningAmber.withOpacity(0.2),
+                                  AppTheme.warningAmber.withOpacity(0.1),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                color: AppTheme.warningAmber.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule_rounded,
+                                  color: AppTheme.warningAmber,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  lang.comingSoon,
+                                  style: GoogleFonts.inter(
+                                    color: AppTheme.warningAmber,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Title
+                          ShaderMask(
+                            blendMode: BlendMode.srcIn,
+                            shaderCallback: (bounds) =>
+                                AppTheme.premiumGradient.createShader(
+                              Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                            ),
+                            child: Text(
+                              lang.premiumFeatures,
+                              style: GoogleFonts.inter(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          Text(
+                            lang.usageLimit,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              color: AppTheme.textSecondary,
+                              height: 1.6,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+
+                          const SizedBox(height: 40),
+
+                          // Features list
+                          _buildFeatureCard(
+                            icon: Icons.all_inclusive_rounded,
+                            title: lang.unlimitedAnalyses,
+                            description: 'Sinirsiz el analizi yapabileceksiniz',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildFeatureCard(
+                            icon: Icons.high_quality_rounded,
+                            title: 'Yuksek Kalite Analiz',
+                            description: 'Daha detayli ve kisisellestirilmis analizler',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildFeatureCard(
+                            icon: Icons.chat_bubble_outline_rounded,
+                            title: 'AI Sohbet',
+                            description: 'Analizleriniz hakkinda sorular sorabileceksiniz',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildFeatureCard(
+                            icon: Icons.history_rounded,
+                            title: 'Sinirsiz Gecmis',
+                            description: 'Tum analizlerinizi saklayabileceksiniz',
+                          ),
+
+                          const SizedBox(height: 40),
+
+                          // Info box
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryIndigo.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppTheme.primaryIndigo.withOpacity(0.15),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  color: AppTheme.primaryIndigo,
+                                  size: 32,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Su an tum ozellikler ucretsiz!',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primaryIndigo,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Premium sistemi aktif olana kadar uygulamayi ucretsiz kullanmaya devam edebilirsiniz.',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    color: AppTheme.textSecondary,
+                                    height: 1.5,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Back button
+                          SecondaryButton(
+                            text: lang.backToApp,
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: Icons.arrow_back_rounded,
+                          ),
+
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildFeatureItem(BuildContext context, IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              color: AppTheme.primaryColor,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+  Widget _buildFeatureCard({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.5),
+        ),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
-            ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

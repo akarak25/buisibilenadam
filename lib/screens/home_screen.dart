@@ -1,13 +1,15 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
-import 'package:palm_analysis/utils/constants.dart';
 import 'package:palm_analysis/screens/camera_screen.dart';
 import 'package:palm_analysis/screens/history_screen.dart';
-import 'package:palm_analysis/screens/language_settings_screen.dart';
+import 'package:palm_analysis/screens/settings_screen.dart';
 import 'package:palm_analysis/screens/premium_screen.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
+import 'package:palm_analysis/services/auth_service.dart';
+import 'package:palm_analysis/models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:palm_analysis/services/usage_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,53 +18,48 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
   int _totalAnalyses = 0;
-  bool _isPremium = false;
-  int _remainingQueries = 0;
-  final UsageService _usageService = UsageService();
+  User? _currentUser;
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
-    
+
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
     );
-    
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.easeInOut,
       ),
     );
-    
+
     _animationController.repeat(reverse: true);
     _loadData();
   }
 
   Future<void> _loadData() async {
     try {
-      // Toplam analiz sayısını yükle
       final prefs = await SharedPreferences.getInstance();
       final totalAnalyses = prefs.getInt('total_analyses') ?? 0;
-      
-      // Premium durumunu ve kalan sorgu hakkını yükle
-      final isPremium = await _usageService.isPremium();
-      final remainingQueries = await _usageService.getRemainingQueries();
-      
+      final user = await _authService.loadStoredUser();
+
       if (mounted) {
         setState(() {
           _totalAnalyses = totalAnalyses;
-          _isPremium = isPremium;
-          _remainingQueries = remainingQueries;
+          _currentUser = user;
         });
       }
     } catch (e) {
-      print('Veri yükleme hatası: $e');
+      print('Data loading error: $e');
     }
   }
 
@@ -74,193 +71,363 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context).currentLanguage;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        toolbarHeight: 40,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.language,
-              color: AppTheme.primaryColor,
-              size: 22,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Stack(
+          children: [
+            // Soft overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.95),
+                    Colors.white.withOpacity(0.90),
+                  ],
+                ),
+              ),
             ),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const LanguageSettingsScreen(),
-                ),
-              );
-            },
-            tooltip: AppLocalizations.of(context).currentLanguage.languageSettings,
-            padding: const EdgeInsets.all(0),
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints(),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context).currentLanguage.appName,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppLocalizations.of(context).currentLanguage.appDescription,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: AppTheme.textColorLight,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedBuilder(
-                        animation: _animationController,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _pulseAnimation.value,
-                            child: child,
-                          );
-                        },
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const CameraScreen(),
-                              ),
-                            ).then((_) => _loadData());
-                          },
-                          child: Container(
-                            width: 220,
-                            height: 220,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primaryColor.withOpacity(0.3),
-                                  blurRadius: 20,
-                                  spreadRadius: 5,
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.back_hand_outlined,
-                                  size: 80,
-                                  color: AppTheme.primaryColor,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  AppLocalizations.of(context).currentLanguage.analyzeHand,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      Text(
-                        AppLocalizations.of(context).currentLanguage.takePicture,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: AppTheme.textColorLight,
-                        ),
-                      ),
+
+            // Decorative elements
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryIndigo.withOpacity(0.12),
+                      AppTheme.primaryPurple.withOpacity(0.08),
                     ],
                   ),
+                  shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(height: 32),
-              // Premium durumu ve kalan sorgular
-              _buildPremiumStatusCard(),
-              
-              const SizedBox(height: 16),
-              
-              // Analiz Geçmişi butonu
-              InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const HistoryScreen(),
-                    ),
-                  ).then((_) => _loadData());
-                },
-                child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            ),
+            Positioned(
+              bottom: -80,
+              left: -80,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryPurple.withOpacity(0.1),
+                      AppTheme.primaryIndigo.withOpacity(0.06),
+                    ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+
+            // Main content
+            SafeArea(
+              child: Column(
+                children: [
+                  // App bar
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.history,
-                              color: AppTheme.primaryColor,
-                              size: 28,
-                            ),
-                            const SizedBox(width: 16),
-                            Text(
-                              AppLocalizations.of(context).currentLanguage.analysisHistory,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
-                            borderRadius: BorderRadius.circular(16),
+                        // App name with gradient
+                        ShaderMask(
+                          blendMode: BlendMode.srcIn,
+                          shaderCallback: (bounds) =>
+                              AppTheme.primaryGradient.createShader(
+                            Rect.fromLTWH(0, 0, bounds.width, bounds.height),
                           ),
                           child: Text(
-                            '$_totalAnalyses',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                            lang.appName,
+                            style: GoogleFonts.inter(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
+                        ),
+                        // Action buttons
+                        _buildIconButton(
+                          icon: Icons.settings_rounded,
+                          onTap: () {
+                            Navigator.of(context)
+                                .push(
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsScreen(),
+                              ),
+                            )
+                                .then((_) => _loadData());
+                          },
                         ),
                       ],
                     ),
                   ),
+
+                  // Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Greeting card
+                          _buildGreetingCard(lang),
+
+                          const SizedBox(height: 24),
+
+                          // Main action - Analyze Hand
+                          Center(
+                            child: AnimatedBuilder(
+                              animation: _animationController,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: _pulseAnimation.value,
+                                  child: child,
+                                );
+                              },
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context)
+                                      .push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const CameraScreen(),
+                                    ),
+                                  )
+                                      .then((_) => _loadData());
+                                },
+                                child: Container(
+                                  width: 200,
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    gradient: AppTheme.primaryGradient,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.primaryIndigo
+                                            .withOpacity(0.4),
+                                        blurRadius: 30,
+                                        spreadRadius: 5,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.back_hand_rounded,
+                                        size: 70,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        lang.analyzeHand,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          Center(
+                            child: Text(
+                              lang.takePicture,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Feature cards
+                          _buildFeatureCard(
+                            icon: Icons.history_rounded,
+                            title: lang.analysisHistory,
+                            subtitle:
+                                '$_totalAnalyses ${lang.analysisHistory.toLowerCase()}',
+                            trailing: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '$_totalAnalyses',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.of(context)
+                                  .push(
+                                MaterialPageRoute(
+                                  builder: (_) => const HistoryScreen(),
+                                ),
+                              )
+                                  .then((_) => _loadData());
+                            },
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          _buildFeatureCard(
+                            icon: Icons.auto_awesome_rounded,
+                            title: lang.premium,
+                            subtitle: lang.comingSoon,
+                            trailing: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.warningAmber.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppTheme.warningAmber.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                lang.comingSoon,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.warningAmber,
+                                ),
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const PremiumScreen(),
+                                ),
+                              );
+                            },
+                            isPremium: true,
+                          ),
+
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          shape: BoxShape.circle,
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: Icon(
+          icon,
+          color: AppTheme.textPrimary,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGreetingCard(dynamic lang) {
+    final greeting = _getGreeting(lang);
+    final userName = _currentUser?.name ?? lang.settings;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.5),
+        ),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    _currentUser?.name.isNotEmpty == true
+                        ? _currentUser!.name[0].toUpperCase()
+                        : '👋',
+                    style: GoogleFonts.inter(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      greeting,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _currentUser != null ? userName : lang.appDescription,
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -269,65 +436,90 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
-  Widget _buildPremiumStatusCard() {
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const PremiumScreen()),
-        ).then((_) => _loadData());
-      },
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
+
+  String _getGreeting(dynamic lang) {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Gunaydin'; // Good morning
+    } else if (hour < 18) {
+      return 'Iyi gunler'; // Good afternoon
+    } else {
+      return 'Iyi aksamlar'; // Good evening
+    }
+  }
+
+  Widget _buildFeatureCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Widget trailing,
+    required VoidCallback onTap,
+    bool isPremium = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isPremium
+                ? AppTheme.warningAmber.withOpacity(0.2)
+                : Colors.white.withOpacity(0.5),
+          ),
+          boxShadow: AppTheme.cardShadow,
         ),
-        color: _isPremium ? Colors.amber.shade50 : Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    _isPremium ? Icons.star : Icons.star_border,
-                    color: _isPremium ? Colors.amber : Colors.grey,
-                    size: 28,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: isPremium
+                        ? AppTheme.premiumGradient
+                        : AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: 16),
-                  Column(
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _isPremium 
-                          ? AppLocalizations.of(context).currentLanguage.premiumActive
-                          : AppLocalizations.of(context).currentLanguage.premium,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: _isPremium ? Colors.amber.shade800 : AppTheme.textColor,
+                        title,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
-                      if (!_isPremium)
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
                         Text(
-                          AppLocalizations.of(context).currentLanguage.remainingAnalyses
-                            .replaceAll('{count}', _remainingQueries.toString()),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.textColorLight,
+                          subtitle,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: AppTheme.textSecondary,
                           ),
                         ),
+                      ],
                     ],
                   ),
-                ],
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: _isPremium ? Colors.amber.shade800 : AppTheme.primaryColor,
-              ),
-            ],
+                ),
+                trailing,
+              ],
+            ),
           ),
         ),
       ),
