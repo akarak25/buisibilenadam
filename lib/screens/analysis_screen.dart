@@ -5,6 +5,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/services/palm_analysis_service.dart';
+import 'package:palm_analysis/services/api_service.dart';
 import 'package:palm_analysis/models/palm_analysis.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -29,6 +30,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   String _analysis = '';
   String? _errorMessage;
   late PalmAnalysisService _analysisService;
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -62,9 +64,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         // Format the analysis text
         String formattedAnalysis = MarkdownFormatter.format(analysis);
 
-        // Save image and analysis
+        // Save image and analysis locally
+        String imagePath = '';
         try {
-          final String imagePath = await _saveImageFile(widget.imageFile);
+          imagePath = await _saveImageFile(widget.imageFile);
 
           final palmAnalysis = PalmAnalysis(
             analysis: formattedAnalysis,
@@ -72,7 +75,19 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           );
           await _saveAnalysis(palmAnalysis);
         } catch (e) {
-          print('Save error: $e');
+          print('Local save error: $e');
+        }
+
+        // Save to backend database for sync across platforms
+        try {
+          await _apiService.saveQuery(
+            imageUrl: imagePath.isNotEmpty ? imagePath : 'mobile://local',
+            question: 'El çizgilerimi yorumlar mısın?',
+            response: formattedAnalysis,
+          );
+          print('Query saved to backend successfully');
+        } catch (e) {
+          print('Backend save error: $e');
         }
 
         if (mounted) {

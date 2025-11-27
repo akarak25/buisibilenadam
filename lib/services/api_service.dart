@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:palm_analysis/config/api_config.dart';
 import 'package:palm_analysis/models/auth_response.dart';
 import 'package:palm_analysis/models/query.dart';
@@ -92,11 +93,13 @@ class ApiService {
     }
     request.headers['Accept'] = 'application/json';
 
-    // Add image file
+    // Add image file with proper content type
+    final mimeType = _getMimeType(imageFile.path);
     request.files.add(
       await http.MultipartFile.fromPath(
         'image',
         imageFile.path,
+        contentType: MediaType.parse(mimeType),
       ),
     );
 
@@ -111,6 +114,36 @@ class ApiService {
       final errorBody = utf8.decode(response.bodyBytes);
       final errorData = jsonDecode(errorBody);
       throw ApiError.fromJson(errorData, response.statusCode);
+    }
+  }
+
+  /// Save query to database (after analysis)
+  Future<Query?> saveQuery({
+    required String imageUrl,
+    required String question,
+    required String response,
+  }) async {
+    try {
+      final result = await post(
+        ApiConfig.queriesEndpoint,
+        body: {
+          'imageUrl': imageUrl,
+          'question': question,
+          'response': response,
+        },
+      );
+
+      if (result.statusCode == 200 || result.statusCode == 201) {
+        final jsonBody = utf8.decode(result.bodyBytes);
+        final data = jsonDecode(jsonBody);
+        return Query.fromJson(data);
+      } else {
+        print('Query save failed: ${result.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error saving query: $e');
+      return null;
     }
   }
 
@@ -187,4 +220,18 @@ class ApiService {
     return ApiConfig.defaultHeaders;
   }
 
+  /// Get MIME type from file path
+  String _getMimeType(String path) {
+    final ext = path.toLowerCase();
+    if (ext.endsWith('.png')) {
+      return 'image/png';
+    } else if (ext.endsWith('.webp')) {
+      return 'image/webp';
+    } else if (ext.endsWith('.gif')) {
+      return 'image/gif';
+    } else if (ext.endsWith('.heic') || ext.endsWith('.heif')) {
+      return 'image/heic';
+    }
+    return 'image/jpeg';
+  }
 }

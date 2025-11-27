@@ -8,6 +8,7 @@ class ApiConfig {
   static const String registerEndpoint = '/auth/kayit';
   static const String logoutEndpoint = '/auth/cikis';
   static const String profileEndpoint = '/auth/profil';
+  static const String googleAuthEndpoint = '/auth/google';
 
   // Analysis endpoint
   static const String analyzeEndpoint = '/analyze';

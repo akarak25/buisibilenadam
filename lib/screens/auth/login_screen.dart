@@ -23,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
 
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
 
@@ -76,6 +77,39 @@ class _LoginScreenState extends State<LoginScreen> {
       MaterialPageRoute(builder: (_) => const HomeScreen()),
       (route) => false,
     );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isGoogleLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _authService.signInWithGoogle();
+
+      if (!mounted) return;
+
+      // Navigate to home
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } on ApiError catch (e) {
+      setState(() {
+        _errorMessage = e.error;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Google girisi basarisiz. Lutfen tekrar deneyin.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -333,6 +367,93 @@ class _LoginScreenState extends State<LoginScreen> {
                                   text: 'Giris Yap',
                                   onPressed: _login,
                                   isLoading: _isLoading,
+                                ),
+
+                                const SizedBox(height: 20),
+
+                                // Divider with "veya"
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        height: 1,
+                                        color: AppTheme.textMuted.withOpacity(0.3),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                                      child: Text(
+                                        'veya',
+                                        style: GoogleFonts.inter(
+                                          color: AppTheme.textMuted,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Container(
+                                        height: 1,
+                                        color: AppTheme.textMuted.withOpacity(0.3),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 20),
+
+                                // Google Sign-In button
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 52,
+                                  child: OutlinedButton(
+                                    onPressed: _isGoogleLoading ? null : _signInWithGoogle,
+                                    style: OutlinedButton.styleFrom(
+                                      side: BorderSide(
+                                        color: AppTheme.textMuted.withOpacity(0.3),
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      backgroundColor: Colors.white,
+                                    ),
+                                    child: _isGoogleLoading
+                                        ? SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(
+                                                AppTheme.primaryIndigo,
+                                              ),
+                                            ),
+                                          )
+                                        : Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Image.network(
+                                                'https://www.google.com/favicon.ico',
+                                                width: 20,
+                                                height: 20,
+                                                errorBuilder: (context, error, stackTrace) {
+                                                  return Icon(
+                                                    Icons.g_mobiledata,
+                                                    size: 24,
+                                                    color: AppTheme.textPrimary,
+                                                  );
+                                                },
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Text(
+                                                'Google ile Giris Yap',
+                                                style: GoogleFonts.inter(
+                                                  color: AppTheme.textPrimary,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                  ),
                                 ),
 
                                 const SizedBox(height: 16),

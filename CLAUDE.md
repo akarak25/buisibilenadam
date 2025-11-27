@@ -28,207 +28,129 @@ Web Site -> elcizgisi.com/api/* -> OpenAI GPT-4o-mini
 - Ortak analiz gecmisi
 - Tek premium sistem
 
----
-
-## Current Implementation Status (Phase 5 Complete)
-
-### Phase 1: Core Infrastructure ✅
-- [x] Removed billing_service.dart, usage_service.dart, user_usage.dart
-- [x] Removed IAP packages from pubspec.yaml
-- [x] Removed .env and flutter_dotenv
-- [x] Cleaned Runner.entitlements
-- [x] Created API Service layer (lib/services/api_service.dart)
-- [x] Created Auth Service (lib/services/auth_service.dart)
-- [x] Created Token Service (lib/services/token_service.dart)
-- [x] Created User Model (lib/models/user.dart)
-- [x] Created Query Model (lib/models/query.dart)
-- [x] Created Auth Response models (lib/models/auth_response.dart)
-- [x] Created API Config (lib/config/api_config.dart)
-- [x] Updated Theme to match web design (lib/utils/theme.dart)
-- [x] Updated palm_analysis_service.dart to use backend API
-- [x] Cleaned main.dart (removed dotenv)
-
-### Phase 2: Auth & Onboarding ✅
-- [x] Created GlassCard widget (glassmorphism)
-- [x] Created GradientButton, SecondaryButton, GhostButton widgets
-- [x] Created GradientText widget
-- [x] Created AnimatedBackground widget
-- [x] Updated Splash Screen (gradient bg, logo animation, auth check)
-- [x] Updated Onboarding Screen (glassmorphism cards, page indicators)
-- [x] Created Login Screen (web design style)
-- [x] Created Register Screen (web design style)
-- [x] Updated Premium Screen ("Coming Soon" placeholder)
-
-### Phase 3: Main Features ✅
-- [x] Updated Home Screen (gradient bg, glassmorphism cards, user greeting)
-- [x] Updated Camera/Upload Screen (web design, glassmorphism controls)
-- [x] Updated Analysis Screen (glassmorphism cards, status indicators)
-- [x] Updated History Screen (card list, delete functionality, detail modal)
-- [x] Added comingSoon localization key (TR/EN)
-- [x] Removed UsageService dependencies from all screens
-- [x] Removed flutter_dotenv from analysis_screen
-
-### Phase 4: User Features ✅
-- [x] Created Profile Screen (lib/screens/profile_screen.dart)
-  - User avatar with gradient
-  - Stats cards (total analyses, membership days)
-  - Personal info card
-  - Logout functionality
-- [x] Created Settings Screen (lib/screens/settings_screen.dart)
-  - Account section (Profile, Premium links)
-  - App Settings section (Language settings)
-  - About section (Privacy policy, Terms, About app)
-  - App info footer with elcizgisi.com links
-- [x] Updated Language Settings Screen (glassmorphism design)
-- [x] Updated Home Screen (Settings icon navigation)
-- [x] Added 30+ profile-related localization keys (TR/EN)
-
-### Phase 5: Polish & Config ✅
-- [x] Created SnackbarHelper utility (lib/utils/snackbar_helper.dart)
-  - showSuccess, showError, showWarning, showInfo methods
-  - showLoading with spinner
-  - showWithAction for custom actions
-- [x] Created Loading widgets (lib/widgets/common/loading_overlay.dart)
-  - LoadingOverlay (full screen with glassmorphism)
-  - LoadingSpinner (inline)
-  - CenteredLoading (centered with message)
-- [x] Updated ShimmerLoading to use new theme colors
-- [x] Updated Premium Screen with localized strings
-- [x] Updated iOS Info.plist (elcizgisi.com domain)
-- [x] Updated Android Manifest (removed BILLING permission)
-- [x] Added url_launcher to pubspec.yaml
-
-### New/Updated Files
-```
-lib/
-├── config/
-│   └── api_config.dart          # API URLs, endpoints, headers
-├── models/
-│   ├── user.dart                # User model (web backend compatible)
-│   ├── query.dart               # Query/analysis model
-│   └── auth_response.dart       # Auth & API response models
-├── services/
-│   ├── api_service.dart         # Base HTTP client for elcizgisi.com
-│   ├── auth_service.dart        # Login, register, token management
-│   ├── token_service.dart       # Secure token storage
-│   └── palm_analysis_service.dart # Updated - uses backend API
-├── utils/
-│   ├── theme.dart               # UPDATED - web design colors
-│   └── snackbar_helper.dart     # NEW - Toast/Snackbar utility
-├── widgets/common/
-│   ├── glass_card.dart          # Glassmorphism card widget
-│   ├── gradient_button.dart     # Primary, Secondary, Ghost buttons
-│   ├── gradient_text.dart       # Gradient text widgets
-│   ├── animated_background.dart # Animated gradient blobs
-│   └── loading_overlay.dart     # NEW - Loading widgets
-├── screens/
-│   ├── splash_screen.dart       # UPDATED - auth check, animations
-│   ├── onboarding_screen.dart   # UPDATED - glassmorphism design
-│   ├── home_screen.dart         # UPDATED - settings navigation
-│   ├── camera_screen.dart       # UPDATED - web design
-│   ├── analysis_screen.dart     # UPDATED - web design
-│   ├── history_screen.dart      # UPDATED - web design
-│   ├── premium_screen.dart      # UPDATED - Coming Soon + localization
-│   ├── profile_screen.dart      # NEW - user profile
-│   ├── settings_screen.dart     # NEW - app settings
-│   ├── language_settings_screen.dart # UPDATED - glassmorphism
-│   └── auth/
-│       ├── login_screen.dart    # NEW - web design style
-│       └── register_screen.dart # NEW - web design style
-├── l10n/languages/
-│   ├── app_language.dart        # UPDATED - profile keys
-│   ├── language_tr.dart         # UPDATED - profile translations
-│   └── language_en.dart         # UPDATED - profile translations
-```
+**ONEMLI:** OpenAI API key FLUTTER'DA DEGIL, VPS'te .env dosyasinda olmali!
 
 ---
 
-## API Configuration
+## Current Implementation Status (Phase 6 - Testing Complete)
 
-### Base URL
+### Phase 1-5: TAMAMLANDI ✅
+### Phase 6: Device Testing ✅
+- [x] iOS Simulator build basarili
+- [x] Physical iPhone test basarili
+- [x] Image upload MIME type fix (http_parser paketi)
+- [x] Backend API entegrasyonu calisiyor
+
+---
+
+## Build Hatalari ve Cozumleri (ONEMLI!)
+
+### 1. Generated.xcconfig not found
+```
+error: could not find included file 'Generated.xcconfig'
+```
+**Cozum:** `flutter pub get` calistir
+
+### 2. intl version conflict
+```
+Because palm_analysis depends on flutter_localizations... intl 0.20.2 is required
+```
+**Cozum:** pubspec.yaml'da `intl: ^0.20.2` yap
+
+### 3. Module 'camera_avfoundation' not found
+```
+error: Module 'camera_avfoundation' not found
+```
+**Cozum:**
+```bash
+cd ios
+pod deintegrate
+pod install --repo-update
+```
+
+### 4. CardTheme / DialogTheme type error
+```
+The argument type 'CardTheme' can't be assigned to 'CardThemeData?'
+```
+**Cozum:** theme.dart'ta `CardTheme(` -> `CardThemeData(`, `DialogTheme(` -> `DialogThemeData(`
+
+### 5. successGradient not found
+**Cozum:** theme.dart'a ekle:
 ```dart
-class ApiConfig {
-  static const String baseUrl = 'https://elcizgisi.com/api';
-
-  // Auth endpoints
-  static const String loginEndpoint = '/auth/giris';
-  static const String registerEndpoint = '/auth/kayit';
-
-  // Analysis endpoint
-  static const String analyzeEndpoint = '/analyze';
-
-  // Queries endpoints
-  static const String queriesEndpoint = '/queries';
-}
-```
-
-### Authentication
-- JWT tokens stored securely with flutter_secure_storage
-- 7-day token expiry
-- Bearer token in Authorization header
-
----
-
-## Design System (Web-Synced)
-
-### Color Palette
-```dart
-// Primary Colors
-static const primaryIndigo = Color(0xFF6366F1);  // indigo-500
-static const primaryPurple = Color(0xFFA855F7);  // purple-500
-
-// Gradients
-static const primaryGradient = LinearGradient(
-  colors: [Color(0xFF6366F1), Color(0xFFA855F7)],
+static const LinearGradient successGradient = LinearGradient(
+  colors: [Color(0xFF10B981), Color(0xFF22C55E)],
 );
-
-static const backgroundGradient = LinearGradient(
-  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-);
-
-// Status Colors
-static const successGreen = Color(0xFF10B981);
-static const warningAmber = Color(0xFFF59E0B);
-static const dangerRed = Color(0xFFEF4444);
 ```
 
-### Typography
-- Font: Inter (Google Fonts)
-- Weights: 400-800
-
-### Border Radius
+### 6. "Lutfen gecerli bir resim dosyasi yukleyin" hatasi
+**Sebep:** MIME type gonderilmiyordu
+**Cozum:**
+- `http_parser: ^4.0.2` paketini ekle
+- api_service.dart'ta MediaType.parse() kullan:
 ```dart
-static const double radiusSmall = 8.0;
-static const double radiusMedium = 12.0;
-static const double radiusLarge = 16.0;
-static const double radiusXLarge = 20.0;
-static const double radiusXXLarge = 24.0;
+import 'package:http_parser/http_parser.dart';
+// ...
+contentType: MediaType.parse(_getMimeType(imageFile.path)),
 ```
 
-### Glassmorphism
-```dart
-static BoxDecoration glassDecoration({
-  double opacity = 0.8,
-  double borderRadius = radiusXLarge,
-}) {
-  return BoxDecoration(
-    color: surfaceWhite.withOpacity(opacity),
-    borderRadius: BorderRadius.circular(borderRadius),
-    border: Border.all(color: surfaceWhite.withOpacity(0.5)),
-    boxShadow: cardShadow,
-  );
-}
+### 7. Code signing error (Physical device)
 ```
+Signing for "Runner" requires a development team
+```
+**Cozum:** Xcode -> Runner -> Signing & Capabilities -> Team sec (Apple ID)
 
 ---
 
-## Premium System
+## iOS Build Adimlari
 
-### CURRENT STATUS: DISABLED
-- Odeme sistemi su an DEVRE DISI
-- Tum kullanicilar FREE tier olarak kullanacak
-- Premium ekraninda "Coming Soon" bildirimi gosterilecek
-- Ileride App Store / Google Play IAP entegre edilecek
+```bash
+# 1. Paketleri guncelle
+flutter pub get
+
+# 2. iOS pod'larini yukle
+cd ios
+pod install
+cd ..
+
+# 3. Build (Simulator)
+flutter build ios --simulator
+
+# 4. Build (Device) - Xcode'dan yap, code signing gerekli
+```
+
+**Physical Device icin:**
+1. Xcode'da Runner project -> Signing & Capabilities
+2. Team dropdown'dan Apple ID sec
+3. iPhone'da: Ayarlar -> Genel -> VPN ve Aygit Yonetimi -> Developer App'i guvenilir yap
+
+---
+
+## Google Sign-In Setup (YAPILACAK)
+
+### Google Cloud Console Bilgileri
+- **Email:** akarak25@gmail.com
+- **Mevcut Web Client ID:** 1090526264689-9pl3vb8rrp2d89g993r4uo1l2nsub1lq.apps.googleusercontent.com
+- **Proje numarasi:** 1090526264689
+
+### Yapilmasi Gerekenler
+1. Google Cloud Console'a gir (akarak25@gmail.com)
+2. Proje numarasi 1090526264689 olan projeyi bul
+3. iOS OAuth client olustur (Bundle ID: com.elcizgisi.palmanalysis)
+4. Android OAuth client olustur (SHA-1 fingerprint gerekli)
+5. Flutter'a google_sign_in paketi ekle
+6. Backend'e mobil Google auth endpoint ekle
+
+---
+
+## API Kullanim ve Maliyetler
+
+| API | Maliyet | Konum |
+|-----|---------|-------|
+| elcizgisi.com | UCRETSIZ (kendi VPS) | Backend |
+| OpenAI GPT-4o-mini | ~$0.075-0.15/istek | Backend'den cagrilir |
+| MongoDB | Free tier veya VPS | Backend |
+
+**OpenAI API Key:** VPS'te .env dosyasinda OPENAI_API_KEY olarak saklanir
 
 ---
 
@@ -242,6 +164,7 @@ dependencies:
   camera: ^0.10.5+9
   image_picker: ^1.0.7
   http: ^1.2.1
+  http_parser: ^4.0.2        # MIME type icin GEREKLI!
   lottie: ^3.0.0
   provider: ^6.1.2
   path_provider: ^2.1.2
@@ -249,15 +172,9 @@ dependencies:
   google_fonts: ^6.2.0
   flutter_markdown: ^0.7.1
   shared_preferences: ^2.2.2
-  intl: ^0.19.0
-  flutter_secure_storage: ^9.0.0  # Secure token storage
-  url_launcher: ^6.2.5           # NEW - External links
-
-# REMOVED
-# in_app_purchase: REMOVED
-# in_app_purchase_android: REMOVED
-# in_app_purchase_storekit: REMOVED
-# flutter_dotenv: REMOVED
+  intl: ^0.20.2              # flutter_localizations ile uyumlu olmali!
+  flutter_secure_storage: ^9.0.0
+  url_launcher: ^6.2.5
 ```
 
 ---
@@ -269,23 +186,27 @@ dependencies:
 - **Min iOS:** 13.0
 - **Permissions:** Camera, Photo Library
 - **ATS Domain:** elcizgisi.com (HTTPS only)
-- **In-App Purchase:** DISABLED
 
 ### Android Configuration
 - **Min SDK:** 21
 - **Permissions:** INTERNET, CAMERA
 - **BILLING permission:** REMOVED
-- **Network Security:** HTTPS to elcizgisi.com
 
 ---
 
-## Next Steps (Phase 6: Testing)
+## Design System (Web-Synced)
 
-1. Manual testing on iOS simulator
-2. Manual testing on Android emulator
-3. Backend API integration testing
-4. Edge case testing (network errors, auth failures)
-5. UI/UX review and polish
+### Color Palette
+```dart
+static const primaryIndigo = Color(0xFF6366F1);  // indigo-500
+static const primaryPurple = Color(0xFFA855F7);  // purple-500
+static const successGreen = Color(0xFF10B981);   // emerald-500
+static const warningAmber = Color(0xFFF59E0B);   // amber-500
+static const dangerRed = Color(0xFFEF4444);      // red-500
+```
+
+### Typography
+- Font: Inter (Google Fonts)
 
 ---
 
@@ -293,72 +214,78 @@ dependencies:
 
 ```
 lib/
-├── main.dart                    # UPDATED - removed dotenv
+├── main.dart
 ├── config/
-│   └── api_config.dart          # API configuration
+│   └── api_config.dart
 ├── models/
-│   ├── palm_analysis.dart       # Analysis model
-│   ├── user.dart                # User model
-│   ├── query.dart               # Query model
-│   └── auth_response.dart       # Auth response models
+│   ├── palm_analysis.dart
+│   ├── user.dart
+│   ├── query.dart
+│   └── auth_response.dart
 ├── providers/
-│   └── locale_provider.dart     # Language provider
+│   └── locale_provider.dart
 ├── screens/
-│   ├── splash_screen.dart       # Splash with auth check
-│   ├── onboarding_screen.dart   # Glassmorphism onboarding
-│   ├── home_screen.dart         # Main home with settings
-│   ├── camera_screen.dart       # Camera/upload
-│   ├── analysis_screen.dart     # Analysis display
-│   ├── history_screen.dart      # Analysis history
-│   ├── premium_screen.dart      # Coming Soon
-│   ├── profile_screen.dart      # User profile
-│   ├── settings_screen.dart     # App settings
-│   ├── language_settings_screen.dart # Language selection
+│   ├── splash_screen.dart
+│   ├── onboarding_screen.dart
+│   ├── home_screen.dart
+│   ├── camera_screen.dart
+│   ├── analysis_screen.dart
+│   ├── history_screen.dart
+│   ├── premium_screen.dart
+│   ├── profile_screen.dart
+│   ├── settings_screen.dart
+│   ├── language_settings_screen.dart
 │   └── auth/
-│       ├── login_screen.dart    # Login
-│       └── register_screen.dart # Register
+│       ├── login_screen.dart
+│       └── register_screen.dart
 ├── services/
-│   ├── api_service.dart         # Base HTTP client
-│   ├── auth_service.dart        # Authentication
-│   ├── token_service.dart       # Token storage
-│   ├── palm_analysis_service.dart # Analysis API
-│   └── camera_service.dart      # Camera handling
+│   ├── api_service.dart         # http_parser ile MIME type
+│   ├── auth_service.dart
+│   ├── token_service.dart
+│   ├── palm_analysis_service.dart
+│   └── camera_service.dart
 ├── utils/
-│   ├── theme.dart               # Web-synced design
-│   ├── snackbar_helper.dart     # Toast/Snackbar utility
-│   ├── constants.dart           # App constants
-│   └── markdown_formatter.dart  # Markdown processing
+│   ├── theme.dart               # successGradient EKLENDI
+│   ├── snackbar_helper.dart
+│   └── ...
 ├── widgets/
-│   ├── camera_guide_overlay.dart # Camera guide
-│   ├── shimmer_loading.dart     # Shimmer loading
 │   └── common/
-│       ├── glass_card.dart      # Glassmorphism card
-│       ├── gradient_button.dart # Buttons
-│       ├── gradient_text.dart   # Gradient text
-│       ├── animated_background.dart # Animated bg
-│       └── loading_overlay.dart # Loading widgets
+│       ├── glass_card.dart
+│       ├── gradient_button.dart
+│       └── loading_overlay.dart
 └── l10n/
-    ├── app_localizations.dart   # Localization helper
     └── languages/
-        ├── app_language.dart    # Abstract language
-        ├── language_tr.dart     # Turkish
-        └── language_en.dart     # English
+        ├── app_language.dart
+        ├── language_tr.dart
+        └── language_en.dart
 ```
 
 ---
 
-## Important Notes
+## Premium System
 
-- **Token Storage:** flutter_secure_storage (NOT SharedPreferences for tokens)
-- **Image Upload:** multipart/form-data to /api/analyze
-- **Error Messages:** Localized (TR/EN)
-- **Premium:** Show "Coming Soon" - no payment processing
-- **All users:** FREE tier
-- **External Links:** Use url_launcher for privacy/terms links
+### CURRENT STATUS: DISABLED
+- Tum kullanicilar FREE tier
+- Premium ekraninda "Coming Soon" gosteriliyor
+- Ileride App Store / Google Play IAP entegre edilecek
+
+---
+
+## Next Steps
+
+1. **Google Sign-In entegrasyonu**
+   - iOS/Android OAuth client'lari olustur
+   - google_sign_in paketi ekle
+   - Backend endpoint ekle
+
+2. **App Store / Play Store hazirlik**
+   - Screenshots
+   - App descriptions
+   - Privacy policy
 
 ---
 
 ## Last Updated
-- Date: 2025-11-26
-- Status: Phase 5 Complete - All screens updated, config finalized
-- Next: Phase 6 - Testing (Manual + API integration)
+- Date: 2025-11-27
+- Status: Phase 6 Complete - Device testing basarili, analiz calisiyor
+- Next: Google Sign-In entegrasyonu
