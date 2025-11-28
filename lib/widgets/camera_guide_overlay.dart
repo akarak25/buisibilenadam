@@ -60,9 +60,9 @@ class CameraGuideOverlay extends StatelessWidget {
           ),
         ),
         
-        // Alt kısımda rehber metni
+        // Alt kısımda rehber metni (bottom controls üzerinde)
         Positioned(
-          bottom: 20,
+          bottom: 200,
           left: 0,
           right: 0,
           child: Container(

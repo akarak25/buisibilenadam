@@ -227,7 +227,7 @@ class AstrologyService {
     }
   }
 
-  /// Get daily palm insight based on moon sign (Turkish)
+  /// Get daily palm insight based on moon sign (Turkish) - For users WITH palm analysis
   String getDailyInsightTr(ZodiacSign moonSign) {
     switch (moonSign) {
       case ZodiacSign.aries:
@@ -257,7 +257,7 @@ class AstrologyService {
     }
   }
 
-  /// Get daily palm insight based on moon sign (English)
+  /// Get daily palm insight based on moon sign (English) - For users WITH palm analysis
   String getDailyInsightEn(ZodiacSign moonSign) {
     switch (moonSign) {
       case ZodiacSign.aries:
@@ -287,7 +287,67 @@ class AstrologyService {
     }
   }
 
-  /// Get moon phase palm insight (Turkish)
+  /// Get general daily insight (NO palm references) - For users WITHOUT palm analysis
+  String getGeneralDailyInsightTr(ZodiacSign moonSign) {
+    switch (moonSign) {
+      case ZodiacSign.aries:
+        return 'Bugün cesaret ve inisiyatif enerjiniz yüksek! Yeni projelere başlamak için ideal.';
+      case ZodiacSign.taurus:
+        return 'Güzellik ve konfor arayışınız ön planda. Kendinizi şımartın.';
+      case ZodiacSign.gemini:
+        return 'İletişim ve öğrenme için harika bir gün! Yeni bilgiler keşfedin.';
+      case ZodiacSign.cancer:
+        return 'Duygusal derinlik ve sezgiler güçlü. İç sesinize kulak verin.';
+      case ZodiacSign.leo:
+        return 'Yaratıcılık ve özgüven dorukta! Kendinizi ifade etmekten çekinmeyin.';
+      case ZodiacSign.virgo:
+        return 'Detaylara dikkat ve öz bakım günü. Sağlığınıza özen gösterin.';
+      case ZodiacSign.libra:
+        return 'İlişkilerde uyum ve denge arayışı. Sevdiklerinizle kaliteli zaman geçirin.';
+      case ZodiacSign.scorpio:
+        return 'Derin düşünceler ve dönüşüm enerjisi. İçsel yolculuğa çıkın.';
+      case ZodiacSign.sagittarius:
+        return 'Macera ve keşif ruhu yüksek! Yeni deneyimlere açık olun.';
+      case ZodiacSign.capricorn:
+        return 'Kariyer ve hedefler ön planda. Uzun vadeli planlar yapın.';
+      case ZodiacSign.aquarius:
+        return 'Yenilikçi fikirler ve özgür düşünce. Sıra dışı çözümler bulun.';
+      case ZodiacSign.pisces:
+        return 'Hayal gücü ve ruhani bağlantılar güçlü. Rüyalarınıza dikkat edin.';
+    }
+  }
+
+  /// Get general daily insight (NO palm references) - For users WITHOUT palm analysis
+  String getGeneralDailyInsightEn(ZodiacSign moonSign) {
+    switch (moonSign) {
+      case ZodiacSign.aries:
+        return 'Your courage and initiative energy is high today! Ideal for starting new projects.';
+      case ZodiacSign.taurus:
+        return 'Beauty and comfort seeking is prominent. Treat yourself today.';
+      case ZodiacSign.gemini:
+        return 'Great day for communication and learning! Discover new information.';
+      case ZodiacSign.cancer:
+        return 'Emotional depth and intuition are strong. Listen to your inner voice.';
+      case ZodiacSign.leo:
+        return 'Creativity and confidence at peak! Don\'t hesitate to express yourself.';
+      case ZodiacSign.virgo:
+        return 'Day for attention to detail and self-care. Take care of your health.';
+      case ZodiacSign.libra:
+        return 'Seeking harmony and balance in relationships. Spend quality time with loved ones.';
+      case ZodiacSign.scorpio:
+        return 'Deep thoughts and transformation energy. Embark on an inner journey.';
+      case ZodiacSign.sagittarius:
+        return 'Adventure and exploration spirit is high! Be open to new experiences.';
+      case ZodiacSign.capricorn:
+        return 'Career and goals are prominent. Make long-term plans.';
+      case ZodiacSign.aquarius:
+        return 'Innovative ideas and free thinking. Find unconventional solutions.';
+      case ZodiacSign.pisces:
+        return 'Imagination and spiritual connections are strong. Pay attention to your dreams.';
+    }
+  }
+
+  /// Get moon phase palm insight (Turkish) - For users WITH palm analysis
   String getMoonPhaseInsightTr(MoonPhase phase) {
     switch (phase) {
       case MoonPhase.newMoon:
@@ -309,7 +369,7 @@ class AstrologyService {
     }
   }
 
-  /// Get moon phase palm insight (English)
+  /// Get moon phase palm insight (English) - For users WITH palm analysis
   String getMoonPhaseInsightEn(MoonPhase phase) {
     switch (phase) {
       case MoonPhase.newMoon:
@@ -328,6 +388,50 @@ class AstrologyService {
         return 'Time to let go. Release old patterns.';
       case MoonPhase.waningCrescent:
         return 'Rest and renewal. Your Mount of Moon seeks inner peace.';
+    }
+  }
+
+  /// Get general moon phase insight (NO palm references) - For users WITHOUT palm analysis
+  String getGeneralMoonPhaseInsightTr(MoonPhase phase) {
+    switch (phase) {
+      case MoonPhase.newMoon:
+        return 'Yeni başlangıçlar için ideal! Bu dönem niyetlerinizi belirleyin.';
+      case MoonPhase.waxingCrescent:
+        return 'Niyetlerinizi hayata geçirme zamanı. Küçük adımlarla ilerleyin.';
+      case MoonPhase.firstQuarter:
+        return 'Harekete geçme zamanı! Kararlar almak için enerjiniz yüksek.';
+      case MoonPhase.waxingGibbous:
+        return 'Sabırlı olun, sonuçlar yaklaşıyor. Çalışmalarınız meyve verecek.';
+      case MoonPhase.fullMoon:
+        return 'Duygusal doruk noktası! Tamamlama ve kutlama zamanı.';
+      case MoonPhase.waningGibbous:
+        return 'Şükran zamanı. Sahip olduklarınız için minnettarlık hissedin.';
+      case MoonPhase.lastQuarter:
+        return 'Bırakma zamanı. Artık işe yaramayan şeyleri geride bırakın.';
+      case MoonPhase.waningCrescent:
+        return 'Dinlenme ve yenilenme. Kendinize zaman ayırın ve içsel huzur bulun.';
+    }
+  }
+
+  /// Get general moon phase insight (NO palm references) - For users WITHOUT palm analysis
+  String getGeneralMoonPhaseInsightEn(MoonPhase phase) {
+    switch (phase) {
+      case MoonPhase.newMoon:
+        return 'Ideal for new beginnings! Set your intentions during this period.';
+      case MoonPhase.waxingCrescent:
+        return 'Time to put intentions into action. Take small steps forward.';
+      case MoonPhase.firstQuarter:
+        return 'Time to take action! Your energy for making decisions is high.';
+      case MoonPhase.waxingGibbous:
+        return 'Be patient, results are approaching. Your efforts will bear fruit.';
+      case MoonPhase.fullMoon:
+        return 'Emotional peak! Time for completion and celebration.';
+      case MoonPhase.waningGibbous:
+        return 'Time for gratitude. Feel thankful for what you have.';
+      case MoonPhase.lastQuarter:
+        return 'Time to let go. Leave behind what no longer serves you.';
+      case MoonPhase.waningCrescent:
+        return 'Rest and renewal. Take time for yourself and find inner peace.';
     }
   }
 

@@ -8,6 +8,8 @@ import 'package:palm_analysis/screens/settings_screen.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/services/auth_service.dart';
 import 'package:palm_analysis/services/astrology_service.dart';
+import 'package:palm_analysis/services/streak_service.dart';
+import 'package:palm_analysis/screens/daily_astrology_screen.dart';
 import 'package:palm_analysis/models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,8 +26,10 @@ class _HomeScreenState extends State<HomeScreen>
   late Animation<double> _pulseAnimation;
   int _totalAnalyses = 0;
   User? _currentUser;
+  int _currentStreak = 0;
   final AuthService _authService = AuthService();
   final AstrologyService _astrologyService = AstrologyService();
+  final StreakService _streakService = StreakService();
 
   @override
   void initState() {
@@ -53,10 +57,14 @@ class _HomeScreenState extends State<HomeScreen>
       final totalAnalyses = prefs.getInt('total_analyses') ?? 0;
       final user = await _authService.loadStoredUser();
 
+      // Record app open and get streak
+      final streakData = await _streakService.recordAppOpen();
+
       if (mounted) {
         setState(() {
           _totalAnalyses = totalAnalyses;
           _currentUser = user;
+          _currentStreak = streakData.currentStreak;
         });
       }
     } catch (e) {
@@ -338,6 +346,8 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildGreetingCard(dynamic lang) {
     final greeting = _getGreeting(lang);
     final userName = _currentUser?.name ?? lang.settings;
+    final isTurkish = Localizations.localeOf(context).languageCode == 'tr';
+    final streakEmoji = _streakService.getStreakEmoji(_currentStreak);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -399,6 +409,43 @@ class _HomeScreenState extends State<HomeScreen>
                   ],
                 ),
               ),
+              // Streak indicator
+              if (_currentStreak > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.warningAmber.withOpacity(0.2),
+                        AppTheme.warningAmber.withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.warningAmber.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        streakEmoji,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$_currentStreak ${isTurkish ? "gün" : "days"}',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.warningAmber,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
@@ -500,6 +547,7 @@ class _HomeScreenState extends State<HomeScreen>
     final moonSign = _astrologyService.getMoonSign();
     final locale = Localizations.localeOf(context);
     final isTurkish = locale.languageCode == 'tr';
+    final hasAnalysis = _totalAnalyses > 0;
 
     final moonPhaseName = isTurkish
         ? _astrologyService.getMoonPhaseTr(moonPhase)
@@ -507,13 +555,26 @@ class _HomeScreenState extends State<HomeScreen>
     final moonSignName = isTurkish
         ? _astrologyService.getZodiacSignTr(moonSign)
         : _astrologyService.getZodiacSignEn(moonSign);
-    final dailyInsight = isTurkish
-        ? _astrologyService.getDailyInsightTr(moonSign)
-        : _astrologyService.getDailyInsightEn(moonSign);
+    // Use general insights if no analysis, palm-specific if they have analysis
+    final dailyInsight = hasAnalysis
+        ? (isTurkish
+            ? _astrologyService.getDailyInsightTr(moonSign)
+            : _astrologyService.getDailyInsightEn(moonSign))
+        : (isTurkish
+            ? _astrologyService.getGeneralDailyInsightTr(moonSign)
+            : _astrologyService.getGeneralDailyInsightEn(moonSign));
     final moonPhaseIcon = _astrologyService.getMoonPhaseIcon(moonPhase);
     final zodiacIcon = _astrologyService.getZodiacSignIcon(moonSign);
 
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DailyAstrologyScreen(hasAnalysis: hasAnalysis),
+          ),
+        );
+      },
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -584,7 +645,30 @@ class _HomeScreenState extends State<HomeScreen>
               height: 1.5,
             ),
           ),
+          const SizedBox(height: 8),
+          // Tap hint
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                Localizations.localeOf(context).languageCode == 'tr'
+                    ? 'Detaylar için dokun'
+                    : 'Tap for details',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AppTheme.primaryIndigo.withOpacity(0.7),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 10,
+                color: AppTheme.primaryIndigo.withOpacity(0.7),
+              ),
+            ],
+          ),
         ],
+      ),
       ),
     );
   }

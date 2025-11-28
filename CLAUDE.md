@@ -32,6 +32,27 @@ Web Site -> elcizgisi.com/api/* -> Gemini 2.5 Flash
 
 ---
 
+## KRITIK: Proje Yapısı ve VPS Deploy
+
+**ÇOK ÖNEMLİ - ASLA UNUTMA:**
+
+```
+/Users/yusufkamil/Desktop/elcizgisi    -> Flutter mobil uygulama (iOS/Android)
+/Users/yusufkamil/Desktop/elyorumweb   -> Next.js backend + web sitesi (VPS'e deploy edilir)
+```
+
+**VPS Backend Değişiklikleri:**
+- Backend API değişiklikleri `elyorumweb` projesinde yapılmalı
+- VPS, `elyorumweb` reposundan `git pull` ile güncellenir
+- Flutter projesi (`elcizgisi`) sadece mobil uygulama kodunu içerir
+
+**Deploy Akışı:**
+1. Backend değişikliği `elyorumweb`'de yapılır
+2. `elyorumweb`'de commit & push
+3. VPS'te: `cd /var/www/elcizgisi && git pull && npm run build && pm2 restart el-cizgisi-yorum`
+
+---
+
 ## Current Implementation Status (Phase 10 - Major Update)
 
 ### Phase 1-6: TAMAMLANDI ✅
@@ -72,6 +93,37 @@ Web Site -> elcizgisi.com/api/* -> Gemini 2.5 Flash
 - [x] Flutter api_config.dart güncellendi (/chat -> /chat/mobile)
 - [ ] VPS'e deploy edilmeli
 - [ ] Test: flutter clean && flutter pub get && iPhone test
+
+### Phase 12: Daily Engagement Features (2025-11-29) ✅
+- [x] daily_astrology_screen.dart oluşturuldu
+  - Ay fazı hero kartı (animasyonlu)
+  - Ay burcu kartı
+  - Dolunay/Yeni ay geri sayımı
+  - Günlük el çizgisi yorumu
+  - Günün ipucu (burç elementine göre)
+- [x] Ana sayfa astroloji kartı tıklanabilir yapıldı
+- [x] Streak sistemi eklendi (streak_service.dart)
+  - Günlük uygulama açılış takibi
+  - Üst üste gün sayacı
+  - Streak emoji sistemi (🌱 -> 🔥 -> ⭐ -> 💎)
+  - Greeting kartında streak göstergesi
+
+### Phase 13: Astrology UX Fix (2025-11-29) ✅
+**Sorun:** Kullanıcı henüz analiz yapmadan astroloji kartı el çizgisi referansları içeriyordu (ör. "Kalp Çizginiz aktif!"). Bu kullanıcıya saçma görünüyordu.
+
+**Çözüm:** Koşullu içerik sistemi eklendi:
+- [x] astrology_service.dart'a genel içerikler eklendi (el çizgisi referansı olmadan)
+  - `getGeneralDailyInsightTr/En()` - Genel günlük yorum
+  - `getGeneralMoonPhaseInsightTr/En()` - Genel ay fazı yorumu
+- [x] home_screen.dart güncellendi
+  - `hasAnalysis = _totalAnalyses > 0` kontrolü
+  - Analiz yoksa genel içerik, varsa el çizgisi referanslı içerik
+  - DailyAstrologyScreen'e hasAnalysis parametresi geçiriliyor
+- [x] daily_astrology_screen.dart güncellendi
+  - `hasAnalysis` parametresi eklendi
+  - İçerikler koşullu (genel vs el çizgisi referanslı)
+  - Analiz yoksa "Günün İpucu" yerine CTA gösteriliyor
+  - CTA: "İlk Analizimi Yap" butonu ile kullanıcıyı analiz yapmaya yönlendiriyor
 
 ---
 
@@ -344,10 +396,11 @@ lib/
 ├── screens/
 │   ├── splash_screen.dart
 │   ├── onboarding_screen.dart
-│   ├── home_screen.dart         # Günlük astroloji kartı EKLENDI
+│   ├── home_screen.dart         # Günlük astroloji + Streak EKLENDI
 │   ├── camera_screen.dart
 │   ├── analysis_screen.dart     # Chat butonu EKLENDI
 │   ├── chat_screen.dart         # YENİ - Chatbot ekranı
+│   ├── daily_astrology_screen.dart  # YENİ - Detaylı astroloji
 │   ├── history_screen.dart
 │   ├── profile_screen.dart
 │   ├── settings_screen.dart     # Premium kaldırıldı
@@ -358,6 +411,7 @@ lib/
 ├── services/
 │   ├── api_service.dart         # sendChatMessage() EKLENDI
 │   ├── astrology_service.dart   # YENİ - Ay fazı ve burç hesaplama
+│   ├── streak_service.dart      # YENİ - Günlük streak takibi
 │   ├── auth_service.dart
 │   ├── token_service.dart
 │   ├── palm_analysis_service.dart
@@ -405,17 +459,21 @@ lib/
 
 ## Last Updated
 - **Date:** 2025-11-29
-- **Status:** Phase 10 - UI/UX fixes tamamlandı
-- **Tamamlanan (Phase 9-10):**
+- **Status:** Phase 13 - Astrology UX Fix tamamlandı
+- **Tamamlanan (Phase 9-13):**
   - Premium sistemi tamamen kaldırıldı
-  - Chatbot sistemi eklendi (chat_screen.dart)
+  - Chatbot sistemi eklendi (chat_screen.dart, /api/chat/mobile endpoint)
   - Sistem promptu profesyonelleştirildi (7+ çizgi, tepeler)
   - Günlük astroloji sistemi eklendi (astrology_service.dart)
-  - Home screen'e günlük enerji kartı eklendi
+  - Daily engagement features (streak, daily_astrology_screen)
   - Localization düzeltmeleri yapıldı
   - Typing indicator animasyonu düzeltildi
+  - **Astrology UX Fix:** Analiz yapmadan el çizgisi referansı gösterilmiyordu problemi çözüldü
+    - Genel içerikler (el çizgisi referansı olmadan) eklendi
+    - Koşullu içerik sistemi (hasAnalysis kontrolü)
+    - CTA: "İlk Analizimi Yap" butonu eklendi
 - **Bekleyen:**
-  - VPS'te /api/chat endpoint oluşturulmalı
-  - `flutter clean && flutter pub get` sonra test
-  - Tüm yeni özellikleri iPhone'da test et
-- **Next:** Backend chat endpoint oluşturma
+  - VPS'te /api/chat/mobile endpoint deploy edilmeli
+  - `flutter clean && flutter pub get` sonra iPhone test
+  - Tüm yeni özellikleri test et
+- **Next:** iPhone'da test
