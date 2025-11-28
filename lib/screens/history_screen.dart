@@ -10,11 +10,10 @@ import 'package:palm_analysis/models/query.dart';
 import 'package:palm_analysis/services/api_service.dart';
 import 'package:palm_analysis/services/token_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
-import 'package:palm_analysis/utils/string_utils.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/widgets/common/gradient_button.dart';
+import 'package:palm_analysis/widgets/styled_analysis_view.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -296,37 +295,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: SingleChildScrollView(
                   controller: controller,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.5),
-                      ),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
-                    child: MarkdownBody(
-                      data: StringUtils.fixAllIssues(analysis.analysis),
-                      styleSheet: MarkdownStyleSheet(
-                        h1: GoogleFonts.inter(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryIndigo,
-                        ),
-                        h2: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primaryPurple,
-                        ),
-                        p: GoogleFonts.inter(
-                          fontSize: 15,
-                          color: AppTheme.textPrimary,
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: StyledAnalysisView(analysisText: analysis.analysis),
                 ),
               ),
 
@@ -828,37 +797,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: SingleChildScrollView(
                   controller: controller,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.5),
-                      ),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
-                    child: MarkdownBody(
-                      data: StringUtils.fixAllIssues(query.response),
-                      styleSheet: MarkdownStyleSheet(
-                        h1: GoogleFonts.inter(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryIndigo,
-                        ),
-                        h2: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primaryPurple,
-                        ),
-                        p: GoogleFonts.inter(
-                          fontSize: 15,
-                          color: AppTheme.textPrimary,
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: StyledAnalysisView(analysisText: query.response),
                 ),
               ),
 

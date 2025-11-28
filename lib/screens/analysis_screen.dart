@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/services/palm_analysis_service.dart';
@@ -10,12 +9,12 @@ import 'package:palm_analysis/models/palm_analysis.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:palm_analysis/widgets/shimmer_loading.dart';
-import 'package:palm_analysis/utils/markdown_formatter.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:palm_analysis/widgets/common/gradient_button.dart';
 import 'package:palm_analysis/screens/chat_screen.dart';
+import 'package:palm_analysis/widgets/styled_analysis_view.dart';
 
 class AnalysisScreen extends StatefulWidget {
   final File imageFile;
@@ -61,50 +60,37 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
       if (!mounted) return;
 
+      // Save image and analysis locally
+      String imagePath = '';
       try {
-        // Format the analysis text
-        String formattedAnalysis = MarkdownFormatter.format(analysis);
+        imagePath = await _saveImageFile(widget.imageFile);
 
-        // Save image and analysis locally
-        String imagePath = '';
-        try {
-          imagePath = await _saveImageFile(widget.imageFile);
-
-          final palmAnalysis = PalmAnalysis(
-            analysis: formattedAnalysis,
-            imagePath: imagePath,
-          );
-          await _saveAnalysis(palmAnalysis);
-        } catch (e) {
-          print('Local save error: $e');
-        }
-
-        // Save to backend database for sync across platforms
-        try {
-          await _apiService.saveQuery(
-            imageUrl: imagePath.isNotEmpty ? imagePath : 'mobile://local',
-            question: 'El çizgilerimi yorumlar mısın?',
-            response: formattedAnalysis,
-          );
-          print('Query saved to backend successfully');
-        } catch (e) {
-          print('Backend save error: $e');
-        }
-
-        if (mounted) {
-          setState(() {
-            _isAnalyzing = false;
-            _analysis = formattedAnalysis;
-          });
-        }
+        final palmAnalysis = PalmAnalysis(
+          analysis: analysis,
+          imagePath: imagePath,
+        );
+        await _saveAnalysis(palmAnalysis);
       } catch (e) {
-        print('Processing error: $e');
-        if (mounted) {
-          setState(() {
-            _isAnalyzing = false;
-            _analysis = analysis; // Show raw text
-          });
-        }
+        print('Local save error: $e');
+      }
+
+      // Save to backend database for sync across platforms
+      try {
+        await _apiService.saveQuery(
+          imageUrl: imagePath.isNotEmpty ? imagePath : 'mobile://local',
+          question: 'El çizgilerimi yorumlar mısın?',
+          response: analysis,
+        );
+        print('Query saved to backend successfully');
+      } catch (e) {
+        print('Backend save error: $e');
+      }
+
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+          _analysis = analysis;
+        });
       }
     } catch (e) {
       print('Analysis error: $e');
@@ -552,67 +538,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Widget _buildAnalysisCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.5),
-        ),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: MarkdownBody(
-            data: _analysis,
-            styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
-            styleSheet: MarkdownStyleSheet(
-              blockSpacing: 16.0,
-              h2Padding:
-                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 0),
-              h3Padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-              h1: GoogleFonts.inter(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryIndigo,
-              ),
-              h2: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.primaryIndigo,
-                height: 1.5,
-              ),
-              h3: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.primaryPurple,
-              ),
-              p: GoogleFonts.inter(
-                fontSize: 15,
-                color: AppTheme.textPrimary,
-                height: 1.6,
-              ),
-              listBullet: GoogleFonts.inter(
-                fontSize: 15,
-                color: AppTheme.primaryIndigo,
-              ),
-              listIndent: 24.0,
-              listBulletPadding: const EdgeInsets.only(right: 8),
-              strong: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-              ),
-              em: GoogleFonts.inter(
-                fontStyle: FontStyle.italic,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    return StyledAnalysisView(analysisText: _analysis);
   }
 }
