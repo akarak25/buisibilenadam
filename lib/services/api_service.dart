@@ -209,6 +209,37 @@ class ApiService {
     }
   }
 
+  /// Send chat message with analysis context
+  Future<String> sendChatMessage({
+    required String message,
+    required String analysisContext,
+    String? queryId,
+  }) async {
+    try {
+      final response = await post(
+        ApiConfig.chatEndpoint,
+        body: {
+          'message': message,
+          'analysisContext': analysisContext,
+          if (queryId != null) 'queryId': queryId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonBody = utf8.decode(response.bodyBytes);
+        final data = jsonDecode(jsonBody);
+        return data['response'] ?? data['message'] ?? '';
+      } else {
+        final errorBody = utf8.decode(response.bodyBytes);
+        final errorData = jsonDecode(errorBody);
+        throw ApiError.fromJson(errorData, response.statusCode);
+      }
+    } catch (e) {
+      print('Chat error: $e');
+      rethrow;
+    }
+  }
+
   /// Get headers with optional auth token
   Future<Map<String, String>> _getHeaders(bool requiresAuth) async {
     if (requiresAuth) {

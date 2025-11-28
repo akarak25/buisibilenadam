@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/models/palm_analysis.dart';
+import 'package:palm_analysis/models/query.dart';
+import 'package:palm_analysis/services/api_service.dart';
+import 'package:palm_analysis/services/token_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
@@ -22,7 +25,11 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   List<PalmAnalysis> _analyses = [];
+  List<Query> _backendQueries = [];
   bool _isLoading = true;
+  bool _isOnline = false;
+  final ApiService _apiService = ApiService();
+  final TokenService _tokenService = TokenService();
 
   @override
   void initState() {
@@ -31,6 +38,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _loadAnalyses() async {
+    setState(() => _isLoading = true);
+
+    // Try to load from backend first (if user is logged in)
+    await _loadFromBackend();
+
+    // Also load local analyses
+    await _loadFromLocal();
+
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadFromBackend() async {
+    try {
+      final token = await _tokenService.getToken();
+      if (token == null) {
+        _isOnline = false;
+        return;
+      }
+
+      final queries = await _apiService.getQueries();
+      _backendQueries = queries;
+      _isOnline = true;
+      print('Loaded ${queries.length} queries from backend');
+    } catch (e) {
+      print('Backend load error: $e');
+      _isOnline = false;
+    }
+  }
+
+  Future<void> _loadFromLocal() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final analysisListJson = prefs.getStringList('analyses') ?? [];
@@ -42,23 +79,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
       // Sort by date (newest first)
       analysisList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      setState(() {
-        _analyses = analysisList;
-        _isLoading = false;
-      });
+      _analyses = analysisList;
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load analyses: $e'),
-            backgroundColor: AppTheme.dangerRed,
-          ),
-        );
-      }
+      print('Local load error: $e');
     }
+  }
+
+  // Get combined list - backend queries take priority
+  List<dynamic> get _combinedAnalyses {
+    if (_isOnline && _backendQueries.isNotEmpty) {
+      // Return backend queries (they are the source of truth)
+      return _backendQueries;
+    }
+    // Fallback to local analyses
+    return _analyses;
   }
 
   Future<void> _deleteAnalysis(int index) async {
@@ -424,7 +458,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                           ),
                         ),
-                        if (_analyses.isNotEmpty)
+                        if (_combinedAnalyses.isNotEmpty && !_isOnline)
                           _buildIconButton(
                             icon: Icons.delete_sweep_rounded,
                             onTap: _showDeleteConfirmation,
@@ -443,9 +477,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ),
                             ),
                           )
-                        : _analyses.isEmpty
+                        : _combinedAnalyses.isEmpty
                             ? _buildEmptyState(lang)
-                            : _buildAnalysisList(),
+                            : RefreshIndicator(
+                                onRefresh: _loadAnalyses,
+                                color: AppTheme.primaryIndigo,
+                                child: _buildAnalysisList(),
+                              ),
                   ),
                 ],
               ),
@@ -528,36 +566,308 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildAnalysisList() {
+    final items = _combinedAnalyses;
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _analyses.length,
+      itemCount: items.length,
       itemBuilder: (ctx, index) {
-        final analysis = _analyses[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Dismissible(
-            key: Key(analysis.createdAt.toString()),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 24),
-              decoration: BoxDecoration(
-                color: AppTheme.dangerRed,
-                borderRadius: BorderRadius.circular(20),
+        final item = items[index];
+
+        // Handle both Query (from backend) and PalmAnalysis (from local)
+        if (item is Query) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildQueryCard(item),
+          );
+        } else if (item is PalmAnalysis) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Dismissible(
+              key: Key(item.createdAt.toString()),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 24),
+                decoration: BoxDecoration(
+                  color: AppTheme.dangerRed,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.delete_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
-              child: const Icon(
-                Icons.delete_rounded,
-                color: Colors.white,
-                size: 28,
+              onDismissed: (direction) {
+                _deleteAnalysis(index);
+              },
+              child: _buildAnalysisCard(item),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  // Build card for backend Query
+  Widget _buildQueryCard(Query query) {
+    final lang = AppLocalizations.of(context).currentLanguage;
+
+    return GestureDetector(
+      onTap: () => _showQueryDetail(query),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.5),
+          ),
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.primaryGradient,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.back_hand_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                lang.palmReadingAnalysis,
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                            ),
+                            // Cloud sync indicator
+                            Icon(
+                              Icons.cloud_done_rounded,
+                              size: 16,
+                              color: AppTheme.successGreen,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('dd MMM yyyy, HH:mm').format(query.createdAt),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _getAnalysisPreview(query.response),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: AppTheme.textSecondary,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: AppTheme.primaryIndigo,
+                  ),
+                ],
               ),
             ),
-            onDismissed: (direction) {
-              _deleteAnalysis(index);
-            },
-            child: _buildAnalysisCard(analysis),
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  // Show detail for backend Query
+  void _showQueryDetail(Query query) {
+    final lang = AppLocalizations.of(context).currentLanguage;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        builder: (_, controller) => Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white,
+                Colors.white.withOpacity(0.98),
+              ],
+            ),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 8),
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.borderLight,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              ShaderMask(
+                                blendMode: BlendMode.srcIn,
+                                shaderCallback: (bounds) =>
+                                    AppTheme.primaryGradient.createShader(
+                                  Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                                ),
+                                child: Text(
+                                  lang.analysisDetail,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.cloud_done_rounded,
+                                size: 18,
+                                color: AppTheme.successGreen,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            DateFormat('dd MMMM yyyy, HH:mm').format(query.createdAt),
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.of(ctx).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceLight,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: AppTheme.textPrimary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: controller,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                      boxShadow: AppTheme.cardShadow,
+                    ),
+                    child: MarkdownBody(
+                      data: StringUtils.fixAllIssues(query.response),
+                      styleSheet: MarkdownStyleSheet(
+                        h1: GoogleFonts.inter(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryIndigo,
+                        ),
+                        h2: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryPurple,
+                        ),
+                        p: GoogleFonts.inter(
+                          fontSize: 15,
+                          color: AppTheme.textPrimary,
+                          height: 1.6,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Bottom padding
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

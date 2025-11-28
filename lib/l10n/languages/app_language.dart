@@ -31,6 +31,7 @@ abstract class AppLanguage {
   String get analyzeHand;
   String get analysisHistory;
   String get settings;
+  String get skip;
   
   // Analysis screen
   String get analyzing;
@@ -131,6 +132,29 @@ abstract class AppLanguage {
   String get profileUpdated;
   String get account;
 
+  // Chatbot
+  String get askQuestion;
+  String get chatWithAI;
+  String get typeYourQuestion;
+  String get chatPlaceholder;
+  String get sendMessage;
+
+  // Daily Astrology
+  String get dailyInsight;
+  String get moonPhase;
+  String get moonIn;
+  String get todaysEnergy;
+  String get weeklyForecast;
+  String get daysUntilFullMoon;
+  String get daysUntilNewMoon;
+
+  // Greetings
+  String get goodMorning;
+  String get goodAfternoon;
+  String get goodEvening;
+  String get loginRequired;
+
   // System prompt for Claude API requests
   String get systemPrompt;
+  String get chatSystemPrompt;
 }

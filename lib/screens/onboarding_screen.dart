@@ -154,7 +154,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         TextButton(
                           onPressed: _skipOnboarding,
                           child: Text(
-                            lang.settings, // Using settings as skip text
+                            lang.skip,
                             style: GoogleFonts.inter(
                               color: AppTheme.textSecondary,
                               fontSize: 14,

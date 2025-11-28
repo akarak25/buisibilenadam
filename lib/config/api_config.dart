@@ -13,6 +13,9 @@ class ApiConfig {
   // Analysis endpoint
   static const String analyzeEndpoint = '/analyze';
 
+  // Chat endpoint (mobile-specific endpoint)
+  static const String chatEndpoint = '/chat/mobile';
+
   // Queries endpoints
   static const String queriesEndpoint = '/queries';
 

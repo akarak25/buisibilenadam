@@ -5,9 +5,9 @@ import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/screens/camera_screen.dart';
 import 'package:palm_analysis/screens/history_screen.dart';
 import 'package:palm_analysis/screens/settings_screen.dart';
-import 'package:palm_analysis/screens/premium_screen.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/services/auth_service.dart';
+import 'package:palm_analysis/services/astrology_service.dart';
 import 'package:palm_analysis/models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen>
   int _totalAnalyses = 0;
   User? _currentUser;
   final AuthService _authService = AuthService();
+  final AstrologyService _astrologyService = AstrologyService();
 
   @override
   void initState() {
@@ -183,6 +184,11 @@ class _HomeScreenState extends State<HomeScreen>
                           // Greeting card
                           _buildGreetingCard(lang),
 
+                          const SizedBox(height: 16),
+
+                          // Daily Astrology Card
+                          _buildDailyAstrologyCard(lang),
+
                           const SizedBox(height: 24),
 
                           // Main action - Analyze Hand
@@ -291,43 +297,6 @@ class _HomeScreenState extends State<HomeScreen>
                               )
                                   .then((_) => _loadData());
                             },
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          _buildFeatureCard(
-                            icon: Icons.auto_awesome_rounded,
-                            title: lang.premium,
-                            subtitle: lang.comingSoon,
-                            trailing: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.warningAmber.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: AppTheme.warningAmber.withOpacity(0.3),
-                                ),
-                              ),
-                              child: Text(
-                                lang.comingSoon,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppTheme.warningAmber,
-                                ),
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const PremiumScreen(),
-                                ),
-                              );
-                            },
-                            isPremium: true,
                           ),
 
                           const SizedBox(height: 24),
@@ -440,11 +409,11 @@ class _HomeScreenState extends State<HomeScreen>
   String _getGreeting(dynamic lang) {
     final hour = DateTime.now().hour;
     if (hour < 12) {
-      return 'Gunaydin'; // Good morning
+      return lang.goodMorning;
     } else if (hour < 18) {
-      return 'Iyi gunler'; // Good afternoon
+      return lang.goodAfternoon;
     } else {
-      return 'Iyi aksamlar'; // Good evening
+      return lang.goodEvening;
     }
   }
 
@@ -522,6 +491,100 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDailyAstrologyCard(dynamic lang) {
+    final moonPhase = _astrologyService.getCurrentMoonPhase();
+    final moonSign = _astrologyService.getMoonSign();
+    final locale = Localizations.localeOf(context);
+    final isTurkish = locale.languageCode == 'tr';
+
+    final moonPhaseName = isTurkish
+        ? _astrologyService.getMoonPhaseTr(moonPhase)
+        : _astrologyService.getMoonPhaseEn(moonPhase);
+    final moonSignName = isTurkish
+        ? _astrologyService.getZodiacSignTr(moonSign)
+        : _astrologyService.getZodiacSignEn(moonSign);
+    final dailyInsight = isTurkish
+        ? _astrologyService.getDailyInsightTr(moonSign)
+        : _astrologyService.getDailyInsightEn(moonSign);
+    final moonPhaseIcon = _astrologyService.getMoonPhaseIcon(moonPhase);
+    final zodiacIcon = _astrologyService.getZodiacSignIcon(moonSign);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primaryIndigo.withOpacity(0.1),
+            AppTheme.primaryPurple.withOpacity(0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.primaryIndigo.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    moonPhaseIcon,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lang.todaysEnergy,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryIndigo,
+                      ),
+                    ),
+                    Text(
+                      '$moonPhaseName • ${lang.moonIn} $zodiacIcon $moonSignName',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Daily insight
+          Text(
+            dailyInsight,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppTheme.textPrimary,
+              height: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -15,6 +15,7 @@ import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:palm_analysis/widgets/common/gradient_button.dart';
+import 'package:palm_analysis/screens/chat_screen.dart';
 
 class AnalysisScreen extends StatefulWidget {
   final File imageFile;
@@ -267,17 +268,19 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
                           // Action buttons
                           if (!_isAnalyzing && _errorMessage == null) ...[
+                            // Ask Question button - Chat with AI
                             GradientButton(
-                              text: lang.shareAnalysis,
+                              text: lang.askQuestion,
                               onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(lang.comingSoon),
-                                    backgroundColor: AppTheme.primaryIndigo,
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => ChatScreen(
+                                      analysisResult: _analysis,
+                                    ),
                                   ),
                                 );
                               },
-                              icon: Icons.share_rounded,
+                              icon: Icons.chat_bubble_outline_rounded,
                             ),
                             const SizedBox(height: 12),
                             SecondaryButton(

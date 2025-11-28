@@ -15,11 +15,11 @@
 **Web sitesinin mevcut backend'ini kullanacak.**
 
 ```
-Flutter App -> elcizgisi.com/api/* -> OpenAI GPT-4o-mini
+Flutter App -> elcizgisi.com/api/* -> Gemini 2.5 Flash
                     |
               MongoDB (shared data)
                     |
-Web Site -> elcizgisi.com/api/* -> OpenAI GPT-4o-mini
+Web Site -> elcizgisi.com/api/* -> Gemini 2.5 Flash
 ```
 
 **Avantajlar:**
@@ -28,18 +28,90 @@ Web Site -> elcizgisi.com/api/* -> OpenAI GPT-4o-mini
 - Ortak analiz gecmisi
 - Tek premium sistem
 
-**ONEMLI:** OpenAI API key FLUTTER'DA DEGIL, VPS'te .env dosyasinda olmali!
+**ONEMLI:** API key'ler FLUTTER'DA DEGIL, VPS'te .env dosyasinda olmali!
 
 ---
 
-## Current Implementation Status (Phase 6 - Testing Complete)
+## Current Implementation Status (Phase 10 - Major Update)
 
-### Phase 1-5: TAMAMLANDI ✅
-### Phase 6: Device Testing ✅
-- [x] iOS Simulator build basarili
-- [x] Physical iPhone test basarili
-- [x] Image upload MIME type fix (http_parser paketi)
-- [x] Backend API entegrasyonu calisiyor
+### Phase 1-6: TAMAMLANDI ✅
+### Phase 7: Web-Mobile Sync Fix (2025-11-28) ✅
+### Phase 8: History Screen Realtime Sync (2025-11-28) ✅
+
+### Phase 9: App Modernization (2025-11-29) ✅
+- [x] Premium sistemi tamamen kaldırıldı
+  - premium_screen.dart silindi
+  - home_screen.dart ve settings_screen.dart'tan premium referansları kaldırıldı
+- [x] Chatbot sistemi eklendi
+  - chat_screen.dart oluşturuldu
+  - api_service.dart'a sendChatMessage() eklendi
+  - api_config.dart'a /chat endpoint eklendi
+  - analysis_screen.dart'a "Soru Sor" butonu eklendi
+- [x] Sistem promptu profesyonelleştirildi
+  - 7+ çizgi analizi (Temel + Yardımcı çizgiler)
+  - Tepe analizleri (Venüs, Jüpiter, Satürn, Ay)
+  - Gruplandırılmış yapı (kullanıcıyı boğmadan)
+- [x] Günlük Astroloji sistemi eklendi
+  - astrology_service.dart oluşturuldu
+  - Ay fazı hesaplaması
+  - Ay burcu hesaplaması
+  - Günlük el çizgisi yorumları
+  - home_screen.dart'a günlük astroloji kartı eklendi
+
+### Phase 10: UI/UX Fixes (2025-11-29) ✅
+- [x] Localization düzeltmeleri
+  - home_screen.dart: _getGreeting hardcoded Türkçe -> lang.goodMorning/goodAfternoon/goodEvening
+  - settings_screen.dart: "Giris yapin" -> lang.loginRequired
+  - app_language.dart, language_tr.dart, language_en.dart: greeting stringleri eklendi
+- [x] Chat screen typing indicator animasyonu düzeltildi
+  - TweenAnimationBuilder (tek seferlik) -> AnimationController.repeat (sürekli)
+  - _TypingDot StatefulWidget oluşturuldu
+
+### Phase 11: Backend Chat Endpoint (2025-11-29) ✅
+- [x] /api/chat/mobile endpoint oluşturuldu (elyorumweb/src/app/api/chat/mobile/route.ts)
+- [x] Flutter api_config.dart güncellendi (/chat -> /chat/mobile)
+- [ ] VPS'e deploy edilmeli
+- [ ] Test: flutter clean && flutter pub get && iPhone test
+
+---
+
+## KRITIK DUZELTMELER (2025-11-28)
+
+### 1. Google Sign-In URL Hatasi
+**Sorun:** `ApiConfig.baseUrl` zaten `/api` içeriyordu, endpoint'te tekrar `/api` eklenmişti
+```dart
+// YANLIS:
+Uri.parse('${ApiConfig.baseUrl}/api/auth/google');
+// Sonuç: https://elcizgisi.com/api/api/auth/google
+
+// DOGRU:
+Uri.parse('${ApiConfig.baseUrl}${ApiConfig.googleAuthEndpoint}');
+// Sonuç: https://elcizgisi.com/api/auth/google
+```
+
+### 2. Auth Service - Eski Token Sorunu
+**Sorun:** Farkli Google hesabiyla giris yapildiginda eski token kaliyordu
+**Cozum:** `signInWithGoogle()` basinda eski verileri temizle:
+```dart
+Future<AuthResponse> signInWithGoogle() async {
+  // Clear previous session data before new login
+  await _tokenService.clearAll();
+  await _clearUserFromPrefs();
+  _currentUser = null;
+
+  // Sign out from previous Google account
+  await _googleSignIn.signOut();
+
+  // Then proceed with new login...
+}
+```
+
+### 3. Web-Mobile Senkronizasyon
+**Sorun:** Mobil'den yapilan analizler veritabanina kaydedilmiyordu
+**Sebep:** `/api/analyze` sadece analiz yapiyor, kaydetmiyordu. Web'de analiz sonrasi ayrica `/api/queries`'e POST yapiliyordu.
+**Cozum:**
+- `api_service.dart`'a `saveQuery()` fonksiyonu eklendi
+- `analysis_screen.dart`'ta analiz sonrasi backend'e kaydetme eklendi
 
 ---
 
@@ -99,6 +171,13 @@ Signing for "Runner" requires a development team
 ```
 **Cozum:** Xcode -> Runner -> Signing & Capabilities -> Team sec (Apple ID)
 
+### 8. Google Sign-In HTML Response Hatasi
+```
+FormatException: Unexpected character (at character 1) <!DOCTYPE html>
+```
+**Sebep:** Yanlis URL'e istek yapildi, Next.js 404 HTML sayfasi dondu
+**Cozum:** URL'deki cift `/api` hatasini duzelt (yukariya bak)
+
 ---
 
 ## iOS Build Adimlari
@@ -125,20 +204,57 @@ flutter build ios --simulator
 
 ---
 
-## Google Sign-In Setup (YAPILACAK)
+## Google Sign-In Setup ✅ TAMAMLANDI
 
-### Google Cloud Console Bilgileri
-- **Email:** akarak25@gmail.com
-- **Mevcut Web Client ID:** 1090526264689-9pl3vb8rrp2d89g993r4uo1l2nsub1lq.apps.googleusercontent.com
-- **Proje numarasi:** 1090526264689
+### Konfigürasyon
+- **iOS Client ID:** 1090526264689-rluovhoc4v3irq65rggr7pjvcootq3kp.apps.googleusercontent.com
+- **Bundle ID:** com.elcizgisi.palmanalysis
 
-### Yapilmasi Gerekenler
-1. Google Cloud Console'a gir (akarak25@gmail.com)
-2. Proje numarasi 1090526264689 olan projeyi bul
-3. iOS OAuth client olustur (Bundle ID: com.elcizgisi.palmanalysis)
-4. Android OAuth client olustur (SHA-1 fingerprint gerekli)
-5. Flutter'a google_sign_in paketi ekle
-6. Backend'e mobil Google auth endpoint ekle
+### Backend Endpoint
+- `/api/auth/google` - Mobil Google auth icin (VPS'te mevcut)
+
+### Flutter Dosyalari
+- `auth_service.dart` - GoogleSignIn instance ve signInWithGoogle()
+- `api_config.dart` - googleAuthEndpoint eklendi
+
+---
+
+## VPS Admin Bilgileri
+
+### Admin Hesabi
+- **Email:** admin@elcizgisi.com
+- **Sifre:** 098783Ew**
+
+### Faydali VPS Komutlari
+```bash
+# Kullanicilari listele
+cd /var/www/elcizgisi && node -e "
+const mongoose = require('mongoose');
+require('dotenv').config();
+mongoose.connect(process.env.MONGODB_URI).then(async () => {
+  const users = await mongoose.connection.db.collection('users').find({}).toArray();
+  console.log('Toplam:', users.length);
+  users.forEach(u => console.log(u._id.toString(), u.email, u.provider));
+  process.exit(0);
+}).catch(console.error);
+"
+
+# Sorgulari listele
+cd /var/www/elcizgisi && node -e "
+const mongoose = require('mongoose');
+require('dotenv').config();
+mongoose.connect(process.env.MONGODB_URI).then(async () => {
+  const queries = await mongoose.connection.db.collection('queries').find({}).toArray();
+  console.log('Toplam:', queries.length);
+  queries.forEach(q => console.log(q._id.toString(), q.userId.toString(), q.createdAt));
+  process.exit(0);
+}).catch(console.error);
+"
+
+# PM2 status
+pm2 list
+# el-cizgisi-yorum id=13
+```
 
 ---
 
@@ -147,10 +263,10 @@ flutter build ios --simulator
 | API | Maliyet | Konum |
 |-----|---------|-------|
 | elcizgisi.com | UCRETSIZ (kendi VPS) | Backend |
-| OpenAI GPT-4o-mini | ~$0.075-0.15/istek | Backend'den cagrilir |
+| Gemini 2.5 Flash | Ucretsiz tier | Backend'den cagrilir |
 | MongoDB | Free tier veya VPS | Backend |
 
-**OpenAI API Key:** VPS'te .env dosyasinda OPENAI_API_KEY olarak saklanir
+**API Keys:** VPS'te .env dosyasinda saklanir (GEMINI_API_KEY, JWT_SECRET, vb.)
 
 ---
 
@@ -175,6 +291,7 @@ dependencies:
   intl: ^0.20.2              # flutter_localizations ile uyumlu olmali!
   flutter_secure_storage: ^9.0.0
   url_launcher: ^6.2.5
+  google_sign_in: ^6.1.6     # Google ile giris
 ```
 
 ---
@@ -216,7 +333,7 @@ static const dangerRed = Color(0xFFEF4444);      // red-500
 lib/
 ├── main.dart
 ├── config/
-│   └── api_config.dart
+│   └── api_config.dart          # chatEndpoint EKLENDI
 ├── models/
 │   ├── palm_analysis.dart
 │   ├── user.dart
@@ -227,25 +344,26 @@ lib/
 ├── screens/
 │   ├── splash_screen.dart
 │   ├── onboarding_screen.dart
-│   ├── home_screen.dart
+│   ├── home_screen.dart         # Günlük astroloji kartı EKLENDI
 │   ├── camera_screen.dart
-│   ├── analysis_screen.dart
+│   ├── analysis_screen.dart     # Chat butonu EKLENDI
+│   ├── chat_screen.dart         # YENİ - Chatbot ekranı
 │   ├── history_screen.dart
-│   ├── premium_screen.dart
 │   ├── profile_screen.dart
-│   ├── settings_screen.dart
+│   ├── settings_screen.dart     # Premium kaldırıldı
 │   ├── language_settings_screen.dart
 │   └── auth/
 │       ├── login_screen.dart
 │       └── register_screen.dart
 ├── services/
-│   ├── api_service.dart         # http_parser ile MIME type
+│   ├── api_service.dart         # sendChatMessage() EKLENDI
+│   ├── astrology_service.dart   # YENİ - Ay fazı ve burç hesaplama
 │   ├── auth_service.dart
 │   ├── token_service.dart
 │   ├── palm_analysis_service.dart
 │   └── camera_service.dart
 ├── utils/
-│   ├── theme.dart               # successGradient EKLENDI
+│   ├── theme.dart
 │   ├── snackbar_helper.dart
 │   └── ...
 ├── widgets/
@@ -255,37 +373,49 @@ lib/
 │       └── loading_overlay.dart
 └── l10n/
     └── languages/
-        ├── app_language.dart
-        ├── language_tr.dart
-        └── language_en.dart
+        ├── app_language.dart    # Astroloji & chat stringleri EKLENDI
+        ├── language_tr.dart     # Sistem promptu genişletildi
+        └── language_en.dart     # Sistem promptu genişletildi
 ```
 
 ---
 
 ## Premium System
 
-### CURRENT STATUS: DISABLED
-- Tum kullanicilar FREE tier
-- Premium ekraninda "Coming Soon" gosteriliyor
-- Ileride App Store / Google Play IAP entegre edilecek
+### CURRENT STATUS: REMOVED (Phase 9)
+- Premium sistemi tamamen kaldırıldı
+- Tüm kullanıcılar tüm özelliklere ücretsiz erişebilir
+- premium_screen.dart silindi
+- Gelecekte IAP eklenebilir
 
 ---
 
-## Next Steps
+## Known Issues / TODO
 
-1. **Google Sign-In entegrasyonu**
-   - iOS/Android OAuth client'lari olustur
-   - google_sign_in paketi ekle
-   - Backend endpoint ekle
+### Acil
+- [ ] Web-Mobile sync test edilmeli (flutter clean && flutter pub get && test)
 
-2. **App Store / Play Store hazirlik**
-   - Screenshots
-   - App descriptions
-   - Privacy policy
+### Gelecek
+- [ ] Resim senkronizasyonu (mobil resimler web'de gorunmuyor - placeholder kullaniliyor)
+- [ ] App Store / Play Store hazirlik (Screenshots, descriptions, privacy policy)
+- [ ] Push notifications
+- [ ] Premium IAP entegrasyonu
 
 ---
 
 ## Last Updated
-- Date: 2025-11-27
-- Status: Phase 6 Complete - Device testing basarili, analiz calisiyor
-- Next: Google Sign-In entegrasyonu
+- **Date:** 2025-11-29
+- **Status:** Phase 10 - UI/UX fixes tamamlandı
+- **Tamamlanan (Phase 9-10):**
+  - Premium sistemi tamamen kaldırıldı
+  - Chatbot sistemi eklendi (chat_screen.dart)
+  - Sistem promptu profesyonelleştirildi (7+ çizgi, tepeler)
+  - Günlük astroloji sistemi eklendi (astrology_service.dart)
+  - Home screen'e günlük enerji kartı eklendi
+  - Localization düzeltmeleri yapıldı
+  - Typing indicator animasyonu düzeltildi
+- **Bekleyen:**
+  - VPS'te /api/chat endpoint oluşturulmalı
+  - `flutter clean && flutter pub get` sonra test
+  - Tüm yeni özellikleri iPhone'da test et
+- **Next:** Backend chat endpoint oluşturma

@@ -5,7 +5,6 @@ import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/screens/profile_screen.dart';
 import 'package:palm_analysis/screens/language_settings_screen.dart';
-import 'package:palm_analysis/screens/premium_screen.dart';
 import 'package:palm_analysis/services/auth_service.dart';
 import 'package:palm_analysis/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -129,7 +128,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               _buildSettingsTile(
                                 icon: Icons.person_outline_rounded,
                                 title: lang.profile,
-                                subtitle: _currentUser?.name ?? 'Giris yapin',
+                                subtitle: _currentUser?.name ?? lang.loginRequired,
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
@@ -137,19 +136,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                   );
                                 },
-                              ),
-                              _buildSettingsTile(
-                                icon: Icons.auto_awesome_rounded,
-                                title: lang.premium,
-                                subtitle: lang.comingSoon,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const PremiumScreen(),
-                                    ),
-                                  );
-                                },
-                                isPremium: true,
                               ),
                             ],
                           ),
