@@ -7,11 +7,19 @@ import 'package:provider/provider.dart';
 import 'package:palm_analysis/providers/locale_provider.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:palm_analysis/services/push_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    // Initialize Firebase
+    await Firebase.initializeApp();
+
+    // Initialize Push Notifications
+    await PushNotificationService.instance.initialize();
+
     // Set system UI overlay style
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

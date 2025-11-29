@@ -19,6 +19,9 @@ class ApiConfig {
   // Queries endpoints
   static const String queriesEndpoint = '/queries';
 
+  // Push notification endpoints
+  static const String deviceTokenEndpoint = '/notifications/device-token';
+
   // User endpoints
   static const String userProfileEndpoint = '/user/profile';
   static const String userOnboardingEndpoint = '/user/onboarding';

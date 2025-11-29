@@ -180,19 +180,6 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
               ),
             ),
           ),
-          // Refresh button
-          _buildIconButton(
-            icon: Icons.refresh_rounded,
-            onTap: () async {
-              final locale = Localizations.localeOf(context);
-              final reading = await _readingService.refreshDailyReading(
-                lang: locale.languageCode,
-              );
-              if (mounted) {
-                setState(() => _reading = reading);
-              }
-            },
-          ),
         ],
       ),
     );

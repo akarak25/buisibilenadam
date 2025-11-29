@@ -138,15 +138,8 @@ class StyledAnalysisView extends StatelessWidget {
           key.startsWith('özet olarak') ||
           key.startsWith('in summary') ||
           key.startsWith('overall')) {
-        // For "Genel olarak" style, keep the text as part of content
-        if (key.startsWith('genel olarak') ||
-            key.startsWith('sonuç olarak') ||
-            key.startsWith('özet olarak') ||
-            key.startsWith('in summary') ||
-            key.startsWith('overall,')) {
-          // Prepend the matched text back to content since it's part of the sentence
-          content = currentName + ' ' + content;
-        }
+        // For "Genel olarak" style conclusions - content already contains the phrase
+        // Don't duplicate it - just use content as-is
         sections['conclusion'] = content;
       } else {
         sections[key] = content;

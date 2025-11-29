@@ -6,6 +6,7 @@ import 'package:palm_analysis/models/auth_response.dart';
 import 'package:palm_analysis/models/user.dart';
 import 'package:palm_analysis/services/token_service.dart';
 import 'package:palm_analysis/services/daily_reading_service.dart';
+import 'package:palm_analysis/services/push_notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Authentication service for login, register, and user management
@@ -64,6 +65,9 @@ class AuthService {
       await _saveUserToPrefs(authResponse.user);
       _currentUser = authResponse.user;
 
+      // Register push notification token
+      await PushNotificationService.instance.registerTokenAfterLogin();
+
       return authResponse;
     } else {
       final errorBody = utf8.decode(response.bodyBytes);
@@ -101,6 +105,9 @@ class AuthService {
       await _saveUserToPrefs(authResponse.user);
       _currentUser = authResponse.user;
 
+      // Register push notification token
+      await PushNotificationService.instance.registerTokenAfterLogin();
+
       return authResponse;
     } else {
       final errorBody = utf8.decode(response.bodyBytes);
@@ -111,6 +118,9 @@ class AuthService {
 
   /// Logout current user
   Future<void> logout() async {
+    // Unregister push notification token
+    await PushNotificationService.instance.unregisterToken();
+
     // CRITICAL: Clear daily reading cache to prevent data leaking to next user
     await _dailyReadingService.clearAllDailyReadingCache();
 
@@ -175,6 +185,9 @@ class AuthService {
         await _tokenService.saveUserId(authResponse.user.id);
         await _saveUserToPrefs(authResponse.user);
         _currentUser = authResponse.user;
+
+        // Register push notification token
+        await PushNotificationService.instance.registerTokenAfterLogin();
 
         return authResponse;
       } else {
