@@ -816,7 +816,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${reading.astronomy.moonPhase.phaseTr} • ${reading.astronomy.moonSign.icon} ${reading.astronomy.moonSign.signTr}',
+                        '${reading.astronomy.moonPhase.getName(isTurkish)} • ${reading.astronomy.moonSign.icon} ${reading.astronomy.moonSign.getName(isTurkish)}',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           color: Colors.white.withOpacity(0.7),

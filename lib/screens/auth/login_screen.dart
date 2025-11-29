@@ -297,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   keyboardType: TextInputType.emailAddress,
                                   textInputAction: TextInputAction.next,
                                   decoration: InputDecoration(
-                                    hintText: 'ornek@email.com',
+                                    hintText: lang.emailPlaceholder,
                                     prefixIcon: Icon(
                                       Icons.email_outlined,
                                       color: AppTheme.textMuted,

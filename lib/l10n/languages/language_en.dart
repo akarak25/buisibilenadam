@@ -283,6 +283,8 @@ class LanguageEn implements AppLanguage {
   @override
   String get email => 'Email';
   @override
+  String get emailPlaceholder => 'example@email.com';
+  @override
   String get password => 'Password';
   @override
   String get age => 'Age';

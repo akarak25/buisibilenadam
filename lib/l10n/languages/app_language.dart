@@ -106,6 +106,7 @@ abstract class AppLanguage {
   String get personalInfo;
   String get fullName;
   String get email;
+  String get emailPlaceholder;
   String get password;
   String get age;
   String get gender;
