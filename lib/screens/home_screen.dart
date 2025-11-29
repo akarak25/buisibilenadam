@@ -7,10 +7,15 @@ import 'package:palm_analysis/screens/history_screen.dart';
 import 'package:palm_analysis/screens/settings_screen.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/services/auth_service.dart';
+import 'package:palm_analysis/services/api_service.dart';
+import 'package:palm_analysis/services/token_service.dart';
 import 'package:palm_analysis/services/astrology_service.dart';
 import 'package:palm_analysis/services/streak_service.dart';
+import 'package:palm_analysis/services/daily_reading_service.dart';
 import 'package:palm_analysis/screens/daily_astrology_screen.dart';
+import 'package:palm_analysis/screens/personalized_daily_screen.dart';
 import 'package:palm_analysis/models/user.dart';
+import 'package:palm_analysis/models/daily_reading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,9 +32,14 @@ class _HomeScreenState extends State<HomeScreen>
   int _totalAnalyses = 0;
   User? _currentUser;
   int _currentStreak = 0;
+  DailyReading? _dailyReading;
+  bool _isLoadingReading = false;
   final AuthService _authService = AuthService();
+  final ApiService _apiService = ApiService();
+  final TokenService _tokenService = TokenService();
   final AstrologyService _astrologyService = AstrologyService();
   final StreakService _streakService = StreakService();
+  final DailyReadingService _dailyReadingService = DailyReadingService();
 
   @override
   void initState() {
@@ -54,8 +64,22 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _loadData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final totalAnalyses = prefs.getInt('total_analyses') ?? 0;
+      int totalAnalyses = prefs.getInt('total_analyses') ?? 0;
       final user = await _authService.loadStoredUser();
+
+      // If user is logged in, try to get count from backend
+      final token = await _tokenService.getToken();
+      if (token != null) {
+        try {
+          final queries = await _apiService.getQueries();
+          totalAnalyses = queries.length;
+          // Update local storage with backend count
+          await prefs.setInt('total_analyses', totalAnalyses);
+          print('Synced analysis count from backend: $totalAnalyses');
+        } catch (e) {
+          print('Backend sync error (using local): $e');
+        }
+      }
 
       // Record app open and get streak
       final streakData = await _streakService.recordAppOpen();
@@ -67,8 +91,36 @@ class _HomeScreenState extends State<HomeScreen>
           _currentStreak = streakData.currentStreak;
         });
       }
+
+      // Load personalized daily reading (async, don't block UI)
+      _loadDailyReading();
     } catch (e) {
       print('Data loading error: $e');
+    }
+  }
+
+  Future<void> _loadDailyReading() async {
+    if (_isLoadingReading) return;
+
+    setState(() => _isLoadingReading = true);
+
+    try {
+      final locale = Localizations.localeOf(context);
+      final reading = await _dailyReadingService.getDailyReading(
+        lang: locale.languageCode,
+      );
+
+      if (mounted) {
+        setState(() {
+          _dailyReading = reading;
+          _isLoadingReading = false;
+        });
+      }
+    } catch (e) {
+      print('Daily reading load error: $e');
+      if (mounted) {
+        setState(() => _isLoadingReading = false);
+      }
     }
   }
 
@@ -543,11 +595,18 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildDailyAstrologyCard(dynamic lang) {
-    final moonPhase = _astrologyService.getCurrentMoonPhase();
-    final moonSign = _astrologyService.getMoonSign();
     final locale = Localizations.localeOf(context);
     final isTurkish = locale.languageCode == 'tr';
     final hasAnalysis = _totalAnalyses > 0;
+
+    // If we have personalized reading, show that
+    if (_dailyReading != null && _dailyReading!.hasPalmProfile) {
+      return _buildPersonalizedDailyCard(lang, isTurkish);
+    }
+
+    // Otherwise show generic astrology card
+    final moonPhase = _astrologyService.getCurrentMoonPhase();
+    final moonSign = _astrologyService.getMoonSign();
 
     final moonPhaseName = isTurkish
         ? _astrologyService.getMoonPhaseTr(moonPhase)
@@ -555,7 +614,6 @@ class _HomeScreenState extends State<HomeScreen>
     final moonSignName = isTurkish
         ? _astrologyService.getZodiacSignTr(moonSign)
         : _astrologyService.getZodiacSignEn(moonSign);
-    // Use general insights if no analysis, palm-specific if they have analysis
     final dailyInsight = hasAnalysis
         ? (isTurkish
             ? _astrologyService.getDailyInsightTr(moonSign)
@@ -651,9 +709,7 @@ class _HomeScreenState extends State<HomeScreen>
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                Localizations.localeOf(context).languageCode == 'tr'
-                    ? 'Detaylar için dokun'
-                    : 'Tap for details',
+                isTurkish ? 'Detaylar için dokun' : 'Tap for details',
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   color: AppTheme.primaryIndigo.withOpacity(0.7),
@@ -669,6 +725,186 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
+      ),
+    );
+  }
+
+  /// Personalized daily reading card (when palm profile exists)
+  Widget _buildPersonalizedDailyCard(dynamic lang, bool isTurkish) {
+    final reading = _dailyReading!;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => PersonalizedDailyScreen(initialReading: reading),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF1a1a2e).withOpacity(0.95),
+              AppTheme.primaryIndigo.withOpacity(0.85),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryIndigo.withOpacity(0.25),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with personalized badge
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      reading.astronomy.moonPhase.icon,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            isTurkish ? 'Günlük El Çizgisi Yorumunuz' : 'Your Daily Palm Reading',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppTheme.successGreen.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              isTurkish ? 'Kişisel' : 'Personal',
+                              style: GoogleFonts.inter(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.successGreen,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${reading.astronomy.moonPhase.phaseTr} • ${reading.astronomy.moonSign.icon} ${reading.astronomy.moonSign.signTr}',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            // Personalized greeting/energy
+            Text(
+              reading.reading.dailyEnergy,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.9),
+                height: 1.5,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            // Lucky elements row
+            Row(
+              children: [
+                _buildMiniLuckyElement(
+                  '🎨',
+                  reading.reading.luckyElements.color,
+                ),
+                const SizedBox(width: 8),
+                _buildMiniLuckyElement(
+                  '🔢',
+                  reading.reading.luckyElements.number,
+                ),
+                const SizedBox(width: 8),
+                _buildMiniLuckyElement(
+                  '⏰',
+                  reading.reading.luckyElements.time,
+                ),
+                const Spacer(),
+                // Tap hint
+                Row(
+                  children: [
+                    Text(
+                      isTurkish ? 'Detaylar' : 'Details',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 10,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniLuckyElement(String icon, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: Colors.white.withOpacity(0.9),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

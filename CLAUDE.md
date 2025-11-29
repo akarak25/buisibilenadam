@@ -125,6 +125,36 @@ Web Site -> elcizgisi.com/api/* -> Gemini 2.5 Flash
   - Analiz yoksa "Günün İpucu" yerine CTA gösteriliyor
   - CTA: "İlk Analizimi Yap" butonu ile kullanıcıyı analiz yapmaya yönlendiriyor
 
+### Phase 14: Personalized Daily Reading System (2025-11-29) 🔄 IN PROGRESS
+**Amaç:** El çizgisi + Astroloji kombinasyonu ile kişiselleştirilmiş günlük yorumlar
+
+**Backend (elyorumweb):**
+- [x] User model güncellendi - PalmProfile interface eklendi
+  - heartLine, headLine, lifeLine, fateLine, sunLine, healthLine, marriageLine
+  - mounts: venus, jupiter, saturn, apollo, mercury, moon, mars
+  - dominantElement, keyTraits, summary
+- [x] palmProfileParser.ts oluşturuldu - Analiz metninden yapılandırılmış veri çıkarıyor
+- [x] /api/palm-profile endpoint oluşturuldu (GET/POST)
+- [x] /api/daily-reading endpoint oluşturuldu
+  - Kullanıcının palm profile + günün astronomi verileri
+  - Gemini 2.5 Flash ile kişiselleştirilmiş yorum üretimi
+  - 6 saatlik cache sistemi
+  - JSON formatında: greeting, dailyEnergy, activeLineReading, moonInfluence, advice, luckyElements, warning
+- [x] /api/queries güncellendi - Analiz kaydedilirken palmProfile otomatik kaydediliyor
+
+**Flutter (elcizgisi):**
+- [x] daily_reading.dart model oluşturuldu
+- [x] daily_reading_service.dart oluşturuldu
+- [x] personalized_daily_screen.dart oluşturuldu
+- [x] home_screen.dart güncellendi
+  - DailyReadingService entegrasyonu
+  - Kişiselleştirilmiş kart (koyu tema, şanslı elementler)
+  - Palm profile varsa kişisel kart, yoksa genel astroloji kartı
+
+**Bekleyen:**
+- [ ] Push notification sistemi (Phase 4)
+- [ ] VPS'e deploy ve test
+
 ---
 
 ## KRITIK DUZELTMELER (2025-11-28)
