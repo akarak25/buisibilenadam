@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/screens/profile_screen.dart';
-import 'package:palm_analysis/screens/language_settings_screen.dart';
 import 'package:palm_analysis/screens/notification_settings_screen.dart';
 import 'package:palm_analysis/services/auth_service.dart';
 import 'package:palm_analysis/models/user.dart';
@@ -148,19 +147,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           const SizedBox(height: 12),
                           _buildSettingsCard(
                             children: [
-                              _buildSettingsTile(
-                                icon: Icons.language_rounded,
-                                title: lang.languageSettings,
-                                subtitle: _getCurrentLanguageName(lang),
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const LanguageSettingsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
                               _buildSettingsTile(
                                 icon: Icons.notifications_rounded,
                                 title: Localizations.localeOf(context).languageCode == 'tr'
@@ -403,15 +389,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
-  }
-
-  String _getCurrentLanguageName(dynamic lang) {
-    final locale = Localizations.localeOf(context);
-    if (locale.languageCode == 'tr') {
-      return lang.turkish;
-    } else {
-      return lang.english;
-    }
   }
 
   void _showAboutDialog() {

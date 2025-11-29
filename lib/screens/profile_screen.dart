@@ -643,13 +643,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               _buildActionTile(
-                icon: Icons.language_rounded,
-                title: lang.languageSettings,
-                onTap: () {
-                  // Already have language settings in settings screen
-                },
-              ),
-              _buildActionTile(
                 icon: Icons.logout_rounded,
                 title: lang.logout,
                 onTap: _logout,
