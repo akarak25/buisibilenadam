@@ -10,7 +10,7 @@ class StyledAnalysisView extends StatelessWidget {
   const StyledAnalysisView({
     super.key,
     required this.analysisText,
-    this.languageCode = 'tr',
+    this.languageCode = 'en',
   });
 
   bool get isEnglish => languageCode == 'en';

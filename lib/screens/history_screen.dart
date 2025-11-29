@@ -385,7 +385,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: SingleChildScrollView(
                   controller: controller,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: StyledAnalysisView(analysisText: analysis.analysis),
+                  child: StyledAnalysisView(
+                    analysisText: analysis.analysis,
+                    languageCode: Localizations.localeOf(context).languageCode,
+                  ),
                 ),
               ),
 
@@ -908,7 +911,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: SingleChildScrollView(
                   controller: controller,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: StyledAnalysisView(analysisText: query.response),
+                  child: StyledAnalysisView(
+                    analysisText: query.response,
+                    languageCode: Localizations.localeOf(context).languageCode,
+                  ),
                 ),
               ),
 
