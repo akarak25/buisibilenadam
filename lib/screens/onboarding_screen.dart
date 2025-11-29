@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
-import 'package:palm_analysis/screens/home_screen.dart';
 import 'package:palm_analysis/screens/auth/login_screen.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/widgets/common/gradient_button.dart';

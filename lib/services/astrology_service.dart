@@ -1,5 +1,3 @@
-import 'dart:math';
-
 /// Moon phase enum
 enum MoonPhase {
   newMoon,

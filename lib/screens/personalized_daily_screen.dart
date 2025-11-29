@@ -1,10 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/models/daily_reading.dart';
 import 'package:palm_analysis/services/daily_reading_service.dart';
+import 'package:palm_analysis/services/auth_service.dart';
 import 'package:palm_analysis/screens/camera_screen.dart';
 
 /// Personalized daily reading screen with palm + astrology combination
@@ -23,12 +23,14 @@ class PersonalizedDailyScreen extends StatefulWidget {
 class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final DailyReadingService _readingService = DailyReadingService();
+  final AuthService _authService = AuthService();
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
 
   DailyReading? _reading;
   bool _isLoading = true;
   String? _errorMessage;
+  String? _userName;
 
   @override
   void initState() {
@@ -49,12 +51,40 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
 
     _animationController.repeat(reverse: true);
 
+    _loadUserName();
+
     if (widget.initialReading != null) {
       _reading = widget.initialReading;
       _isLoading = false;
     } else {
       _loadReading();
     }
+  }
+
+  Future<void> _loadUserName() async {
+    final user = await _authService.loadStoredUser();
+    if (mounted && user != null) {
+      setState(() {
+        _userName = user.name;
+      });
+    }
+  }
+
+  String _getDynamicGreeting(dynamic lang) {
+    final hour = DateTime.now().hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = lang.goodMorning;
+    } else if (hour < 18) {
+      greeting = lang.goodAfternoon;
+    } else {
+      greeting = lang.goodEvening;
+    }
+
+    if (_userName != null && _userName!.isNotEmpty) {
+      return '$greeting $_userName!';
+    }
+    return '$greeting!';
   }
 
   Future<void> _loadReading() async {
@@ -164,7 +194,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                         ? _buildLoadingState()
                         : _reading == null || _errorMessage != null
                             ? _buildNoProfileState(isTurkish)
-                            : _buildContent(isTurkish),
+                            : _buildContent(isTurkish, lang),
                   ),
                 ],
               ),
@@ -389,7 +419,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
     );
   }
 
-  Widget _buildContent(bool isTurkish) {
+  Widget _buildContent(bool isTurkish, dynamic lang) {
     final reading = _reading!;
 
     return RefreshIndicator(
@@ -409,7 +439,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Greeting card with moon
-            _buildGreetingCard(reading, isTurkish),
+            _buildGreetingCard(reading, isTurkish, lang),
 
             const SizedBox(height: 20),
 
@@ -444,7 +474,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
     );
   }
 
-  Widget _buildGreetingCard(DailyReading reading, bool isTurkish) {
+  Widget _buildGreetingCard(DailyReading reading, bool isTurkish, dynamic lang) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -482,9 +512,9 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
             },
           ),
           const SizedBox(height: 16),
-          // Greeting
+          // Dynamic greeting based on device time
           Text(
-            reading.reading.greeting,
+            _getDynamicGreeting(lang),
             style: GoogleFonts.inter(
               fontSize: 22,
               fontWeight: FontWeight.w700,
