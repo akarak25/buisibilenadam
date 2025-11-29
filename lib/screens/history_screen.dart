@@ -136,6 +136,96 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  /// Delete a query from backend
+  Future<void> _deleteBackendQuery(Query query, int index) async {
+    final locale = Localizations.localeOf(context);
+    final isTurkish = locale.languageCode == 'tr';
+
+    try {
+      await _apiService.deleteQuery(query.id);
+
+      // Remove from local list
+      setState(() {
+        _backendQueries.removeAt(index);
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isTurkish ? 'Analiz silindi' : 'Analysis deleted'),
+            backgroundColor: AppTheme.successGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isTurkish ? 'Silme başarısız: $e' : 'Failed to delete: $e'),
+            backgroundColor: AppTheme.dangerRed,
+          ),
+        );
+      }
+      // Re-add to list if failed (restore state)
+      setState(() {});
+    }
+  }
+
+  /// Show delete confirmation for backend query
+  void _showDeleteQueryConfirmation(Query query, int index) {
+    final locale = Localizations.localeOf(context);
+    final isTurkish = locale.languageCode == 'tr';
+    final lang = AppLocalizations.of(context).currentLanguage;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          isTurkish ? 'Analizi Sil' : 'Delete Analysis',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        content: Text(
+          isTurkish
+              ? 'Bu analiz kalıcı olarak silinecek. Bu işlem geri alınamaz.'
+              : 'This analysis will be permanently deleted. This action cannot be undone.',
+          style: GoogleFonts.inter(
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              lang.cancel,
+              style: GoogleFonts.inter(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _deleteBackendQuery(query, index);
+            },
+            child: Text(
+              isTurkish ? 'Sil' : 'Delete',
+              style: GoogleFonts.inter(
+                color: AppTheme.dangerRed,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _deleteAllAnalyses() async {
     // Delete all image files
     for (var analysis in _analyses) {
@@ -547,7 +637,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
         if (item is Query) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _buildQueryCard(item),
+            child: Dismissible(
+              key: Key(item.id),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (direction) async {
+                _showDeleteQueryConfirmation(item, index);
+                return false; // Don't dismiss automatically, wait for confirmation
+              },
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 24),
+                decoration: BoxDecoration(
+                  color: AppTheme.dangerRed,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.delete_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              child: _buildQueryCard(item),
+            ),
           );
         } else if (item is PalmAnalysis) {
           return Padding(

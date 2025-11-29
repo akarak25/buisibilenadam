@@ -189,7 +189,7 @@ class ApiService {
 
   /// Delete a query
   Future<void> deleteQuery(String queryId) async {
-    final response = await delete('${ApiConfig.queriesEndpoint}/$queryId');
+    final response = await delete('${ApiConfig.queriesEndpoint}?id=$queryId');
 
     if (response.statusCode != 200 && response.statusCode != 204) {
       final errorBody = utf8.decode(response.bodyBytes);
