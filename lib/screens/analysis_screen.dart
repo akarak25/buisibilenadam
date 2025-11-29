@@ -217,7 +217,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       children: [
                         _buildIconButton(
                           icon: Icons.arrow_back_rounded,
-                          onTap: () => Navigator.of(context).pop(),
+                          onTap: () => Navigator.of(context)
+                              .popUntil((route) => route.isFirst),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
