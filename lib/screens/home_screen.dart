@@ -599,6 +599,11 @@ class _HomeScreenState extends State<HomeScreen>
     final isTurkish = locale.languageCode == 'tr';
     final hasAnalysis = _totalAnalyses > 0;
 
+    // Show loading state while fetching personalized reading
+    if (_isLoadingReading && hasAnalysis && _dailyReading == null) {
+      return _buildLoadingDailyCard(isTurkish);
+    }
+
     // If we have personalized reading, show that
     if (_dailyReading != null && _dailyReading!.hasPalmProfile) {
       return _buildPersonalizedDailyCard(lang, isTurkish);
@@ -906,6 +911,194 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
+    );
+  }
+
+  /// Loading state card for daily reading
+  Widget _buildLoadingDailyCard(bool isTurkish) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF1a1a2e).withOpacity(0.95),
+            AppTheme.primaryIndigo.withOpacity(0.85),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryIndigo.withOpacity(0.25),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: _ShimmerIcon(),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          isTurkish ? 'Günlük Yorumunuz Yükleniyor' : 'Loading Your Daily Reading',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    _ShimmerBar(width: 120, height: 10),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Shimmer content lines
+          _ShimmerBar(width: double.infinity, height: 14),
+          const SizedBox(height: 8),
+          _ShimmerBar(width: 200, height: 14),
+          const SizedBox(height: 14),
+          // Shimmer lucky elements
+          Row(
+            children: [
+              _ShimmerBar(width: 60, height: 24),
+              const SizedBox(width: 8),
+              _ShimmerBar(width: 50, height: 24),
+              const SizedBox(width: 8),
+              _ShimmerBar(width: 70, height: 24),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Animated shimmer bar for loading state
+class _ShimmerBar extends StatefulWidget {
+  final double width;
+  final double height;
+
+  const _ShimmerBar({required this.width, required this.height});
+
+  @override
+  State<_ShimmerBar> createState() => _ShimmerBarState();
+}
+
+class _ShimmerBarState extends State<_ShimmerBar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+    _animation = Tween<double>(begin: -1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.height / 2),
+            gradient: LinearGradient(
+              begin: Alignment(-1.0 + _animation.value, 0),
+              end: Alignment(_animation.value, 0),
+              colors: [
+                Colors.white.withOpacity(0.1),
+                Colors.white.withOpacity(0.25),
+                Colors.white.withOpacity(0.1),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Animated shimmer icon for loading state
+class _ShimmerIcon extends StatefulWidget {
+  const _ShimmerIcon();
+
+  @override
+  State<_ShimmerIcon> createState() => _ShimmerIconState();
+}
+
+class _ShimmerIconState extends State<_ShimmerIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Opacity(
+          opacity: 0.3 + (_controller.value * 0.7),
+          child: const Text(
+            '✨',
+            style: TextStyle(fontSize: 22),
+          ),
+        );
+      },
     );
   }
 }
