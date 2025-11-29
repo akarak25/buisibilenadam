@@ -373,6 +373,32 @@ class LanguageTr implements AppLanguage {
   @override
   String get loginRequired => 'Giriş yapın';
 
+  // Login/Register screen
+  @override
+  String get welcome => 'Hoş Geldiniz';
+  @override
+  String get loginToAccount => 'Hesabınıza giriş yapın';
+  @override
+  String get login => 'Giriş Yap';
+  @override
+  String get orText => 'veya';
+  @override
+  String get signInWithGoogle => 'Google ile Giriş Yap';
+  @override
+  String get continueWithoutLogin => 'Giriş yapmadan devam et';
+  @override
+  String get dontHaveAccount => 'Hesabınız yok mu? ';
+  @override
+  String get signUp => 'Kayıt Ol';
+  @override
+  String get emailRequired => 'E-posta gerekli';
+  @override
+  String get invalidEmail => 'Geçerli bir e-posta girin';
+  @override
+  String get passwordRequired => 'Şifre gerekli';
+  @override
+  String get googleSignInFailed => 'Google girişi başarısız. Lütfen tekrar deneyin.';
+
   // Claude API istekleri için sistem mesajı
   @override
   String get systemPrompt => '''

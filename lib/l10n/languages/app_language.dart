@@ -155,6 +155,20 @@ abstract class AppLanguage {
   String get goodEvening;
   String get loginRequired;
 
+  // Login/Register screen
+  String get welcome;
+  String get loginToAccount;
+  String get login;
+  String get orText;
+  String get signInWithGoogle;
+  String get continueWithoutLogin;
+  String get dontHaveAccount;
+  String get signUp;
+  String get emailRequired;
+  String get invalidEmail;
+  String get passwordRequired;
+  String get googleSignInFailed;
+
   // System prompt for Claude API requests
   String get systemPrompt;
   String get chatSystemPrompt;

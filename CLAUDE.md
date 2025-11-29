@@ -935,43 +935,36 @@ lib/
 
 ## Last Updated
 - **Date:** 2025-11-29
-- **Status:** Phase 15 TAMAMLANDI - Push Notification System
+- **Status:** Phase 16 TAMAMLANDI - Multi-Language Support Fix
 - **Bu Oturumda Tamamlananlar:**
-  - **FULL PUSH NOTIFICATION SYSTEM KURULDU!**
-  - Backend: User model (notificationPreferences, streakData, lastActivityAt)
-  - Backend: Firebase Admin SDK entegrasyonu
-  - Backend: notification-service.ts (tüm bildirim fonksiyonları)
-  - Backend: /api/activity/daily (streak sync)
-  - Backend: /api/notifications/preferences (kullanıcı tercihleri)
-  - Backend: notification-cron.ts (zamanlı bildirimler)
-  - Flutter: navigatorKey ile bildirim navigasyonu
-  - Flutter: notification_settings_screen.dart
-  - Flutter: streak_service.dart backend sync
-- **Yeni Dosyalar (Backend - elyorumweb):**
-  - `src/lib/firebase-admin.ts`
-  - `src/lib/notification-service.ts`
-  - `src/workers/notification-cron.ts`
-  - `src/app/api/activity/daily/route.ts`
-  - `src/app/api/notifications/preferences/route.ts`
-- **Yeni Dosyalar (Flutter - elcizgisi):**
-  - `lib/services/notification_preferences_service.dart`
-  - `lib/screens/notification_settings_screen.dart`
-- **Güncellenmiş Dosyalar:**
-  - `package.json` - firebase-admin, node-cron eklendi
-  - `src/models/User.ts` - notificationPreferences, streakData, lastActivityAt
-  - `lib/main.dart` - navigatorKey
-  - `lib/services/push_notification_service.dart` - gerçek navigasyon
-  - `lib/config/api_config.dart` - yeni endpoint'ler
-  - `lib/services/streak_service.dart` - backend sync
-  - `lib/screens/settings_screen.dart` - bildirim ayarları linki
-  - `lib/services/auth_service.dart` - streak temizleme
+  - **FULL MULTI-LANGUAGE SUPPORT DÜZELTILDI!**
+  - Analiz sonuçları artık uygulama diline göre dönüyor
+  - Kart başlıkları (Head Line, Heart Line vb.) dile göre değişiyor
+  - Chatbot yanıtları seçilen dilde dönüyor
 
-- **DEPLOY ÖNCESİ GEREKLİ:**
-  1. Firebase Console'dan service account JSON indir
-  2. Base64 encode et: `base64 -i service-account.json | tr -d '\n'`
-  3. VPS .env'e ekle: `FIREBASE_SERVICE_ACCOUNT_BASE64=<base64>`
-  4. `npm install` çalıştır
-  5. PM2 ile notification worker'ı başlat
+- **Güncellenmiş Dosyalar (Backend - elyorumweb):**
+  - `src/app/api/analyze/route.ts` - `language` parametresi eklendi, dil duyarlı promptlar
+  - `src/app/api/chat/mobile/route.ts` - `language` parametresi eklendi, dil duyarlı promptlar ve hata mesajları
+
+- **Güncellenmiş Dosyalar (Flutter - elcizgisi):**
+  - `lib/services/api_service.dart` - analyzeImage() ve sendChatMessage() fonksiyonlarına language parametresi eklendi
+  - `lib/services/palm_analysis_service.dart` - locale languageCode geçiriliyor
+  - `lib/screens/analysis_screen.dart` - _languageCode state, StyledAnalysisView'a languageCode geçiriliyor
+  - `lib/screens/chat_screen.dart` - languageCode alınıp API'ye gönderiliyor
+  - `lib/widgets/styled_analysis_view.dart` - languageCode parametresi, tüm başlıklar dile göre
+
+- **Önceki Oturum (Phase 15):**
+  - Push Notification System kuruldu
+  - Firebase Admin SDK, notification worker, streak sync
+
+- **DEPLOY GEREKLİ:**
+  ```bash
+  # VPS'te (Backend)
+  cd /var/www/elcizgisi
+  git pull
+  npm run build
+  pm2 restart el-cizgisi-yorum
+  ```
 
 - **Test için:**
   ```bash
@@ -979,9 +972,4 @@ lib/
   cd /Users/yusufkamil/Desktop/elcizgisi
   flutter clean && flutter pub get
   flutter build ios --simulator
-
-  # Backend (local test)
-  cd /Users/yusufkamil/Desktop/elyorumweb
-  npm install
-  npm run dev
   ```

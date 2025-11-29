@@ -5,11 +5,15 @@ import 'package:palm_analysis/utils/theme.dart';
 /// Styled analysis view that parses and displays palm analysis beautifully
 class StyledAnalysisView extends StatelessWidget {
   final String analysisText;
+  final String languageCode;
 
   const StyledAnalysisView({
     super.key,
     required this.analysisText,
+    this.languageCode = 'tr',
   });
+
+  bool get isEnglish => languageCode == 'en';
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +233,7 @@ class StyledAnalysisView extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Hoş Geldiniz',
+                isEnglish ? 'Welcome' : 'Hoş Geldiniz',
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -372,7 +376,7 @@ class StyledAnalysisView extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Genel Değerlendirme',
+                isEnglish ? 'Overall Assessment' : 'Genel Değerlendirme',
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -460,8 +464,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Yaşam/Life Line
     if (keyLower.contains('yaşam') || keyLower.contains('life')) {
       return _SectionInfo(
-        title: 'Yaşam Çizgisi',
-        subtitle: 'Life Line',
+        title: isEnglish ? 'Life Line' : 'Yaşam Çizgisi',
+        subtitle: isEnglish ? '' : 'Life Line',
         icon: Icons.favorite_rounded,
         color: const Color(0xFFE91E63),
         emoji: '💗',
@@ -471,8 +475,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Kalp/Heart Line
     if (keyLower.contains('kalp') || keyLower.contains('heart')) {
       return _SectionInfo(
-        title: 'Kalp Çizgisi',
-        subtitle: 'Heart Line',
+        title: isEnglish ? 'Heart Line' : 'Kalp Çizgisi',
+        subtitle: isEnglish ? '' : 'Heart Line',
         icon: Icons.volunteer_activism_rounded,
         color: const Color(0xFFE53935),
         emoji: '❤️',
@@ -482,8 +486,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Akıl/Kafa/Head Line
     if (keyLower.contains('akıl') || keyLower.contains('kafa') || keyLower.contains('head')) {
       return _SectionInfo(
-        title: 'Akıl Çizgisi',
-        subtitle: 'Head Line',
+        title: isEnglish ? 'Head Line' : 'Akıl Çizgisi',
+        subtitle: isEnglish ? '' : 'Head Line',
         icon: Icons.psychology_rounded,
         color: const Color(0xFF3F51B5),
         emoji: '🧠',
@@ -493,8 +497,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Kader/Fate Line
     if (keyLower.contains('kader') || keyLower.contains('fate')) {
       return _SectionInfo(
-        title: 'Kader Çizgisi',
-        subtitle: 'Fate Line',
+        title: isEnglish ? 'Fate Line' : 'Kader Çizgisi',
+        subtitle: isEnglish ? '' : 'Fate Line',
         icon: Icons.auto_awesome_rounded,
         color: const Color(0xFF9C27B0),
         emoji: '✨',
@@ -504,8 +508,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Güneş/Sun Line
     if (keyLower.contains('güneş') || keyLower.contains('sun')) {
       return _SectionInfo(
-        title: 'Güneş Çizgisi',
-        subtitle: 'Sun Line',
+        title: isEnglish ? 'Sun Line' : 'Güneş Çizgisi',
+        subtitle: isEnglish ? '' : 'Sun Line',
         icon: Icons.wb_sunny_rounded,
         color: const Color(0xFFFF9800),
         emoji: '☀️',
@@ -515,8 +519,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Sağlık/Health Line
     if (keyLower.contains('sağlık') || keyLower.contains('health')) {
       return _SectionInfo(
-        title: 'Sağlık Çizgisi',
-        subtitle: 'Health Line',
+        title: isEnglish ? 'Health Line' : 'Sağlık Çizgisi',
+        subtitle: isEnglish ? '' : 'Health Line',
         icon: Icons.health_and_safety_rounded,
         color: const Color(0xFF4CAF50),
         emoji: '💚',
@@ -526,8 +530,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Evlilik/Marriage Line
     if (keyLower.contains('evlilik') || keyLower.contains('marriage')) {
       return _SectionInfo(
-        title: 'Evlilik Çizgisi',
-        subtitle: 'Marriage Line',
+        title: isEnglish ? 'Marriage Line' : 'Evlilik Çizgisi',
+        subtitle: isEnglish ? '' : 'Marriage Line',
         icon: Icons.favorite_border_rounded,
         color: const Color(0xFFFF4081),
         emoji: '💍',
@@ -537,8 +541,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Venüs Tepesi
     if (keyLower.contains('venüs') || keyLower.contains('venus')) {
       return _SectionInfo(
-        title: 'Venüs Tepesi',
-        subtitle: 'Mount of Venus',
+        title: isEnglish ? 'Mount of Venus' : 'Venüs Tepesi',
+        subtitle: isEnglish ? '' : 'Mount of Venus',
         icon: Icons.spa_rounded,
         color: const Color(0xFFEC407A),
         emoji: '🌸',
@@ -548,8 +552,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Jüpiter Tepesi
     if (keyLower.contains('jüpiter') || keyLower.contains('jupiter')) {
       return _SectionInfo(
-        title: 'Jüpiter Tepesi',
-        subtitle: 'Mount of Jupiter',
+        title: isEnglish ? 'Mount of Jupiter' : 'Jüpiter Tepesi',
+        subtitle: isEnglish ? '' : 'Mount of Jupiter',
         icon: Icons.emoji_events_rounded,
         color: const Color(0xFFFFB300),
         emoji: '👑',
@@ -559,8 +563,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Satürn Tepesi
     if (keyLower.contains('satürn') || keyLower.contains('saturn')) {
       return _SectionInfo(
-        title: 'Satürn Tepesi',
-        subtitle: 'Mount of Saturn',
+        title: isEnglish ? 'Mount of Saturn' : 'Satürn Tepesi',
+        subtitle: isEnglish ? '' : 'Mount of Saturn',
         icon: Icons.architecture_rounded,
         color: const Color(0xFF607D8B),
         emoji: '🪐',
@@ -570,8 +574,8 @@ class StyledAnalysisView extends StatelessWidget {
     // Ay Tepesi
     if (keyLower.contains('ay tepesi') || keyLower.contains('moon')) {
       return _SectionInfo(
-        title: 'Ay Tepesi',
-        subtitle: 'Mount of Moon',
+        title: isEnglish ? 'Mount of Moon' : 'Ay Tepesi',
+        subtitle: isEnglish ? '' : 'Mount of Moon',
         icon: Icons.nightlight_round,
         color: const Color(0xFF5C6BC0),
         emoji: '🌙',

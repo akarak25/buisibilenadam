@@ -373,6 +373,32 @@ class LanguageEn implements AppLanguage {
   @override
   String get loginRequired => 'Please login';
 
+  // Login/Register screen
+  @override
+  String get welcome => 'Welcome';
+  @override
+  String get loginToAccount => 'Login to your account';
+  @override
+  String get login => 'Login';
+  @override
+  String get orText => 'or';
+  @override
+  String get signInWithGoogle => 'Sign in with Google';
+  @override
+  String get continueWithoutLogin => 'Continue without login';
+  @override
+  String get dontHaveAccount => "Don't have an account? ";
+  @override
+  String get signUp => 'Sign Up';
+  @override
+  String get emailRequired => 'Email is required';
+  @override
+  String get invalidEmail => 'Enter a valid email';
+  @override
+  String get passwordRequired => 'Password is required';
+  @override
+  String get googleSignInFailed => 'Google sign-in failed. Please try again.';
+
   // System prompt for Claude API requests
   @override
   String get systemPrompt => '''

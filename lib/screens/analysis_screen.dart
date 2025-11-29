@@ -29,6 +29,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   bool _isAnalyzing = true;
   String _analysis = '';
   String? _errorMessage;
+  String _languageCode = 'tr';
   late PalmAnalysisService _analysisService;
   final ApiService _apiService = ApiService();
 
@@ -61,6 +62,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           deviceLanguage = locale.languageCode;
         } catch (_) {}
       }
+
+      // Store language for UI components
+      _languageCode = deviceLanguage;
 
       // Analyze image via backend API
       final analysis = await _analysisService.analyzeHandImage(
@@ -548,6 +552,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Widget _buildAnalysisCard() {
-    return StyledAnalysisView(analysisText: _analysis);
+    return StyledAnalysisView(
+      analysisText: _analysis,
+      languageCode: _languageCode,
+    );
   }
 }

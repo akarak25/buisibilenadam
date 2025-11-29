@@ -60,8 +60,9 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = e.error;
       });
     } catch (e) {
+      final lang = AppLocalizations.of(context).currentLanguage;
       setState(() {
-        _errorMessage = 'Bir hata olustu. Lutfen tekrar deneyin.';
+        _errorMessage = lang.generalError;
       });
     } finally {
       if (mounted) {
@@ -100,8 +101,9 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = e.error;
       });
     } catch (e) {
+      final lang = AppLocalizations.of(context).currentLanguage;
       setState(() {
-        _errorMessage = 'Google girisi basarisiz. Lutfen tekrar deneyin.';
+        _errorMessage = lang.googleSignInFailed;
       });
     } finally {
       if (mounted) {
@@ -205,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Rect.fromLTWH(0, 0, bounds.width, bounds.height),
                             ),
                             child: Text(
-                              'Hos Geldiniz',
+                              lang.welcome,
                               style: GoogleFonts.inter(
                                 fontSize: 32,
                                 fontWeight: FontWeight.w700,
@@ -214,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Hesabiniza giris yapin',
+                            lang.loginToAccount,
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               color: AppTheme.textSecondary,
@@ -303,10 +305,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'E-posta gerekli';
+                                      return lang.emailRequired;
                                     }
                                     if (!value.contains('@')) {
-                                      return 'Gecerli bir e-posta girin';
+                                      return lang.invalidEmail;
                                     }
                                     return null;
                                   },
@@ -351,10 +353,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Sifre gerekli';
+                                      return lang.passwordRequired;
                                     }
                                     if (value.length < 6) {
-                                      return 'Sifre en az 6 karakter olmali';
+                                      return lang.passwordTooShort;
                                     }
                                     return null;
                                   },
@@ -364,14 +366,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                 // Login button
                                 GradientButton(
-                                  text: 'Giris Yap',
+                                  text: lang.login,
                                   onPressed: _login,
                                   isLoading: _isLoading,
                                 ),
 
                                 const SizedBox(height: 20),
 
-                                // Divider with "veya"
+                                // Divider with "or"
                                 Row(
                                   children: [
                                     Expanded(
@@ -383,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 16),
                                       child: Text(
-                                        'veya',
+                                        lang.orText,
                                         style: GoogleFonts.inter(
                                           color: AppTheme.textMuted,
                                           fontSize: 14,
@@ -444,7 +446,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                               ),
                                               const SizedBox(width: 12),
                                               Text(
-                                                'Google ile Giris Yap',
+                                                lang.signInWithGoogle,
                                                 style: GoogleFonts.inter(
                                                   color: AppTheme.textPrimary,
                                                   fontSize: 16,
@@ -463,7 +465,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: TextButton(
                                     onPressed: _skipLogin,
                                     child: Text(
-                                      'Giris yapmadan devam et',
+                                      lang.continueWithoutLogin,
                                       style: GoogleFonts.inter(
                                         color: AppTheme.textSecondary,
                                         fontSize: 14,
@@ -486,7 +488,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Hesabiniz yok mu? ',
+                            lang.dontHaveAccount,
                             style: GoogleFonts.inter(
                               color: AppTheme.textSecondary,
                               fontSize: 14,
@@ -507,7 +509,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Rect.fromLTWH(0, 0, bounds.width, bounds.height),
                               ),
                               child: Text(
-                                'Kayit Ol',
+                                lang.signUp,
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,

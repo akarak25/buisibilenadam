@@ -218,6 +218,7 @@ class ApiService {
     required String message,
     required String analysisContext,
     String? queryId,
+    String language = 'tr',
   }) async {
     try {
       final response = await post(
@@ -225,6 +226,7 @@ class ApiService {
         body: {
           'message': message,
           'analysisContext': analysisContext,
+          'language': language,
           if (queryId != null) 'queryId': queryId,
         },
       );

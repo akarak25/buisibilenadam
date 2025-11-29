@@ -69,11 +69,15 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
       );
 
       if (mounted) {
+        final locale = Localizations.localeOf(context);
+        final isTurkish = locale.languageCode == 'tr';
         setState(() {
           _reading = reading;
           _isLoading = false;
           if (reading == null) {
-            _errorMessage = 'Kişiselleştirilmiş okuma için önce el analizi yapın.';
+            _errorMessage = isTurkish
+                ? 'Kişiselleştirilmiş okuma için önce el analizi yapın.'
+                : 'Please complete a palm analysis first for personalized readings.';
           }
         });
       }
@@ -208,6 +212,9 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
   }
 
   Widget _buildLoadingState() {
+    final locale = Localizations.localeOf(context);
+    final isTurkish = locale.languageCode == 'tr';
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -217,7 +224,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
           ),
           const SizedBox(height: 16),
           Text(
-            'Günlük yorumunuz hazırlanıyor...',
+            isTurkish ? 'Günlük yorumunuz hazırlanıyor...' : 'Preparing your daily reading...',
             style: GoogleFonts.inter(
               fontSize: 14,
               color: AppTheme.textSecondary,
@@ -483,7 +490,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${reading.astronomy.moonPhase.phaseTr} • ${reading.astronomy.moonSign.icon} ${reading.astronomy.moonSign.signTr}',
+              '${reading.astronomy.moonPhase.getName(isTurkish)} • ${reading.astronomy.moonSign.icon} ${reading.astronomy.moonSign.getName(isTurkish)}',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: Colors.white.withOpacity(0.9),
@@ -555,7 +562,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                       ),
                     ),
                     Text(
-                      '${reading.astronomy.activeLine.lineTr} (${reading.astronomy.activeLine.planet})',
+                      '${reading.astronomy.activeLine.getName(isTurkish)} (${reading.astronomy.activeLine.getPlanet(isTurkish)})',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: AppTheme.textSecondary,
@@ -621,7 +628,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                       ),
                     ),
                     Text(
-                      '${reading.astronomy.moonSign.signTr} - ${reading.astronomy.moonSign.element}',
+                      '${reading.astronomy.moonSign.getName(isTurkish)} - ${reading.astronomy.moonSign.getElement(isTurkish)}',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: AppTheme.textSecondary,

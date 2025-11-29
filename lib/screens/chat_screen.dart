@@ -61,10 +61,15 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
+      // Get current language
+      final appLoc = AppLocalizations.of(context);
+      final languageCode = appLoc.locale.languageCode;
+
       final response = await _apiService.sendChatMessage(
         message: message,
         analysisContext: widget.analysisResult,
         queryId: widget.queryId,
+        language: languageCode,
       );
 
       setState(() {
