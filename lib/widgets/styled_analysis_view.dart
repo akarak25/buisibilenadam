@@ -48,6 +48,7 @@ class StyledAnalysisView extends StatelessWidget {
       RegExp(r'(?:^|\n)\**\s*Yaşam Çizgisi[^:]*:\**\s*', caseSensitive: false),
       RegExp(r'(?:^|\n)\**\s*Kalp Çizgisi[^:]*:\**\s*', caseSensitive: false),
       RegExp(r'(?:^|\n)\**\s*Akıl Çizgisi[^:]*:\**\s*', caseSensitive: false),
+      RegExp(r'(?:^|\n)\**\s*Kafa Çizgisi[^:]*:\**\s*', caseSensitive: false),
       RegExp(r'(?:^|\n)\**\s*Kader Çizgisi[^:]*:\**\s*', caseSensitive: false),
       RegExp(r'(?:^|\n)\**\s*Güneş Çizgisi[^:]*:\**\s*', caseSensitive: false),
       RegExp(r'(?:^|\n)\**\s*Sağlık Çizgisi[^:]*:\**\s*', caseSensitive: false),
@@ -74,6 +75,12 @@ class StyledAnalysisView extends StatelessWidget {
       RegExp(r'(?:^|\n)\**\s*Sonuç[^:]*:\**\s*', caseSensitive: false),
       RegExp(r'(?:^|\n)\**\s*Overall[^:]*:\**\s*', caseSensitive: false),
       RegExp(r'(?:^|\n)\**\s*Conclusion[^:]*:\**\s*', caseSensitive: false),
+      // Genel olarak başlayan paragraflar (conclusion pattern)
+      RegExp(r'(?:^|\n)\s*Genel olarak,?\s+', caseSensitive: false),
+      RegExp(r'(?:^|\n)\s*Sonuç olarak,?\s+', caseSensitive: false),
+      RegExp(r'(?:^|\n)\s*Özet olarak,?\s+', caseSensitive: false),
+      RegExp(r'(?:^|\n)\s*In summary,?\s+', caseSensitive: false),
+      RegExp(r'(?:^|\n)\s*Overall,?\s+', caseSensitive: false),
     ];
 
     // Find all section matches with their positions
@@ -121,7 +128,25 @@ class StyledAnalysisView extends StatelessWidget {
 
       // Map to standard key
       String key = _normalizeKey(currentName);
-      if (key == 'sonuç' || key == 'genel yorum' || key == 'conclusion' || key == 'overall') {
+      // Check if this is a conclusion section
+      if (key == 'sonuç' ||
+          key == 'genel yorum' ||
+          key == 'conclusion' ||
+          key == 'overall' ||
+          key.startsWith('genel olarak') ||
+          key.startsWith('sonuç olarak') ||
+          key.startsWith('özet olarak') ||
+          key.startsWith('in summary') ||
+          key.startsWith('overall')) {
+        // For "Genel olarak" style, keep the text as part of content
+        if (key.startsWith('genel olarak') ||
+            key.startsWith('sonuç olarak') ||
+            key.startsWith('özet olarak') ||
+            key.startsWith('in summary') ||
+            key.startsWith('overall,')) {
+          // Prepend the matched text back to content since it's part of the sentence
+          content = currentName + ' ' + content;
+        }
         sections['conclusion'] = content;
       } else {
         sections[key] = content;
@@ -461,8 +486,8 @@ class StyledAnalysisView extends StatelessWidget {
       );
     }
 
-    // Akıl/Head Line
-    if (keyLower.contains('akıl') || keyLower.contains('head')) {
+    // Akıl/Kafa/Head Line
+    if (keyLower.contains('akıl') || keyLower.contains('kafa') || keyLower.contains('head')) {
       return _SectionInfo(
         title: 'Akıl Çizgisi',
         subtitle: 'Head Line',

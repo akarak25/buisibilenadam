@@ -14,28 +14,51 @@ class DailyReadingService {
   factory DailyReadingService() => _instance;
   DailyReadingService._internal();
 
-  // Cache key
-  String _getCacheKey() {
+  // Cache key prefix for daily readings
+  static const String _cacheKeyPrefix = 'daily_reading_';
+
+  // Cache key - NOW INCLUDES USER ID for privacy isolation
+  String _getCacheKey(String userId) {
     final today = DateTime.now().toIso8601String().split('T')[0];
-    return 'daily_reading_$today';
+    return '${_cacheKeyPrefix}${userId}_$today';
+  }
+
+  /// Clear all daily reading cache for current user (called on logout)
+  Future<void> clearAllDailyReadingCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final allKeys = prefs.getKeys();
+
+      // Remove all keys that start with daily_reading_
+      for (final key in allKeys) {
+        if (key.startsWith(_cacheKeyPrefix)) {
+          await prefs.remove(key);
+          print('Cleared daily reading cache: $key');
+        }
+      }
+    } catch (e) {
+      print('Clear all daily reading cache error: $e');
+    }
   }
 
   /// Get personalized daily reading
   /// Returns cached version if available for today
   Future<DailyReading?> getDailyReading({String lang = 'tr'}) async {
     try {
-      // Check cache first
-      final cached = await _getCachedReading();
-      if (cached != null) {
-        print('Returning cached daily reading');
-        return cached;
+      // Get token and userId first
+      final token = await _tokenService.getToken();
+      final userId = await _tokenService.getUserId();
+
+      if (token == null || userId == null) {
+        print('No token or userId available for daily reading');
+        return null;
       }
 
-      // Get token
-      final token = await _tokenService.getToken();
-      if (token == null) {
-        print('No token available for daily reading');
-        return null;
+      // Check cache first (with userId isolation)
+      final cached = await _getCachedReading(userId);
+      if (cached != null) {
+        print('Returning cached daily reading for user: $userId');
+        return cached;
       }
 
       // Fetch from API
@@ -53,8 +76,8 @@ class DailyReadingService {
 
         if (data['success'] == true) {
           final reading = DailyReading.fromJson(data);
-          // Cache the reading
-          await _cacheReading(data);
+          // Cache the reading (with userId isolation)
+          await _cacheReading(userId, data);
           return reading;
         } else {
           print('Daily reading API returned success: false');
@@ -102,7 +125,8 @@ class DailyReadingService {
   Future<bool> savePalmProfile(String analysisText) async {
     try {
       final token = await _tokenService.getToken();
-      if (token == null) return false;
+      final userId = await _tokenService.getUserId();
+      if (token == null || userId == null) return false;
 
       final uri = Uri.parse('${ApiConfig.baseUrl}/palm-profile');
       final response = await http.post(
@@ -117,7 +141,7 @@ class DailyReadingService {
       if (response.statusCode == 200) {
         print('Palm profile saved successfully');
         // Clear daily reading cache to get fresh personalized reading
-        await _clearCache();
+        await _clearCache(userId);
         return true;
       }
       return false;
@@ -127,11 +151,11 @@ class DailyReadingService {
     }
   }
 
-  /// Get cached reading for today
-  Future<DailyReading?> _getCachedReading() async {
+  /// Get cached reading for today (with user isolation)
+  Future<DailyReading?> _getCachedReading(String userId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cacheKey = _getCacheKey();
+      final cacheKey = _getCacheKey(userId);
       final cachedJson = prefs.getString(cacheKey);
 
       if (cachedJson != null) {
@@ -145,23 +169,25 @@ class DailyReadingService {
     }
   }
 
-  /// Cache reading for today
-  Future<void> _cacheReading(Map<String, dynamic> data) async {
+  /// Cache reading for today (with user isolation)
+  Future<void> _cacheReading(String userId, Map<String, dynamic> data) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cacheKey = _getCacheKey();
+      final cacheKey = _getCacheKey(userId);
       await prefs.setString(cacheKey, jsonEncode(data));
+      print('Cached daily reading for user: $userId');
     } catch (e) {
       print('Cache write error: $e');
     }
   }
 
-  /// Clear cache (used when palm profile is updated)
-  Future<void> _clearCache() async {
+  /// Clear cache for specific user (used when palm profile is updated)
+  Future<void> _clearCache(String userId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cacheKey = _getCacheKey();
+      final cacheKey = _getCacheKey(userId);
       await prefs.remove(cacheKey);
+      print('Cleared cache for user: $userId');
     } catch (e) {
       print('Cache clear error: $e');
     }
@@ -169,7 +195,15 @@ class DailyReadingService {
 
   /// Force refresh daily reading (bypass cache)
   Future<DailyReading?> refreshDailyReading({String lang = 'tr'}) async {
-    await _clearCache();
-    return getDailyReading(lang: lang);
+    try {
+      final userId = await _tokenService.getUserId();
+      if (userId != null) {
+        await _clearCache(userId);
+      }
+      return getDailyReading(lang: lang);
+    } catch (e) {
+      print('Refresh daily reading error: $e');
+      return null;
+    }
   }
 }

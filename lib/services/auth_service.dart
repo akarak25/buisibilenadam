@@ -5,11 +5,13 @@ import 'package:palm_analysis/config/api_config.dart';
 import 'package:palm_analysis/models/auth_response.dart';
 import 'package:palm_analysis/models/user.dart';
 import 'package:palm_analysis/services/token_service.dart';
+import 'package:palm_analysis/services/daily_reading_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Authentication service for login, register, and user management
 class AuthService {
   final TokenService _tokenService = TokenService();
+  final DailyReadingService _dailyReadingService = DailyReadingService();
   User? _currentUser;
 
   // Google Sign-In instance
@@ -109,15 +111,23 @@ class AuthService {
 
   /// Logout current user
   Future<void> logout() async {
+    // CRITICAL: Clear daily reading cache to prevent data leaking to next user
+    await _dailyReadingService.clearAllDailyReadingCache();
+
     await _tokenService.clearAll();
     await _clearUserFromPrefs();
     await _googleSignIn.signOut();
     _currentUser = null;
+
+    print('User logged out - all caches cleared');
   }
 
   /// Sign in with Google
   Future<AuthResponse> signInWithGoogle() async {
     try {
+      // CRITICAL: Clear ALL caches before new login to prevent data leaking
+      await _dailyReadingService.clearAllDailyReadingCache();
+
       // Clear previous session data before new login
       await _tokenService.clearAll();
       await _clearUserFromPrefs();
@@ -125,6 +135,8 @@ class AuthService {
 
       // Sign out from previous Google account to allow account selection
       await _googleSignIn.signOut();
+
+      print('Previous session cleared - starting fresh Google Sign-In');
 
       // Trigger Google Sign-In flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
