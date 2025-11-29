@@ -132,8 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: 300,
                 height: 300,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryIndigo.withOpacity(0.08),
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -159,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: 280,
                 height: 280,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryPurple.withOpacity(0.06),
+                  color: AppTheme.primaryPurple.withValues(alpha: 0.06),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -187,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.primaryIndigo.withOpacity(0.3),
+                                  color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                                   blurRadius: 20,
                                   spreadRadius: 2,
                                 ),
@@ -236,10 +236,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                             ),
                             boxShadow: AppTheme.cardShadow,
                           ),
@@ -253,10 +253,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.dangerRed.withOpacity(0.1),
+                                      color: AppTheme.dangerRed.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: AppTheme.dangerRed.withOpacity(0.3),
+                                        color: AppTheme.dangerRed.withValues(alpha: 0.3),
                                       ),
                                     ),
                                     child: Row(
@@ -379,7 +379,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Expanded(
                                       child: Container(
                                         height: 1,
-                                        color: AppTheme.textMuted.withOpacity(0.3),
+                                        color: AppTheme.textMuted.withValues(alpha: 0.3),
                                       ),
                                     ),
                                     Padding(
@@ -395,7 +395,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Expanded(
                                       child: Container(
                                         height: 1,
-                                        color: AppTheme.textMuted.withOpacity(0.3),
+                                        color: AppTheme.textMuted.withValues(alpha: 0.3),
                                       ),
                                     ),
                                   ],
@@ -411,7 +411,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onPressed: _isGoogleLoading ? null : _signInWithGoogle,
                                     style: OutlinedButton.styleFrom(
                                       side: BorderSide(
-                                        color: AppTheme.textMuted.withOpacity(0.3),
+                                        color: AppTheme.textMuted.withValues(alpha: 0.3),
                                       ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
@@ -436,6 +436,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 'https://www.google.com/favicon.ico',
                                                 width: 20,
                                                 height: 20,
+                                                cacheWidth: 60, // 20 * 3 for @3x displays
+                                                cacheHeight: 60,
                                                 errorBuilder: (context, error, stackTrace) {
                                                   return Icon(
                                                     Icons.g_mobiledata,

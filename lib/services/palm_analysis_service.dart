@@ -37,10 +37,10 @@ class PalmAnalysisService {
       // Return the analysis text
       return response.analysis;
     } on ApiError catch (e) {
-      print('API Error: ${e.error}');
+      debugPrint('API Error: ${e.error}');
       return _getApiErrorMessage(e, locale);
     } catch (e) {
-      print('Analysis error: $e');
+      debugPrint('Analysis error: $e');
       return _getErrorMessage('generic_error', locale);
     }
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:palm_analysis/config/api_config.dart';
@@ -142,11 +143,11 @@ class ApiService {
         final data = jsonDecode(jsonBody);
         return Query.fromJson(data);
       } else {
-        print('Query save failed: ${result.statusCode}');
+        debugPrint('Query save failed: ${result.statusCode}');
         return null;
       }
     } catch (e) {
-      print('Error saving query: $e');
+      debugPrint('Error saving query: $e');
       return null;
     }
   }
@@ -241,7 +242,7 @@ class ApiService {
         throw ApiError.fromJson(errorData, response.statusCode);
       }
     } catch (e) {
-      print('Chat error: $e');
+      debugPrint('Chat error: $e');
       rethrow;
     }
   }

@@ -463,4 +463,10 @@ RULES:
 User's previous palm analysis:
 {analysis}
 ''';
+
+  // Entertainment Disclaimer (Apple App Store requirement)
+  @override
+  String get entertainmentDisclaimer => 'This reading is for entertainment purposes only. Palm reading is an ancient art of self-reflection and should not be used as a substitute for professional medical, psychological, or financial advice.';
+  @override
+  String get disclaimerTitle => 'Entertainment Only';
 }

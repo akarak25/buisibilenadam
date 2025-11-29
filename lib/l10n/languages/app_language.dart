@@ -173,4 +173,8 @@ abstract class AppLanguage {
   // System prompt for Claude API requests
   String get systemPrompt;
   String get chatSystemPrompt;
+
+  // Entertainment Disclaimer (Apple App Store requirement)
+  String get entertainmentDisclaimer;
+  String get disclaimerTitle;
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:palm_analysis/config/api_config.dart';
@@ -133,7 +134,7 @@ class AuthService {
     await _googleSignIn.signOut();
     _currentUser = null;
 
-    print('User logged out - all caches cleared');
+    debugPrint('User logged out - all caches cleared');
   }
 
   /// Sign in with Google
@@ -150,7 +151,7 @@ class AuthService {
       // Sign out from previous Google account to allow account selection
       await _googleSignIn.signOut();
 
-      print('Previous session cleared - starting fresh Google Sign-In');
+      debugPrint('Previous session cleared - starting fresh Google Sign-In');
 
       // Trigger Google Sign-In flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -218,7 +219,7 @@ class AuthService {
         _currentUser = User.fromJson(jsonDecode(userJson));
         return _currentUser;
       } catch (e) {
-        print('Error loading stored user: $e');
+        debugPrint('Error loading stored user: $e');
         return null;
       }
     }
@@ -325,5 +326,44 @@ class AuthService {
   Future<void> _clearUserFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('current_user');
+  }
+
+  /// Delete user account permanently (iOS 17.4+ requirement)
+  Future<void> deleteAccount() async {
+    final token = await _tokenService.getToken();
+    if (token == null) {
+      throw ApiError(error: 'Oturum bulunamadi', statusCode: 401);
+    }
+
+    final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.deleteAccountEndpoint}');
+
+    final response = await http
+        .delete(
+          uri,
+          headers: ApiConfig.authHeaders(token),
+        )
+        .timeout(ApiConfig.connectionTimeout);
+
+    if (response.statusCode == 200) {
+      // Account deleted successfully - clear all local data
+      await PushNotificationService.instance.unregisterToken();
+      await _dailyReadingService.clearAllDailyReadingCache();
+      await StreakService().clearLocalStreak();
+      await _tokenService.clearAll();
+      await _clearUserFromPrefs();
+      await _googleSignIn.signOut();
+      _currentUser = null;
+
+      // Clear all analyses from local storage
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('analyses');
+      await prefs.remove('total_analyses');
+
+      debugPrint('Account deleted - all local data cleared');
+    } else {
+      final errorBody = utf8.decode(response.bodyBytes);
+      final errorData = jsonDecode(errorBody);
+      throw ApiError.fromJson(errorData, response.statusCode);
+    }
   }
 }

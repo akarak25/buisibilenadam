@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -6,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:palm_analysis/config/api_config.dart';
 import 'package:palm_analysis/services/token_service.dart';
 import 'package:palm_analysis/main.dart' show navigatorKey;
-import 'package:palm_analysis/screens/home_screen.dart';
 import 'package:palm_analysis/screens/personalized_daily_screen.dart';
 import 'package:palm_analysis/screens/daily_astrology_screen.dart';
 
@@ -27,6 +27,11 @@ class PushNotificationService {
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
+  // Stream subscriptions for proper lifecycle management
+  StreamSubscription<String>? _tokenRefreshSubscription;
+  StreamSubscription<RemoteMessage>? _foregroundMessageSubscription;
+  StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
+
   /// Initialize push notification service
   Future<void> initialize() async {
     try {
@@ -40,13 +45,13 @@ class PushNotificationService {
       await _getToken();
 
       // Listen to token refresh
-      _messaging.onTokenRefresh.listen(_onTokenRefresh);
+      _tokenRefreshSubscription = _messaging.onTokenRefresh.listen(_onTokenRefresh);
 
       // Handle foreground messages
-      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+      _foregroundMessageSubscription = FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
       // Handle message open (when user taps notification)
-      FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
+      _messageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
 
       // Check if app was opened from notification
       final initialMessage = await _messaging.getInitialMessage();
@@ -232,5 +237,16 @@ class PushNotificationService {
   /// Open app settings for notifications
   Future<void> openNotificationSettings() async {
     await _messaging.requestPermission();
+  }
+
+  /// Dispose stream subscriptions (called if service needs to be reinitialized)
+  void dispose() {
+    _tokenRefreshSubscription?.cancel();
+    _foregroundMessageSubscription?.cancel();
+    _messageOpenedSubscription?.cancel();
+    _tokenRefreshSubscription = null;
+    _foregroundMessageSubscription = null;
+    _messageOpenedSubscription = null;
+    debugPrint('Push notification service disposed');
   }
 }

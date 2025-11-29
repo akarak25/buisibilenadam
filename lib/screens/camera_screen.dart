@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ class _CameraScreenState extends State<CameraScreen>
   bool _isHandDetected = false;
   bool _isHandAligned = false;
   bool _hasGoodLighting = false;
+  Timer? _lightDetectionTimer;
 
   @override
   void initState() {
@@ -60,6 +62,7 @@ class _CameraScreenState extends State<CameraScreen>
     if (!_isCameraReady || _cameraService.controller == null) return;
 
     if (state == AppLifecycleState.inactive) {
+      _lightDetectionTimer?.cancel();
       _cameraService.dispose();
       _isCameraReady = false;
     } else if (state == AppLifecycleState.resumed) {
@@ -69,6 +72,7 @@ class _CameraScreenState extends State<CameraScreen>
 
   @override
   void dispose() {
+    _lightDetectionTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _cameraService.dispose();
     super.dispose();
@@ -77,18 +81,35 @@ class _CameraScreenState extends State<CameraScreen>
   void _startLightLevelDetection() {
     if (!_isCameraReady || _cameraService.controller == null) return;
 
+    // Cancel any existing timer
+    _lightDetectionTimer?.cancel();
+
+    // Initial check
+    _checkLightLevel();
+
+    // Start periodic timer
+    _lightDetectionTimer = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) => _checkLightLevel(),
+    );
+  }
+
+  void _checkLightLevel() {
+    if (!mounted || !_isCameraReady || _cameraService.controller == null) {
+      _lightDetectionTimer?.cancel();
+      return;
+    }
+
     try {
-      if (mounted) {
-        _cameraService.hasGoodLighting().then((bool hasGoodLight) {
+      _cameraService.hasGoodLighting().then((bool hasGoodLight) {
+        if (mounted) {
           setState(() {
             _hasGoodLighting = hasGoodLight;
           });
-        });
-      }
-
-      Future.delayed(const Duration(seconds: 2), _startLightLevelDetection);
+        }
+      });
     } catch (e) {
-      print('Light level detection error: $e');
+      debugPrint('Light level detection error: $e');
     }
   }
 
@@ -241,7 +262,7 @@ class _CameraScreenState extends State<CameraScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.7),
+                    Colors.black.withValues(alpha: 0.7),
                     Colors.transparent,
                   ],
                 ),
@@ -289,7 +310,7 @@ class _CameraScreenState extends State<CameraScreen>
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Colors.black.withOpacity(0.8),
+                    Colors.black.withValues(alpha: 0.8),
                     Colors.transparent,
                   ],
                 ),
@@ -308,7 +329,7 @@ class _CameraScreenState extends State<CameraScreen>
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -365,10 +386,10 @@ class _CameraScreenState extends State<CameraScreen>
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
               ),
             ),
             child: Icon(
@@ -390,10 +411,10 @@ class _CameraScreenState extends State<CameraScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
             ),
           ),
           child: Row(
@@ -436,12 +457,12 @@ class _CameraScreenState extends State<CameraScreen>
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(isDisabled ? 0.1 : 0.2),
+              color: Colors.white.withValues(alpha: isDisabled ? 0.1 : 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
-              color: Colors.white.withOpacity(isDisabled ? 0.3 : 1),
+              color: Colors.white.withValues(alpha: isDisabled ? 0.3 : 1),
               size: 26,
             ),
           ),
@@ -450,7 +471,7 @@ class _CameraScreenState extends State<CameraScreen>
             label,
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: Colors.white.withOpacity(isDisabled ? 0.3 : 0.7),
+              color: Colors.white.withValues(alpha: isDisabled ? 0.3 : 0.7),
             ),
           ),
         ],
@@ -469,7 +490,7 @@ class _CameraScreenState extends State<CameraScreen>
           gradient: AppTheme.primaryGradient,
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryIndigo.withOpacity(0.5),
+              color: AppTheme.primaryIndigo.withValues(alpha: 0.5),
               blurRadius: 20,
               spreadRadius: 2,
             ),

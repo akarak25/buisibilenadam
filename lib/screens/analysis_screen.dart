@@ -52,10 +52,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           // First try to get from AppLocalizations
           final appLoc = AppLocalizations.of(context);
           deviceLanguage = appLoc.locale.languageCode;
-          print('Analysis language detected: $deviceLanguage');
+          debugPrint('Analysis language detected: $deviceLanguage');
         }
       } catch (e) {
-        print('Language detection error: $e');
+        debugPrint('Language detection error: $e');
         // Fallback: try Localizations.localeOf
         try {
           final locale = Localizations.localeOf(context);
@@ -85,7 +85,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         );
         await _saveAnalysis(palmAnalysis);
       } catch (e) {
-        print('Local save error: $e');
+        debugPrint('Local save error: $e');
       }
 
       // Save to backend database for sync across platforms
@@ -95,9 +95,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           question: 'El çizgilerimi yorumlar mısın?',
           response: analysis,
         );
-        print('Query saved to backend successfully');
+        debugPrint('Query saved to backend successfully');
       } catch (e) {
-        print('Backend save error: $e');
+        debugPrint('Backend save error: $e');
       }
 
       if (mounted) {
@@ -107,7 +107,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         });
       }
     } catch (e) {
-      print('Analysis error: $e');
+      debugPrint('Analysis error: $e');
       if (mounted) {
         setState(() {
           _isAnalyzing = false;
@@ -132,7 +132,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       final savedImage = await imageFile.copy(savedImagePath);
       return savedImage.path;
     } catch (e) {
-      print('Image save error: $e');
+      debugPrint('Image save error: $e');
       return imageFile.path;
     }
   }
@@ -157,7 +157,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       final totalAnalyses = prefs.getInt('total_analyses') ?? 0;
       await prefs.setInt('total_analyses', totalAnalyses + 1);
     } catch (e) {
-      print('Analysis save error: $e');
+      debugPrint('Analysis save error: $e');
     }
   }
 
@@ -179,8 +179,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -196,8 +196,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryIndigo.withOpacity(0.12),
-                      AppTheme.primaryPurple.withOpacity(0.08),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.12),
+                      AppTheme.primaryPurple.withValues(alpha: 0.08),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -264,6 +264,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                             _buildLoadingCard(lang)
                           else
                             _buildAnalysisCard(),
+
+                          // Entertainment disclaimer (Apple App Store requirement)
+                          if (!_isAnalyzing && _errorMessage == null) ...[
+                            const SizedBox(height: 16),
+                            _buildDisclaimerCard(lang),
+                          ],
 
                           const SizedBox(height: 24),
 
@@ -336,7 +342,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           boxShadow: AppTheme.cardShadow,
         ),
@@ -355,7 +361,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryIndigo.withOpacity(0.2),
+            color: AppTheme.primaryIndigo.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -370,6 +376,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               width: double.infinity,
               height: 220,
               fit: BoxFit.cover,
+              cacheHeight: 660, // 220 * 3 for @3x displays
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   width: double.infinity,
@@ -401,7 +408,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.5),
+                      Colors.black.withValues(alpha: 0.5),
                     ],
                   ),
                 ),
@@ -423,7 +430,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         gradient: hasError
             ? LinearGradient(
                 colors: [
-                  AppTheme.dangerRed.withOpacity(0.9),
+                  AppTheme.dangerRed.withValues(alpha: 0.9),
                   AppTheme.dangerRed,
                 ],
               )
@@ -431,7 +438,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ? AppTheme.successGradient
                 : LinearGradient(
                     colors: [
-                      AppTheme.warningAmber.withOpacity(0.9),
+                      AppTheme.warningAmber.withValues(alpha: 0.9),
                       AppTheme.warningAmber,
                     ],
                   ),
@@ -439,10 +446,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         boxShadow: [
           BoxShadow(
             color: hasError
-                ? AppTheme.dangerRed.withOpacity(0.3)
+                ? AppTheme.dangerRed.withValues(alpha: 0.3)
                 : isComplete
-                    ? AppTheme.successGreen.withOpacity(0.3)
-                    : AppTheme.warningAmber.withOpacity(0.3),
+                    ? AppTheme.successGreen.withValues(alpha: 0.3)
+                    : AppTheme.warningAmber.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -492,10 +499,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
         ),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -515,10 +522,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.dangerRed.withOpacity(0.2),
+          color: AppTheme.dangerRed.withValues(alpha: 0.2),
         ),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -527,7 +534,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           Icon(
             Icons.error_outline_rounded,
             size: 64,
-            color: AppTheme.dangerRed.withOpacity(0.7),
+            color: AppTheme.dangerRed.withValues(alpha: 0.7),
           ),
           const SizedBox(height: 16),
           Text(
@@ -546,6 +553,55 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               color: AppTheme.textSecondary,
             ),
             textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDisclaimerCard(dynamic lang) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.warningAmber.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.warningAmber.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            color: AppTheme.warningAmber,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  lang.disclaimerTitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.warningAmber.withValues(alpha: 0.9),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  lang.entertainmentDisclaimer,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -60,8 +60,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -77,8 +77,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryPurple.withOpacity(0.1),
-                      AppTheme.primaryIndigo.withOpacity(0.06),
+                      AppTheme.primaryPurple.withValues(alpha: 0.1),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.06),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -137,6 +137,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   );
                                 },
                               ),
+                              if (_currentUser != null) ...[
+                                const Divider(height: 1, indent: 16, endIndent: 16),
+                                _buildSettingsTile(
+                                  icon: Icons.delete_forever_rounded,
+                                  title: lang.deleteAccount,
+                                  subtitle: Localizations.localeOf(context).languageCode == 'tr'
+                                      ? 'Hesabınızı ve tüm verilerinizi silin'
+                                      : 'Delete your account and all data',
+                                  onTap: _showDeleteAccountDialog,
+                                  isDanger: true,
+                                ),
+                              ],
                             ],
                           ),
 
@@ -214,7 +226,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     boxShadow: [
                                       BoxShadow(
                                         color: AppTheme.primaryIndigo
-                                            .withOpacity(0.3),
+                                            .withValues(alpha: 0.3),
                                         blurRadius: 15,
                                         spreadRadius: 2,
                                       ),
@@ -277,7 +289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           boxShadow: AppTheme.cardShadow,
         ),
@@ -307,10 +319,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSettingsCard({required List<Widget> children}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
         ),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -332,6 +344,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String? subtitle,
     required VoidCallback onTap,
     bool isPremium = false,
+    bool isDanger = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -343,9 +356,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                gradient: isPremium
-                    ? AppTheme.premiumGradient
-                    : AppTheme.primaryGradient,
+                gradient: isDanger
+                    ? LinearGradient(
+                        colors: [
+                          AppTheme.dangerRed.withValues(alpha: 0.9),
+                          AppTheme.dangerRed,
+                        ],
+                      )
+                    : isPremium
+                        ? AppTheme.premiumGradient
+                        : AppTheme.primaryGradient,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -364,7 +384,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textPrimary,
+                      color: isDanger ? AppTheme.dangerRed : AppTheme.textPrimary,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -382,13 +402,183 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: AppTheme.textMuted,
+              color: isDanger ? AppTheme.dangerRed.withValues(alpha: 0.5) : AppTheme.textMuted,
               size: 22,
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _showDeleteAccountDialog() {
+    final lang = AppLocalizations.of(context).currentLanguage;
+    final isTurkish = Localizations.localeOf(context).languageCode == 'tr';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.dangerRed.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.warning_rounded,
+                color: AppTheme.dangerRed,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              lang.deleteAccount,
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.dangerRed,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              lang.deleteAccountConfirmation,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppTheme.textPrimary,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.dangerRed.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.dangerRed.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: AppTheme.dangerRed,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      isTurkish
+                          ? 'Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.'
+                          : 'This action cannot be undone. All your data will be permanently deleted.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppTheme.dangerRed,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              lang.cancel,
+              style: GoogleFonts.inter(
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await _deleteAccount();
+            },
+            child: Text(
+              lang.deleteAccount,
+              style: GoogleFonts.inter(
+                color: AppTheme.dangerRed,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteAccount() async {
+    final lang = AppLocalizations.of(context).currentLanguage;
+    final isTurkish = Localizations.localeOf(context).languageCode == 'tr';
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        content: Row(
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.dangerRed),
+            ),
+            const SizedBox(width: 20),
+            Text(
+              isTurkish ? 'Hesap siliniyor...' : 'Deleting account...',
+              style: GoogleFonts.inter(fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      await _authService.deleteAccount();
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+
+        // Show success and navigate to home
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(lang.accountDeleted),
+            backgroundColor: AppTheme.successGreen,
+          ),
+        );
+
+        // Navigate to home and clear navigation stack
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isTurkish
+                ? 'Hesap silinemedi: $e'
+                : 'Failed to delete account: $e'),
+            backgroundColor: AppTheme.dangerRed,
+          ),
+        );
+      }
+    }
   }
 
   void _showAboutDialog() {
@@ -411,7 +601,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryIndigo.withOpacity(0.3),
+                    color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                     blurRadius: 15,
                     spreadRadius: 2,
                   ),

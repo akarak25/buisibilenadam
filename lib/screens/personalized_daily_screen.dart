@@ -21,7 +21,7 @@ class PersonalizedDailyScreen extends StatefulWidget {
 }
 
 class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final DailyReadingService _readingService = DailyReadingService();
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
@@ -33,6 +33,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _animationController = AnimationController(
       vsync: this,
@@ -92,7 +93,17 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _animationController.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      _animationController.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
     super.dispose();
   }
@@ -117,8 +128,8 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppTheme.primaryIndigo.withOpacity(0.08),
-                    Colors.white.withOpacity(0.95),
+                    AppTheme.primaryIndigo.withValues(alpha: 0.08),
+                    Colors.white.withValues(alpha: 0.95),
                   ],
                 ),
               ),
@@ -134,8 +145,8 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryPurple.withOpacity(0.12),
-                      AppTheme.primaryIndigo.withOpacity(0.08),
+                      AppTheme.primaryPurple.withValues(alpha: 0.12),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.08),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -198,7 +209,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           boxShadow: AppTheme.cardShadow,
         ),
@@ -250,7 +261,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryIndigo.withOpacity(0.3),
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -302,7 +313,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryIndigo.withOpacity(0.3),
+                    color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -353,7 +364,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: AppTheme.successGreen.withOpacity(0.1),
+                color: AppTheme.successGreen.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -443,13 +454,13 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
           colors: [
             const Color(0xFF1a1a2e),
             const Color(0xFF16213e),
-            AppTheme.primaryIndigo.withOpacity(0.8),
+            AppTheme.primaryIndigo.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryIndigo.withOpacity(0.3),
+            color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -486,14 +497,14 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '${reading.astronomy.moonPhase.getName(isTurkish)} • ${reading.astronomy.moonSign.icon} ${reading.astronomy.moonSign.getName(isTurkish)}',
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ),
@@ -503,7 +514,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
             reading.reading.dailyEnergy,
             style: GoogleFonts.inter(
               fontSize: 15,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -521,13 +532,13 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryIndigo.withOpacity(0.1),
-            AppTheme.primaryPurple.withOpacity(0.08),
+            AppTheme.primaryIndigo.withValues(alpha: 0.1),
+            AppTheme.primaryPurple.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.primaryIndigo.withOpacity(0.2),
+          color: AppTheme.primaryIndigo.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -591,7 +602,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -604,7 +615,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryPurple.withOpacity(0.15),
+                  color: AppTheme.primaryPurple.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -661,7 +672,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.successGreen.withOpacity(0.3),
+            color: AppTheme.successGreen.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -675,7 +686,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -700,7 +711,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
             reading.reading.advice,
             style: GoogleFonts.inter(
               fontSize: 15,
-              color: Colors.white.withOpacity(0.95),
+              color: Colors.white.withValues(alpha: 0.95),
               height: 1.6,
             ),
           ),
@@ -723,8 +734,8 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryIndigo.withOpacity(0.2),
-                      AppTheme.primaryPurple.withOpacity(0.15),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.2),
+                      AppTheme.primaryPurple.withValues(alpha: 0.15),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(10),
@@ -813,7 +824,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: gradientColors[0].withOpacity(0.15),
+            color: gradientColors[0].withValues(alpha: 0.15),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -854,7 +865,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
           trailing: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: gradientColors[0].withOpacity(0.1),
+              color: gradientColors[0].withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -870,13 +881,13 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    gradientColors[0].withOpacity(0.08),
-                    gradientColors[1].withOpacity(0.05),
+                    gradientColors[0].withValues(alpha: 0.08),
+                    gradientColors[1].withValues(alpha: 0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: gradientColors[0].withOpacity(0.15),
+                  color: gradientColors[0].withValues(alpha: 0.15),
                 ),
               ),
               child: Column(
@@ -914,7 +925,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -951,10 +962,10 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.warningAmber.withOpacity(0.1),
+        color: AppTheme.warningAmber.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.warningAmber.withOpacity(0.3),
+          color: AppTheme.warningAmber.withValues(alpha: 0.3),
         ),
       ),
       child: Row(

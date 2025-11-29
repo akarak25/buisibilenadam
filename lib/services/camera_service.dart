@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,7 +21,7 @@ class CameraService {
       cameras = await availableCameras();
       controller = CameraController(
         cameras[0], // Arka kamera
-        ResolutionPreset.high,
+        ResolutionPreset.medium, // Memory optimization - high not needed for palm analysis
         imageFormatGroup: ImageFormatGroup.jpeg,
         enableAudio: false, // Ses kaydını devre dışı bırak
       );
@@ -50,10 +51,10 @@ class CameraService {
       try {
         await controller!.setFlashMode(FlashMode.off);
       } catch (e) {
-        print('Flash modu ayarlanamıyor: $e');
+        debugPrint('Flash modu ayarlanamıyor: $e');
       }
     } catch (e) {
-      print('Kamera ayarları yapılandırma hatası: $e');
+      debugPrint('Kamera ayarları yapılandırma hatası: $e');
     }
   }
   
@@ -65,7 +66,7 @@ class CameraService {
       // Basit bir kontrol - otomatik olarak iyi ışıklandırma varsay
       return true;
     } catch (e) {
-      print('Işık kontrolü hatası: $e');
+      debugPrint('Işık kontrolü hatası: $e');
       return false;
     }
   }

@@ -27,8 +27,8 @@ class LanguageSettingsScreen extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -44,8 +44,8 @@ class LanguageSettingsScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryPurple.withOpacity(0.1),
-                      AppTheme.primaryIndigo.withOpacity(0.06),
+                      AppTheme.primaryPurple.withValues(alpha: 0.1),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.06),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -124,7 +124,7 @@ class LanguageSettingsScreen extends StatelessWidget {
                                     boxShadow: [
                                       BoxShadow(
                                         color: AppTheme.primaryIndigo
-                                            .withOpacity(0.3),
+                                            .withValues(alpha: 0.3),
                                         blurRadius: 15,
                                         spreadRadius: 2,
                                       ),
@@ -169,7 +169,7 @@ class LanguageSettingsScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           boxShadow: AppTheme.cardShadow,
         ),
@@ -186,10 +186,10 @@ class LanguageSettingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
         ),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -246,10 +246,10 @@ class LanguageSettingsScreen extends StatelessWidget {
   Widget _buildLanguagesCard(BuildContext context, dynamic lang) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
         ),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -267,7 +267,7 @@ class LanguageSettingsScreen extends StatelessWidget {
               ),
               Divider(
                 height: 1,
-                color: AppTheme.textMuted.withOpacity(0.2),
+                color: AppTheme.textMuted.withValues(alpha: 0.2),
               ),
               _buildLanguageOption(
                 context: context,
@@ -302,8 +302,8 @@ class LanguageSettingsScreen extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppTheme.primaryIndigo.withOpacity(0.1)
-                    : AppTheme.textMuted.withOpacity(0.1),
+                    ? AppTheme.primaryIndigo.withValues(alpha: 0.1)
+                    : AppTheme.textMuted.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
@@ -344,7 +344,7 @@ class LanguageSettingsScreen extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: AppTheme.textMuted.withOpacity(0.3),
+                    color: AppTheme.textMuted.withValues(alpha: 0.3),
                     width: 2,
                   ),
                   shape: BoxShape.circle,

@@ -1,0 +1,11 @@
+/* Turkish localization */
+
+/* App name displayed on home screen */
+"CFBundleDisplayName" = "El Çizgisi";
+"CFBundleName" = "El Çizgisi";
+
+/* Camera permission */
+"NSCameraUsageDescription" = "El çizgilerinizi analiz etmek için kameraya erişim gereklidir";
+
+/* Photo library permission */
+"NSPhotoLibraryUsageDescription" = "El çizgilerinizi analiz etmek için fotoğraf galerisine erişim gereklidir";

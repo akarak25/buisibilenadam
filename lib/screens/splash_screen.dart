@@ -162,8 +162,8 @@ class _SplashScreenState extends State<SplashScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.92),
-                    Colors.white.withOpacity(0.88),
+                    Colors.white.withValues(alpha: 0.92),
+                    Colors.white.withValues(alpha: 0.88),
                   ],
                 ),
               ),
@@ -181,7 +181,7 @@ class _SplashScreenState extends State<SplashScreen>
                     height: 250,
                     decoration: BoxDecoration(
                       color: AppTheme.primaryIndigo
-                          .withOpacity(_pulseAnimation.value * 0.15),
+                          .withValues(alpha: _pulseAnimation.value * 0.15),
                       shape: BoxShape.circle,
                     ),
                   );
@@ -199,7 +199,7 @@ class _SplashScreenState extends State<SplashScreen>
                     height: 200,
                     decoration: BoxDecoration(
                       color: AppTheme.primaryPurple
-                          .withOpacity(_pulseAnimation.value * 0.12),
+                          .withValues(alpha: _pulseAnimation.value * 0.12),
                       shape: BoxShape.circle,
                     ),
                   );
@@ -229,7 +229,7 @@ class _SplashScreenState extends State<SplashScreen>
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      AppTheme.primaryIndigo.withOpacity(0.4),
+                                      AppTheme.primaryIndigo.withValues(alpha: 0.4),
                                   blurRadius: 30,
                                   spreadRadius: 5,
                                 ),
@@ -297,7 +297,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: CircularProgressIndicator(
                         strokeWidth: 3,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppTheme.primaryIndigo.withOpacity(0.7),
+                          AppTheme.primaryIndigo.withValues(alpha: 0.7),
                         ),
                       ),
                     ),

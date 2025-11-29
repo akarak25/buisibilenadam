@@ -129,7 +129,7 @@ class SnackbarHelper {
         duration: duration,
         action: SnackBarAction(
           label: 'Kapat',
-          textColor: Colors.white.withOpacity(0.9),
+          textColor: Colors.white.withValues(alpha: 0.9),
           onPressed: () {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
           },

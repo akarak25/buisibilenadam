@@ -140,8 +140,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -157,8 +157,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryIndigo.withOpacity(0.12),
-                      AppTheme.primaryPurple.withOpacity(0.08),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.12),
+                      AppTheme.primaryPurple.withValues(alpha: 0.08),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -174,8 +174,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryPurple.withOpacity(0.1),
-                      AppTheme.primaryIndigo.withOpacity(0.06),
+                      AppTheme.primaryPurple.withValues(alpha: 0.1),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.06),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -249,7 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           boxShadow: AppTheme.cardShadow,
         ),
@@ -276,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryIndigo.withOpacity(0.3),
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -351,7 +351,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   gradient: LinearGradient(
                     colors: [
                       AppTheme.warningAmber,
-                      AppTheme.warningAmber.withOpacity(0.8),
+                      AppTheme.warningAmber.withValues(alpha: 0.8),
                     ],
                   ),
                 ),
@@ -383,7 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryIndigo.withOpacity(0.3),
+            color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -400,7 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                 ),
               ],
@@ -443,7 +443,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _currentUser?.email ?? '',
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -454,7 +454,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -487,7 +487,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryIndigo.withOpacity(0.2),
+            color: AppTheme.primaryIndigo.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -515,7 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             label,
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
         ],
@@ -527,10 +527,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
         ),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -629,10 +629,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildAccountActionsCard(dynamic lang) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
         ),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -672,8 +672,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               height: 40,
               decoration: BoxDecoration(
                 color: isDestructive
-                    ? AppTheme.dangerRed.withOpacity(0.1)
-                    : AppTheme.primaryIndigo.withOpacity(0.1),
+                    ? AppTheme.dangerRed.withValues(alpha: 0.1)
+                    : AppTheme.primaryIndigo.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(

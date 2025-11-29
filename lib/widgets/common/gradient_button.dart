@@ -139,8 +139,8 @@ class _SecondaryButtonState extends State<SecondaryButton> {
           ..scale(_isPressed ? 0.98 : 1.0),
         decoration: BoxDecoration(
           color: _isPressed
-              ? AppTheme.primaryIndigo.withOpacity(0.1)
-              : Colors.white.withOpacity(0.9),
+              ? AppTheme.primaryIndigo.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
           border: Border.all(
             color: AppTheme.borderIndigo,

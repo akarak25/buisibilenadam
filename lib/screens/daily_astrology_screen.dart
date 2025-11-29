@@ -19,7 +19,7 @@ class DailyAstrologyScreen extends StatefulWidget {
 }
 
 class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final AstrologyService _astrologyService = AstrologyService();
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
@@ -27,6 +27,7 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
@@ -43,7 +44,17 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _animationController.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      _animationController.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
     super.dispose();
   }
@@ -97,8 +108,8 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppTheme.primaryIndigo.withOpacity(0.1),
-                    Colors.white.withOpacity(0.95),
+                    AppTheme.primaryIndigo.withValues(alpha: 0.1),
+                    Colors.white.withValues(alpha: 0.95),
                   ],
                 ),
               ),
@@ -114,8 +125,8 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryPurple.withOpacity(0.15),
-                      AppTheme.primaryIndigo.withOpacity(0.1),
+                      AppTheme.primaryPurple.withValues(alpha: 0.15),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.1),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -131,8 +142,8 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryIndigo.withOpacity(0.08),
-                      AppTheme.primaryPurple.withOpacity(0.05),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.08),
+                      AppTheme.primaryPurple.withValues(alpha: 0.05),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -276,7 +287,7 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           boxShadow: AppTheme.cardShadow,
         ),
@@ -303,13 +314,13 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
           colors: [
             const Color(0xFF1a1a2e),
             const Color(0xFF16213e),
-            AppTheme.primaryIndigo.withOpacity(0.8),
+            AppTheme.primaryIndigo.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryIndigo.withOpacity(0.3),
+            color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -346,7 +357,7 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
             insight,
             style: GoogleFonts.inter(
               fontSize: 15,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -360,7 +371,7 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -411,7 +422,7 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -499,13 +510,13 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryIndigo.withOpacity(0.1),
-            AppTheme.primaryPurple.withOpacity(0.08),
+            AppTheme.primaryIndigo.withValues(alpha: 0.1),
+            AppTheme.primaryPurple.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.primaryIndigo.withOpacity(0.2),
+          color: AppTheme.primaryIndigo.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -575,7 +586,7 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -588,7 +599,7 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppTheme.warningAmber.withOpacity(0.15),
+                  color: AppTheme.warningAmber.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -650,13 +661,13 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryIndigo.withOpacity(0.15),
-            AppTheme.primaryPurple.withOpacity(0.1),
+            AppTheme.primaryIndigo.withValues(alpha: 0.15),
+            AppTheme.primaryPurple.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.primaryIndigo.withOpacity(0.3),
+          color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -710,7 +721,7 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryIndigo.withOpacity(0.3),
+                    color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

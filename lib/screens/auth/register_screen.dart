@@ -5,7 +5,6 @@ import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/screens/home_screen.dart';
 import 'package:palm_analysis/services/auth_service.dart';
 import 'package:palm_analysis/models/auth_response.dart';
-import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/widgets/common/gradient_button.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -92,8 +91,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -107,7 +106,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: 300,
                 height: 300,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryPurple.withOpacity(0.08),
+                  color: AppTheme.primaryPurple.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -119,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: 250,
                 height: 250,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryIndigo.withOpacity(0.06),
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.06),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -138,7 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           shape: BoxShape.circle,
                           boxShadow: AppTheme.cardShadow,
                         ),
@@ -187,10 +186,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                         boxShadow: AppTheme.cardShadow,
                       ),
@@ -208,10 +207,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.dangerRed.withOpacity(0.1),
+                                      color: AppTheme.dangerRed.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: AppTheme.dangerRed.withOpacity(0.3),
+                                        color: AppTheme.dangerRed.withValues(alpha: 0.3),
                                       ),
                                     ),
                                     child: Row(

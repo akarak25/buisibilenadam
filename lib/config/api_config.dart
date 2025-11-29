@@ -29,6 +29,7 @@ class ApiConfig {
   // User endpoints
   static const String userProfileEndpoint = '/user/profile';
   static const String userOnboardingEndpoint = '/user/onboarding';
+  static const String deleteAccountEndpoint = '/user/delete-account';
 
   // Timeouts
   static const Duration connectionTimeout = Duration(seconds: 30);

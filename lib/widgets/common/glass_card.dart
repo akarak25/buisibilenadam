@@ -30,10 +30,10 @@ class GlassCard extends StatelessWidget {
     final card = Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(opacity),
+        color: Colors.white.withValues(alpha: opacity),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: borderColor ?? Colors.white.withOpacity(0.5),
+          color: borderColor ?? Colors.white.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: AppTheme.cardShadow,
@@ -100,10 +100,10 @@ class _GlassCardHoverState extends State<GlassCardHover> {
           ..translate(0.0, _isPressed ? 0.0 : -2.0),
         margin: widget.margin,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(widget.opacity),
+          color: Colors.white.withValues(alpha: widget.opacity),
           borderRadius: BorderRadius.circular(widget.borderRadius),
           border: Border.all(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             width: 1,
           ),
           boxShadow: _isPressed

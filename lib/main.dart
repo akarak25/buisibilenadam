@@ -71,7 +71,7 @@ void main() async {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppTheme.dangerRed.withOpacity(0.1),
+                      color: AppTheme.dangerRed.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(

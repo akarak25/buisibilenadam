@@ -205,13 +205,13 @@ class StyledAnalysisView extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryIndigo.withOpacity(0.1),
-            AppTheme.primaryPurple.withOpacity(0.05),
+            AppTheme.primaryIndigo.withValues(alpha: 0.1),
+            AppTheme.primaryPurple.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.primaryIndigo.withOpacity(0.2),
+          color: AppTheme.primaryIndigo.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -258,7 +258,7 @@ class StyledAnalysisView extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: sectionInfo.color.withOpacity(0.15),
+            color: sectionInfo.color.withValues(alpha: 0.15),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -275,8 +275,8 @@ class StyledAnalysisView extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  sectionInfo.color.withOpacity(0.15),
-                  sectionInfo.color.withOpacity(0.05),
+                  sectionInfo.color.withValues(alpha: 0.15),
+                  sectionInfo.color.withValues(alpha: 0.05),
                 ],
               ),
               borderRadius: const BorderRadius.only(
@@ -289,7 +289,7 @@ class StyledAnalysisView extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: sectionInfo.color.withOpacity(0.2),
+                    color: sectionInfo.color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -348,13 +348,13 @@ class StyledAnalysisView extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.successGreen.withOpacity(0.1),
-            AppTheme.primaryIndigo.withOpacity(0.05),
+            AppTheme.successGreen.withValues(alpha: 0.1),
+            AppTheme.primaryIndigo.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.successGreen.withOpacity(0.3),
+          color: AppTheme.successGreen.withValues(alpha: 0.3),
         ),
       ),
       child: Column(

@@ -19,18 +19,18 @@ class LoadingOverlay extends StatelessWidget {
     if (!isVisible) return const SizedBox.shrink();
 
     return Container(
-      color: Colors.black.withOpacity(0.3),
+      color: Colors.black.withValues(alpha: 0.3),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Center(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: Colors.white.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryIndigo.withOpacity(0.2),
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.2),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -82,7 +82,7 @@ class LoadingOverlay extends StatelessWidget {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (context) => LoadingOverlay(message: message),
     );
   }
@@ -141,7 +141,7 @@ class CenteredLoading extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryIndigo.withOpacity(0.3),
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),

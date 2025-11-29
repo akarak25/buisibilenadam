@@ -120,8 +120,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -137,8 +137,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryPurple.withOpacity(0.12),
-                      AppTheme.primaryIndigo.withOpacity(0.08),
+                      AppTheme.primaryPurple.withValues(alpha: 0.12),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.08),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -231,7 +231,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           boxShadow: AppTheme.cardShadow,
         ),
@@ -259,7 +259,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryIndigo.withOpacity(0.3),
+                    color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                     blurRadius: 20,
                     spreadRadius: 3,
                   ),
@@ -314,7 +314,7 @@ class _ChatScreenState extends State<ChatScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: message.isUser ? AppTheme.primaryGradient : null,
-            color: message.isUser ? null : Colors.white.withOpacity(0.9),
+            color: message.isUser ? null : Colors.white.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(20).copyWith(
               bottomRight: message.isUser ? const Radius.circular(4) : null,
               bottomLeft: !message.isUser ? const Radius.circular(4) : null,
@@ -357,7 +357,7 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(20).copyWith(
               bottomLeft: const Radius.circular(4),
             ),
@@ -386,10 +386,10 @@ class _ChatScreenState extends State<ChatScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -442,7 +442,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryIndigo.withOpacity(0.3),
+                      color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                       blurRadius: 10,
                       spreadRadius: 1,
                     ),
@@ -511,7 +511,7 @@ class _TypingDotState extends State<_TypingDot>
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: AppTheme.primaryIndigo.withOpacity(_animation.value),
+            color: AppTheme.primaryIndigo.withValues(alpha: _animation.value),
             shape: BoxShape.circle,
           ),
         );

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class CameraGuideOverlay extends StatelessWidget {
@@ -69,7 +68,7 @@ class CameraGuideOverlay extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 20),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(

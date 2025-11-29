@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:palm_analysis/config/api_config.dart';
 import 'package:palm_analysis/models/daily_reading.dart';
@@ -33,11 +34,11 @@ class DailyReadingService {
       for (final key in allKeys) {
         if (key.startsWith(_cacheKeyPrefix)) {
           await prefs.remove(key);
-          print('Cleared daily reading cache: $key');
+          debugPrint('Cleared daily reading cache: $key');
         }
       }
     } catch (e) {
-      print('Clear all daily reading cache error: $e');
+      debugPrint('Clear all daily reading cache error: $e');
     }
   }
 
@@ -50,14 +51,14 @@ class DailyReadingService {
       final userId = await _tokenService.getUserId();
 
       if (token == null || userId == null) {
-        print('No token or userId available for daily reading');
+        debugPrint('No token or userId available for daily reading');
         return null;
       }
 
       // Check cache first (with userId isolation)
       final cached = await _getCachedReading(userId);
       if (cached != null) {
-        print('Returning cached daily reading for user: $userId');
+        debugPrint('Returning cached daily reading for user: $userId');
         return cached;
       }
 
@@ -80,17 +81,17 @@ class DailyReadingService {
           await _cacheReading(userId, data);
           return reading;
         } else {
-          print('Daily reading API returned success: false');
-          print('Message: ${data['message']}');
+          debugPrint('Daily reading API returned success: false');
+          debugPrint('Message: ${data['message']}');
           return null;
         }
       } else {
-        print('Daily reading API error: ${response.statusCode}');
-        print('Body: ${response.body}');
+        debugPrint('Daily reading API error: ${response.statusCode}');
+        debugPrint('Body: ${response.body}');
         return null;
       }
     } catch (e) {
-      print('Daily reading service error: $e');
+      debugPrint('Daily reading service error: $e');
       return null;
     }
   }
@@ -116,7 +117,7 @@ class DailyReadingService {
       }
       return false;
     } catch (e) {
-      print('Check palm profile error: $e');
+      debugPrint('Check palm profile error: $e');
       return false;
     }
   }
@@ -139,14 +140,14 @@ class DailyReadingService {
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        print('Palm profile saved successfully');
+        debugPrint('Palm profile saved successfully');
         // Clear daily reading cache to get fresh personalized reading
         await _clearCache(userId);
         return true;
       }
       return false;
     } catch (e) {
-      print('Save palm profile error: $e');
+      debugPrint('Save palm profile error: $e');
       return false;
     }
   }
@@ -164,7 +165,7 @@ class DailyReadingService {
       }
       return null;
     } catch (e) {
-      print('Cache read error: $e');
+      debugPrint('Cache read error: $e');
       return null;
     }
   }
@@ -175,9 +176,9 @@ class DailyReadingService {
       final prefs = await SharedPreferences.getInstance();
       final cacheKey = _getCacheKey(userId);
       await prefs.setString(cacheKey, jsonEncode(data));
-      print('Cached daily reading for user: $userId');
+      debugPrint('Cached daily reading for user: $userId');
     } catch (e) {
-      print('Cache write error: $e');
+      debugPrint('Cache write error: $e');
     }
   }
 
@@ -187,9 +188,9 @@ class DailyReadingService {
       final prefs = await SharedPreferences.getInstance();
       final cacheKey = _getCacheKey(userId);
       await prefs.remove(cacheKey);
-      print('Cleared cache for user: $userId');
+      debugPrint('Cleared cache for user: $userId');
     } catch (e) {
-      print('Cache clear error: $e');
+      debugPrint('Cache clear error: $e');
     }
   }
 
@@ -202,7 +203,7 @@ class DailyReadingService {
       }
       return getDailyReading(lang: lang);
     } catch (e) {
-      print('Refresh daily reading error: $e');
+      debugPrint('Refresh daily reading error: $e');
       return null;
     }
   }

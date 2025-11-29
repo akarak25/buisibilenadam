@@ -27,8 +27,8 @@ class AnimatedGradientBackground extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.white.withOpacity(0.95),
-                  Colors.white.withOpacity(0.90),
+                  Colors.white.withValues(alpha: 0.95),
+                  Colors.white.withValues(alpha: 0.90),
                 ],
               ),
             ),
@@ -40,7 +40,7 @@ class AnimatedGradientBackground extends StatelessWidget {
               top: -100,
               right: -100,
               child: _AnimatedBlob(
-                color: AppTheme.primaryIndigo.withOpacity(0.1),
+                color: AppTheme.primaryIndigo.withValues(alpha: 0.1),
                 size: 300,
                 delay: Duration.zero,
               ),
@@ -49,7 +49,7 @@ class AnimatedGradientBackground extends StatelessWidget {
               bottom: -50,
               left: -50,
               child: _AnimatedBlob(
-                color: AppTheme.primaryPurple.withOpacity(0.1),
+                color: AppTheme.primaryPurple.withValues(alpha: 0.1),
                 size: 250,
                 delay: const Duration(seconds: 2),
               ),
@@ -58,7 +58,7 @@ class AnimatedGradientBackground extends StatelessWidget {
               top: MediaQuery.of(context).size.height * 0.3,
               right: -80,
               child: _AnimatedBlob(
-                color: AppTheme.accentSky.withOpacity(0.08),
+                color: AppTheme.accentSky.withValues(alpha: 0.08),
                 size: 200,
                 delay: const Duration(seconds: 4),
               ),

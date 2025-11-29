@@ -26,7 +26,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
   int _totalAnalyses = 0;
@@ -44,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _animationController = AnimationController(
       vsync: this,
@@ -75,9 +76,9 @@ class _HomeScreenState extends State<HomeScreen>
           totalAnalyses = queries.length;
           // Update local storage with backend count
           await prefs.setInt('total_analyses', totalAnalyses);
-          print('Synced analysis count from backend: $totalAnalyses');
+          debugPrint('Synced analysis count from backend: $totalAnalyses');
         } catch (e) {
-          print('Backend sync error (using local): $e');
+          debugPrint('Backend sync error (using local): $e');
         }
       }
 
@@ -95,12 +96,12 @@ class _HomeScreenState extends State<HomeScreen>
       // Load personalized daily reading (async, don't block UI)
       _loadDailyReading();
     } catch (e) {
-      print('Data loading error: $e');
+      debugPrint('Data loading error: $e');
     }
   }
 
   Future<void> _loadDailyReading() async {
-    if (_isLoadingReading) return;
+    if (_isLoadingReading || !mounted) return;
 
     setState(() => _isLoadingReading = true);
 
@@ -117,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen>
         });
       }
     } catch (e) {
-      print('Daily reading load error: $e');
+      debugPrint('Daily reading load error: $e');
       if (mounted) {
         setState(() => _isLoadingReading = false);
       }
@@ -125,7 +126,17 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _animationController.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      _animationController.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
     super.dispose();
   }
@@ -148,8 +159,8 @@ class _HomeScreenState extends State<HomeScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -165,8 +176,8 @@ class _HomeScreenState extends State<HomeScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryIndigo.withOpacity(0.12),
-                      AppTheme.primaryPurple.withOpacity(0.08),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.12),
+                      AppTheme.primaryPurple.withValues(alpha: 0.08),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -182,8 +193,8 @@ class _HomeScreenState extends State<HomeScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryPurple.withOpacity(0.1),
-                      AppTheme.primaryIndigo.withOpacity(0.06),
+                      AppTheme.primaryPurple.withValues(alpha: 0.1),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.06),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -280,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     boxShadow: [
                                       BoxShadow(
                                         color: AppTheme.primaryIndigo
-                                            .withOpacity(0.4),
+                                            .withValues(alpha: 0.4),
                                         blurRadius: 30,
                                         spreadRadius: 5,
                                       ),
@@ -382,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen>
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           boxShadow: AppTheme.cardShadow,
         ),
@@ -408,10 +419,10 @@ class _HomeScreenState extends State<HomeScreen>
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
             boxShadow: AppTheme.cardShadow,
           ),
@@ -471,13 +482,13 @@ class _HomeScreenState extends State<HomeScreen>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppTheme.warningAmber.withOpacity(0.2),
-                        AppTheme.warningAmber.withOpacity(0.1),
+                        AppTheme.warningAmber.withValues(alpha: 0.2),
+                        AppTheme.warningAmber.withValues(alpha: 0.1),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppTheme.warningAmber.withOpacity(0.3),
+                      color: AppTheme.warningAmber.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Column(
@@ -529,12 +540,12 @@ class _HomeScreenState extends State<HomeScreen>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isPremium
-                ? AppTheme.warningAmber.withOpacity(0.2)
-                : Colors.white.withOpacity(0.5),
+                ? AppTheme.warningAmber.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.5),
           ),
           boxShadow: AppTheme.cardShadow,
         ),
@@ -644,13 +655,13 @@ class _HomeScreenState extends State<HomeScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryIndigo.withOpacity(0.1),
-            AppTheme.primaryPurple.withOpacity(0.08),
+            AppTheme.primaryIndigo.withValues(alpha: 0.1),
+            AppTheme.primaryPurple.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.primaryIndigo.withOpacity(0.2),
+          color: AppTheme.primaryIndigo.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -717,14 +728,14 @@ class _HomeScreenState extends State<HomeScreen>
                 isTurkish ? 'Detaylar için dokun' : 'Tap for details',
                 style: GoogleFonts.inter(
                   fontSize: 11,
-                  color: AppTheme.primaryIndigo.withOpacity(0.7),
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(width: 4),
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 10,
-                color: AppTheme.primaryIndigo.withOpacity(0.7),
+                color: AppTheme.primaryIndigo.withValues(alpha: 0.7),
               ),
             ],
           ),
@@ -753,14 +764,14 @@ class _HomeScreenState extends State<HomeScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF1a1a2e).withOpacity(0.95),
-              AppTheme.primaryIndigo.withOpacity(0.85),
+              const Color(0xFF1a1a2e).withValues(alpha: 0.95),
+              AppTheme.primaryIndigo.withValues(alpha: 0.85),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryIndigo.withOpacity(0.25),
+              color: AppTheme.primaryIndigo.withValues(alpha: 0.25),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -776,7 +787,7 @@ class _HomeScreenState extends State<HomeScreen>
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -805,7 +816,7 @@ class _HomeScreenState extends State<HomeScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppTheme.successGreen.withOpacity(0.2),
+                              color: AppTheme.successGreen.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -824,7 +835,7 @@ class _HomeScreenState extends State<HomeScreen>
                         '${reading.astronomy.moonPhase.getName(isTurkish)} • ${reading.astronomy.moonSign.icon} ${reading.astronomy.moonSign.getName(isTurkish)}',
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -838,7 +849,7 @@ class _HomeScreenState extends State<HomeScreen>
               reading.reading.dailyEnergy,
               style: GoogleFonts.inter(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 height: 1.5,
               ),
               maxLines: 2,
@@ -870,14 +881,14 @@ class _HomeScreenState extends State<HomeScreen>
                       isTurkish ? 'Detaylar' : 'Details',
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(width: 4),
                     Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 10,
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                     ),
                   ],
                 ),
@@ -893,7 +904,7 @@ class _HomeScreenState extends State<HomeScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -905,7 +916,7 @@ class _HomeScreenState extends State<HomeScreen>
             value,
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -923,14 +934,14 @@ class _HomeScreenState extends State<HomeScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF1a1a2e).withOpacity(0.95),
-            AppTheme.primaryIndigo.withOpacity(0.85),
+            const Color(0xFF1a1a2e).withValues(alpha: 0.95),
+            AppTheme.primaryIndigo.withValues(alpha: 0.85),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryIndigo.withOpacity(0.25),
+            color: AppTheme.primaryIndigo.withValues(alpha: 0.25),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -946,7 +957,7 @@ class _HomeScreenState extends State<HomeScreen>
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(
@@ -1047,9 +1058,9 @@ class _ShimmerBarState extends State<_ShimmerBar>
               begin: Alignment(-1.0 + _animation.value, 0),
               end: Alignment(_animation.value, 0),
               colors: [
-                Colors.white.withOpacity(0.1),
-                Colors.white.withOpacity(0.25),
-                Colors.white.withOpacity(0.1),
+                Colors.white.withValues(alpha: 0.1),
+                Colors.white.withValues(alpha: 0.25),
+                Colors.white.withValues(alpha: 0.1),
               ],
             ),
           ),

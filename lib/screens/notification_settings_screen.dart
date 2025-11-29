@@ -201,8 +201,8 @@ class _NotificationSettingsScreenState
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -218,8 +218,8 @@ class _NotificationSettingsScreenState
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryIndigo.withOpacity(0.1),
-                      AppTheme.primaryPurple.withOpacity(0.06),
+                      AppTheme.primaryIndigo.withValues(alpha: 0.1),
+                      AppTheme.primaryPurple.withValues(alpha: 0.06),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -346,7 +346,7 @@ class _NotificationSettingsScreenState
                                           ),
                                           decoration: BoxDecoration(
                                             color: AppTheme.primaryIndigo
-                                                .withOpacity(0.1),
+                                                .withValues(alpha: 0.1),
                                             borderRadius:
                                                 BorderRadius.circular(8),
                                           ),
@@ -449,7 +449,7 @@ class _NotificationSettingsScreenState
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           boxShadow: AppTheme.cardShadow,
         ),
@@ -479,10 +479,10 @@ class _NotificationSettingsScreenState
   Widget _buildSettingsCard({required List<Widget> children}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
         ),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -520,8 +520,8 @@ class _NotificationSettingsScreenState
                   ? AppTheme.primaryGradient
                   : LinearGradient(
                       colors: [
-                        AppTheme.textMuted.withOpacity(0.3),
-                        AppTheme.textMuted.withOpacity(0.2),
+                        AppTheme.textMuted.withValues(alpha: 0.3),
+                        AppTheme.textMuted.withValues(alpha: 0.2),
                       ],
                     ),
               borderRadius: BorderRadius.circular(10),
@@ -575,10 +575,10 @@ class _NotificationSettingsScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.warningAmber.withOpacity(0.1),
+        color: AppTheme.warningAmber.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.warningAmber.withOpacity(0.3),
+          color: AppTheme.warningAmber.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -586,7 +586,7 @@ class _NotificationSettingsScreenState
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppTheme.warningAmber.withOpacity(0.2),
+              color: AppTheme.warningAmber.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(

@@ -107,8 +107,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.95),
-                    Colors.white.withOpacity(0.90),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.90),
                   ],
                 ),
               ),
@@ -122,7 +122,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 width: 300,
                 height: 300,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryIndigo.withOpacity(0.08),
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -134,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 width: 250,
                 height: 250,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryPurple.withOpacity(0.06),
+                  color: AppTheme.primaryPurple.withValues(alpha: 0.06),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -272,20 +272,20 @@ class _OnboardingPage extends StatelessWidget {
             width: 180,
             height: 180,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
                 BoxShadow(
-                  color: AppTheme.primaryIndigo.withOpacity(0.1),
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.1),
                   blurRadius: 40,
                   offset: const Offset(0, 20),
                 ),

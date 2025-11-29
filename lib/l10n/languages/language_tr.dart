@@ -463,4 +463,10 @@ KURALLAR:
 Kullanıcının önceki el analizi:
 {analysis}
 ''';
+
+  // Entertainment Disclaimer (Apple App Store requirement)
+  @override
+  String get entertainmentDisclaimer => 'Bu yorum yalnızca eğlence amaçlıdır. El falı, kendini keşfetmeye yönelik kadim bir sanattır ve profesyonel tıbbi, psikolojik veya finansal tavsiye yerine kullanılmamalıdır.';
+  @override
+  String get disclaimerTitle => 'Sadece Eğlence Amaçlı';
 }

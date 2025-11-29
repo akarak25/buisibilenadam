@@ -1,0 +1,11 @@
+/* English localization */
+
+/* App name displayed on home screen */
+"CFBundleDisplayName" = "Palmify";
+"CFBundleName" = "Palmify";
+
+/* Camera permission */
+"NSCameraUsageDescription" = "Camera access is required to analyze your palm lines";
+
+/* Photo library permission */
+"NSPhotoLibraryUsageDescription" = "Photo library access is required to analyze your palm lines";

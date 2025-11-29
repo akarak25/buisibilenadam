@@ -79,12 +79,12 @@ class AppTheme {
   // Shadows matching web design
   static List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withValues(alpha: 0.05),
       blurRadius: 10,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: primaryIndigo.withOpacity(0.05),
+      color: primaryIndigo.withValues(alpha: 0.05),
       blurRadius: 20,
       offset: const Offset(0, 8),
     ),
@@ -92,7 +92,7 @@ class AppTheme {
 
   static List<BoxShadow> buttonShadow = [
     BoxShadow(
-      color: primaryIndigo.withOpacity(0.3),
+      color: primaryIndigo.withValues(alpha: 0.3),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
@@ -100,7 +100,7 @@ class AppTheme {
 
   static List<BoxShadow> elevatedShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.1),
+      color: Colors.black.withValues(alpha: 0.1),
       blurRadius: 25,
       offset: const Offset(0, 10),
     ),
@@ -219,7 +219,7 @@ class AppTheme {
           backgroundColor: primaryIndigo,
           foregroundColor: Colors.white,
           elevation: 0,
-          shadowColor: primaryIndigo.withOpacity(0.3),
+          shadowColor: primaryIndigo.withValues(alpha: 0.3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusLarge),
           ),
@@ -258,7 +258,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusXLarge),
-          side: BorderSide(color: borderLight.withOpacity(0.5)),
+          side: BorderSide(color: borderLight.withValues(alpha: 0.5)),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
@@ -294,7 +294,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surfaceWhite.withOpacity(0.8),
+        fillColor: surfaceWhite.withValues(alpha: 0.8),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusLarge),
           borderSide: BorderSide(color: borderLight),
@@ -361,10 +361,10 @@ class AppTheme {
     Color? borderColor,
   }) {
     return BoxDecoration(
-      color: surfaceWhite.withOpacity(opacity),
+      color: surfaceWhite.withValues(alpha: opacity),
       borderRadius: BorderRadius.circular(borderRadius),
       border: Border.all(
-        color: borderColor ?? surfaceWhite.withOpacity(0.5),
+        color: borderColor ?? surfaceWhite.withValues(alpha: 0.5),
         width: 1,
       ),
       boxShadow: cardShadow,

@@ -2,10 +2,19 @@
 class TurkishCharacterReplacer {
   // Türkçe karakter problemleri için özel char-by-char düzelticiler
   static final Map<String, String> _replacements = {
-    "Å": "Ş", "Å": "ş", "Ã": "Ö", "Ã": "Ü", "Ã": "Ç", "Ä": "İ", "Ä": "ğ",
-    "±": "ı", "Ä": "ğ", "Ä": "İ", "Ã¼": "ü", "Ã¶": "ö", "Ã§": "ç",
-    "â": "i", "Â": "İ", "â": "ı", "Å¾": "ş", "ÅŸ": "ş", "Ã¯": "i", "Ã®": "i",
-    "ÅŸ": "ş", "Ä±": "ı", "ÄŸ": "ğ", "Ä°": "İ", "Ã": "ç", "ð": "ğ"
+    "Ã¼": "ü",
+    "Ã¶": "ö",
+    "Ã§": "ç",
+    "Ã¯": "i",
+    "Ã®": "i",
+    "Å¾": "ş",
+    "ÅŸ": "ş",
+    "Ä±": "ı",
+    "ÄŸ": "ğ",
+    "Ä°": "İ",
+    "±": "ı",
+    "Â": "İ",
+    "ð": "ğ",
   };
   
   // Özel problemli durumlar için kelime bazlı düzeltmeler

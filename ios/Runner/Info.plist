@@ -5,15 +5,20 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>El Çizgisi Analizi</string>
+	<string>Palmify</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>tr</string>
+	</array>
 	<key>CFBundleName</key>
-	<string>El Çizgisi Analizi</string>
+	<string>Palmify</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -29,9 +34,9 @@
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSCameraUsageDescription</key>
-	<string>El çizgilerinizi analiz etmek için kameraya erişim gereklidir</string>
+	<string>Camera access is required to analyze your palm lines</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>El çizgilerinizi analiz etmek için fotoğraf galerisine erişim gereklidir</string>
+	<string>Photo library access is required to analyze your palm lines</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
