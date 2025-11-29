@@ -30,8 +30,9 @@ class PalmAnalysisService {
         return _getErrorMessage('file_too_large', locale);
       }
 
-      // Call backend API
-      final response = await _apiService.analyzeImage(imageFile);
+      // Call backend API with language preference
+      final languageCode = locale?.languageCode ?? 'tr';
+      final response = await _apiService.analyzeImage(imageFile, language: languageCode);
 
       // Return the analysis text
       return response.analysis;

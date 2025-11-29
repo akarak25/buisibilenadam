@@ -51,6 +51,361 @@ Web Site -> elcizgisi.com/api/* -> Gemini 2.5 Flash
 
 ---
 
+## 🔔 PUSH NOTIFICATION SYSTEM - COMPLETE REFERENCE GUIDE
+
+> **Bu bölüm diğer projelerde referans olarak kullanılabilir.**
+
+### Mimari Genel Bakış
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         VPS (Backend)                            │
+├─────────────────────────────────────────────────────────────────┤
+│  Next.js App                    │  Notification Worker (PM2)    │
+│  ─────────────                  │  ────────────────────────     │
+│  • /api/device-token            │  • node-cron ile zamanlama    │
+│    (token kayıt)                │  • 06:00-12:00 günlük yorum   │
+│  • /api/activity/daily          │  • 20:00 streak hatırlatma    │
+│    (streak sync)                │  • 18:00 özel günler          │
+│  • /api/notifications/prefs     │                               │
+│    (kullanıcı tercihleri)       │                               │
+├─────────────────────────────────┴───────────────────────────────┤
+│                      Firebase Admin SDK                          │
+│                (FIREBASE_SERVICE_ACCOUNT_BASE64)                 │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ FCM
+┌─────────────────────────────────────────────────────────────────┐
+│                      Firebase Cloud Messaging                    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┴───────────────┐
+              ▼                               ▼
+┌─────────────────────────┐     ┌─────────────────────────┐
+│      iOS (APNs)         │     │    Android (FCM)        │
+│  ─────────────────      │     │  ─────────────────      │
+│  • firebase_messaging   │     │  • firebase_messaging   │
+│  • AppDelegate.swift    │     │  • AndroidManifest.xml  │
+│  • .entitlements        │     │                         │
+│  • .p8 key gerekli      │     │                         │
+└─────────────────────────┘     └─────────────────────────┘
+```
+
+### Backend Dosya Yapısı
+
+```
+elyorumweb/
+├── src/
+│   ├── lib/
+│   │   ├── firebase-admin.ts      # Firebase Admin SDK init (LAZY!)
+│   │   ├── notification-service.ts # Tüm bildirim fonksiyonları
+│   │   └── mongodb.ts
+│   ├── models/
+│   │   └── User.ts                 # notificationPreferences, streakData, deviceTokens
+│   ├── app/api/
+│   │   ├── device-token/route.ts   # Token kayıt/silme
+│   │   ├── activity/daily/route.ts # Streak senkronizasyonu
+│   │   └── notifications/
+│   │       └── preferences/route.ts # Bildirim tercihleri
+│   └── workers/
+│       └── notification-cron.ts    # Zamanlı bildirimler
+├── package.json                    # firebase-admin, node-cron
+└── .env                            # FIREBASE_SERVICE_ACCOUNT_BASE64
+```
+
+### Flutter Dosya Yapısı
+
+```
+lib/
+├── main.dart                       # navigatorKey (Global)
+├── config/
+│   └── api_config.dart             # Endpoint tanımları
+├── services/
+│   ├── push_notification_service.dart  # FCM token, navigasyon
+│   ├── notification_preferences_service.dart # Tercih yönetimi
+│   └── streak_service.dart         # Backend sync
+└── screens/
+    └── notification_settings_screen.dart # Ayarlar UI
+```
+
+### Adım Adım Kurulum
+
+#### 1. Firebase Console Ayarları
+
+```
+1. Firebase Console → Project Settings → Cloud Messaging
+2. iOS:
+   - APNs Authentication Key (.p8) yükle
+   - Team ID, Key ID gir
+   - BOTH Development AND Production için yükle!
+3. Android:
+   - google-services.json indir
+   - android/app/ altına koy
+```
+
+#### 2. Firebase Admin SDK (Backend)
+
+**KRITIK: Lazy Initialization Pattern**
+
+```typescript
+// ❌ YANLIŞ - Module load'da crash yapar
+class NotificationService {
+  private messaging = getMessaging(); // dotenv yüklenmeden çağrılır!
+}
+
+// ✅ DOĞRU - Lazy initialization
+class NotificationService {
+  private _messaging: Messaging | null = null;
+
+  private get messaging() {
+    if (!this._messaging) {
+      this._messaging = getMessaging();
+    }
+    return this._messaging;
+  }
+}
+```
+
+**firebase-admin.ts:**
+
+```typescript
+import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { getMessaging, Messaging } from 'firebase-admin/messaging';
+
+let firebaseApp: App | null = null;
+
+function initializeFirebaseAdmin(): App {
+  if (getApps().length > 0) {
+    return getApps()[0];
+  }
+
+  const base64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+
+  if (!base64) {
+    console.error('FIREBASE_SERVICE_ACCOUNT_BASE64 not set');
+    throw new Error('Firebase service account not configured');
+  }
+
+  const serviceAccount = JSON.parse(
+    Buffer.from(base64, 'base64').toString('utf-8')
+  );
+
+  firebaseApp = initializeApp({
+    credential: cert(serviceAccount),
+  });
+
+  return firebaseApp;
+}
+
+export function getMessaging(): Messaging {
+  const app = initializeFirebaseAdmin();
+  return getMessaging(app);
+}
+```
+
+#### 3. Worker Setup (node-cron)
+
+**notification-cron.ts:**
+
+```typescript
+import cron from 'node-cron';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// KRITIK: dotenv ÖNCE yüklenmeli!
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
+// Sonra diğer import'lar
+import { notificationService } from '../lib/notification-service';
+
+// Cron jobs
+cron.schedule('0 9 * * *', async () => {
+  // Her gün 09:00'da
+}, { timezone: 'Europe/Istanbul' });
+```
+
+**package.json scripts:**
+
+```json
+{
+  "scripts": {
+    "notification-worker": "tsx src/workers/notification-cron.ts",
+    "notification-worker:prod": "NODE_ENV=production tsx src/workers/notification-cron.ts"
+  }
+}
+```
+
+> **NOT:** `cross-env` kullanma! Linux'ta gereksiz ve hata veriyor.
+
+#### 4. Flutter Navigasyon
+
+**main.dart:**
+
+```dart
+// Global navigator key
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorKey: navigatorKey, // ← Buraya ekle
+      // ...
+    );
+  }
+}
+```
+
+**push_notification_service.dart:**
+
+```dart
+void _handleNotificationTap(Map<String, dynamic> data) {
+  final navigator = navigatorKey.currentState;
+  if (navigator == null) return;
+
+  final type = data['type'] ?? data['screen'];
+
+  switch (type) {
+    case 'daily_reading':
+      navigator.push(MaterialPageRoute(
+        builder: (_) => const PersonalizedDailyScreen(),
+      ));
+      break;
+    case 'streak_reminder':
+      navigator.popUntil((route) => route.isFirst);
+      break;
+    // ...
+  }
+}
+```
+
+### User Model Güncellemesi
+
+```typescript
+interface NotificationPreferences {
+  enabled: boolean;          // Master toggle
+  dailyReading: boolean;     // Günlük yorum
+  dailyReadingTime: string;  // "09:00"
+  streakReminder: boolean;   // Streak hatırlatma
+  specialEvents: boolean;    // Dolunay, yeni ay vb.
+  timezone: string;          // "Europe/Istanbul"
+}
+
+interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastStreakDate: Date | null;
+}
+
+interface DeviceToken {
+  token: string;
+  platform: 'ios' | 'android' | 'web';
+  createdAt: Date;
+  lastUsedAt: Date;
+}
+
+// User schema'ya ekle:
+deviceTokens: [DeviceToken];
+notificationPreferences: NotificationPreferences;
+streakData: StreakData;
+lastActivityAt: Date;
+```
+
+### VPS Deploy Checklist
+
+```bash
+# 1. Firebase Service Account hazırla
+# Firebase Console → Project Settings → Service Accounts
+# "Generate new private key" → JSON indir
+
+# 2. Base64 encode (Mac/Linux)
+base64 -i elcizgisi-firebase-adminsdk-xxxxx.json | tr -d '\n'
+
+# 3. VPS'te .env'e ekle
+nano /var/www/elcizgisi/.env
+# FIREBASE_SERVICE_ACCOUNT_BASE64=<base64_string>
+
+# 4. Dependencies yükle
+cd /var/www/elcizgisi
+npm install firebase-admin node-cron
+npm install -D @types/node-cron
+
+# 5. Build
+npm run build
+
+# 6. Ana uygulama restart
+pm2 restart el-cizgisi-yorum
+
+# 7. Notification worker başlat
+pm2 delete notification-worker  # Varsa sil
+pm2 start npm --name "notification-worker" -- run notification-worker:prod
+pm2 save
+
+# 8. Kontrol
+pm2 logs notification-worker --lines 20
+```
+
+### Sık Yapılan Hatalar ve Çözümleri
+
+| Hata | Sebep | Çözüm |
+|------|-------|-------|
+| `cross-env: not found` | Windows paketi Linux'ta yok | `cross-env` yerine direkt `NODE_ENV=production` kullan |
+| `Firebase service account not configured` | dotenv import'lardan sonra yükleniyor | Lazy initialization pattern kullan |
+| `FIREBASE_SERVICE_ACCOUNT_BASE64 not set` | .env yüklenmemiş veya yanlış | PM2'de `--update-env` ile restart |
+| PM2 env cache | Eski env değerleri kullanılıyor | `pm2 restart app --update-env` |
+| Bildirim gelmiyor (iOS) | APNs key eksik/yanlış | Firebase Console'da Development+Production yükle |
+| Token invalid | Eski/geçersiz token | `removeInvalidTokens()` ile temizle |
+
+### Bildirim Metinleri Örneği
+
+```typescript
+// Günlük yorum
+{
+  title: `${userName}, Günlük Yorumunuz Hazır!`,
+  body: personalizedMessage || 'Bugün için kişiselleştirilmiş yorumunuzu keşfedin.'
+}
+
+// Streak hatırlatma
+{
+  title: '🔥 Serinizi Koruyun!',
+  body: `${streak} günlük serinizi kaybetmeyin! Bugünün yorumunu görmek için dokunun.`
+}
+
+// Özel gün
+{
+  title: '🌕 Bu Gece Dolunay!',
+  body: 'El çizgileriniz için özel bir enerji var.'
+}
+```
+
+### Test Komutları
+
+```bash
+# Worker loglarını izle
+pm2 logs notification-worker --lines 50
+
+# Worker'ı manuel çalıştır (test)
+cd /var/www/elcizgisi
+NODE_ENV=production npx tsx src/workers/notification-cron.ts
+
+# MongoDB'de token kontrol
+node -e "
+const mongoose = require('mongoose');
+require('dotenv').config();
+mongoose.connect(process.env.MONGODB_URI).then(async () => {
+  const users = await mongoose.connection.db.collection('users')
+    .find({ 'deviceTokens.0': { \$exists: true } })
+    .project({ email: 1, deviceTokens: 1 })
+    .toArray();
+  console.log('Token olan kullanıcılar:', users.length);
+  users.forEach(u => console.log(u.email, u.deviceTokens?.length, 'token'));
+  process.exit(0);
+});
+"
+```
+
+---
+
 ## KRITIK: Proje Yapısı ve VPS Deploy
 
 **ÇOK ÖNEMLİ - ASLA UNUTMA:**

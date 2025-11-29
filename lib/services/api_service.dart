@@ -81,7 +81,8 @@ class ApiService {
   }
 
   /// Upload image for palm analysis
-  Future<AnalysisResponse> analyzeImage(File imageFile) async {
+  /// [language] should be 'tr' for Turkish or 'en' for English
+  Future<AnalysisResponse> analyzeImage(File imageFile, {String language = 'tr'}) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.analyzeEndpoint}');
     final token = await _tokenService.getToken();
 
@@ -92,6 +93,9 @@ class ApiService {
       request.headers['Authorization'] = 'Bearer $token';
     }
     request.headers['Accept'] = 'application/json';
+
+    // Add language field
+    request.fields['language'] = language;
 
     // Add image file with proper content type
     final mimeType = _getMimeType(imageFile.path);

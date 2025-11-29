@@ -36,20 +36,30 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   void initState() {
     super.initState();
     _analysisService = PalmAnalysisService();
-    _analyzeImage();
+    // Use addPostFrameCallback to ensure context is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _analyzeImage();
+    });
   }
 
   Future<void> _analyzeImage() async {
     try {
-      // Get current locale
+      // Get current locale from app's localization system
       String deviceLanguage = 'tr';
       try {
         if (mounted) {
-          final locale = Localizations.localeOf(context);
-          deviceLanguage = locale.languageCode;
+          // First try to get from AppLocalizations
+          final appLoc = AppLocalizations.of(context);
+          deviceLanguage = appLoc.locale.languageCode;
+          print('Analysis language detected: $deviceLanguage');
         }
       } catch (e) {
         print('Language detection error: $e');
+        // Fallback: try Localizations.localeOf
+        try {
+          final locale = Localizations.localeOf(context);
+          deviceLanguage = locale.languageCode;
+        } catch (_) {}
       }
 
       // Analyze image via backend API
