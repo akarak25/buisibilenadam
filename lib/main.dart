@@ -10,6 +10,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:palm_analysis/services/push_notification_service.dart';
 
+/// Global navigator key for navigation from notification service
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -108,6 +111,7 @@ class PalmAnalysisApp extends StatelessWidget {
     final appLocalizations = AppLocalizations(localeProvider.locale);
 
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: appLocalizations.currentLanguage.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

@@ -283,6 +283,8 @@ class LanguageEn implements AppLanguage {
   @override
   String get email => 'Email';
   @override
+  String get password => 'Password';
+  @override
   String get age => 'Age';
   @override
   String get gender => 'Gender';

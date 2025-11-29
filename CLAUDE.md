@@ -32,6 +32,25 @@ Web Site -> elcizgisi.com/api/* -> Gemini 2.5 Flash
 
 ---
 
+## KRITIK: Push Notification Setup Dersleri
+
+**BU HATALARI BİR DAHA YAPMA:**
+
+1. **APNs Key Upload:** Firebase Console'da HEM Development HEM Production için aynı .p8 key yüklenmeli. "Birini boş bırak" YANLIŞ!
+
+2. **APNs Token Type:** Debug build için `Messaging.messaging().setAPNSToken(deviceToken, type: .sandbox)` kullanılmalı. Sadece `.apnsToken = deviceToken` YETMEZ!
+
+3. **Döngüsel Çözümler Değil Araştırma:** Bilmediğin konularda tahmin yürütme, ÖNCE güncel web araştırması yap, Context7 ile dökümantasyon oku.
+
+4. **Firebase iOS Push Checklist:**
+   - GoogleService-Info.plist Xcode projesine EKLENMELİ (Runner target)
+   - APNs Key: Development + Production Firebase'e yüklenmeli
+   - Runner.entitlements: `aps-environment` = development (debug) / production (release)
+   - Info.plist: UIBackgroundModes → remote-notification, fetch
+   - AppDelegate: `setAPNSToken(deviceToken, type: .sandbox)` for DEBUG
+
+---
+
 ## KRITIK: Proje Yapısı ve VPS Deploy
 
 **ÇOK ÖNEMLİ - ASLA UNUTMA:**
@@ -155,23 +174,77 @@ Web Site -> elcizgisi.com/api/* -> Gemini 2.5 Flash
 - [x] "Genel olarak Genel olarak" çift tekrar hatası düzeltildi
 - [x] Yenileme butonu kaldırıldı (gereksizdi)
 
-### Phase 15: Push Notification System (SONRAKI OTURUM) ⏳ BEKLEMEDE
+### Phase 15: Push Notification System (2025-11-29) ✅ TAMAMLANDI
 **ÖNEMLİ:** Bu projenin en kritik ve can alıcı aşaması!
 
-**Planlanan Özellikler:**
-- [ ] Firebase Cloud Messaging (FCM) entegrasyonu
-- [ ] APNs (Apple Push Notification service) kurulumu
-- [ ] Günlük kişiselleştirilmiş bildirim (sabah yorumu)
-- [ ] Streak hatırlatma bildirimi
-- [ ] Backend push notification gönderme sistemi
-- [ ] Kullanıcı bildirim tercihleri
+**Tamamlanan Özellikler:**
 
-**Gerekli Adımlar:**
-1. Firebase projesi oluştur
-2. Flutter firebase_messaging paketi ekle
-3. iOS APNs sertifikası ve provisioning profile
-4. Backend'de cron job ile günlük bildirim gönderimi
-5. Device token kaydetme endpoint'i
+**Backend (elyorumweb):**
+- [x] User model güncellendi:
+  - `notificationPreferences` - Bildirim tercihleri (enabled, dailyReading, dailyReadingTime, streakReminder, specialEvents, timezone)
+  - `streakData` - Seri takibi (currentStreak, longestStreak, lastStreakDate)
+  - `lastActivityAt` - Son aktivite zamanı
+- [x] Firebase Admin SDK kurulumu (`firebase-admin` paketi)
+- [x] `src/lib/firebase-admin.ts` - Firebase Admin SDK initialization (base64 encoded service account)
+- [x] `src/lib/notification-service.ts` - Tam kapsamlı bildirim servisi:
+  - `sendToDevice()` - Tek cihaza bildirim
+  - `sendToDevices()` - Toplu bildirim (500 token batch)
+  - `sendDailyReadingNotification()` - Kişiselleştirilmiş günlük yorum
+  - `sendStreakReminderNotification()` - Streak hatırlatma
+  - `sendSpecialEventNotification()` - Özel gün bildirimleri (dolunay, yeni ay)
+  - `getUsersForDailyReading()` / `getUsersForStreakReminder()` / `getUsersForSpecialEvents()`
+- [x] `/api/activity/daily` endpoint (POST/GET) - Streak senkronizasyonu
+- [x] `/api/notifications/preferences` endpoint (GET/PUT/PATCH) - Bildirim tercihleri
+- [x] `src/workers/notification-cron.ts` - Cron worker:
+  - Günlük yorum: 6-12 arası her saat (kullanıcı tercihine göre)
+  - Streak hatırlatma: 20:00
+  - Özel günler: 18:00 (ay fazı kontrolü)
+  - Kişiselleştirilmiş mesajlar (palmProfile'a göre)
+
+**Flutter (elcizgisi):**
+- [x] `lib/main.dart` - Global navigatorKey eklendi
+- [x] `lib/services/push_notification_service.dart` - Gerçek navigasyon eklendi:
+  - `daily_reading` -> PersonalizedDailyScreen
+  - `streak_reminder` -> HomeScreen
+  - `special_event` -> DailyAstrologyScreen
+- [x] `lib/config/api_config.dart` - Yeni endpoint'ler eklendi
+- [x] `lib/services/notification_preferences_service.dart` - Bildirim tercihleri servisi
+- [x] `lib/screens/notification_settings_screen.dart` - Bildirim ayarları ekranı:
+  - Master toggle
+  - Günlük yorum toggle + saat seçici
+  - Streak hatırlatma toggle
+  - Özel günler toggle
+  - Sistem izni uyarısı
+- [x] `lib/screens/settings_screen.dart` - Bildirim ayarları linki eklendi
+- [x] `lib/services/streak_service.dart` - Backend senkronizasyonu eklendi:
+  - Backend'den streak alıyor/gönderiyor
+  - Offline fallback (local storage)
+  - Logout'ta temizleme
+
+**Cron Job Zamanlaması (Europe/Istanbul):**
+- 06:00-12:00 - Günlük yorum bildirimleri (kullanıcı tercihine göre)
+- 20:00 - Streak hatırlatma (uygulamayı açmamış kullanıcılara)
+- 18:00 - Özel gün bildirimleri (dolunay/yeni ay günlerinde)
+
+**VPS Deploy için:**
+```bash
+# Backend deploy
+cd /var/www/elcizgisi
+git pull
+npm install  # firebase-admin ve node-cron eklenecek
+npm run build
+pm2 restart el-cizgisi-yorum
+
+# Notification worker başlat
+pm2 start npm --name "notification-worker" -- run notification-worker:prod
+```
+
+**Firebase Service Account Kurulumu:**
+1. Firebase Console > Project Settings > Service Accounts
+2. "Generate new private key" tıkla
+3. JSON dosyasını indir
+4. Base64 encode: `base64 -i service-account.json | tr -d '\n'`
+5. VPS'te .env'e ekle: `FIREBASE_SERVICE_ACCOUNT_BASE64=<base64_string>`
 
 ---
 
@@ -507,29 +580,53 @@ lib/
 
 ## Last Updated
 - **Date:** 2025-11-29
-- **Status:** Phase 14 TAMAMLANDI - Personalized Daily Reading System
+- **Status:** Phase 15 TAMAMLANDI - Push Notification System
 - **Bu Oturumda Tamamlananlar:**
-  - Kişiselleştirilmiş günlük yorum sistemi çalışıyor
-  - **KRİTİK:** Cache izolasyonu düzeltildi (kullanıcı değiştiğinde cache karışması sorunu)
-    - Cache key artık userId içeriyor: `daily_reading_${userId}_$today`
-    - logout/signInWithGoogle sırasında tüm daily_reading cache'i temizleniyor
-  - Lucky Elements UI geliştirildi (açıklamalar + ExpansionTile)
-  - "Genel olarak Genel olarak" çift tekrar hatası düzeltildi
-  - Yenileme butonu kaldırıldı
+  - **FULL PUSH NOTIFICATION SYSTEM KURULDU!**
+  - Backend: User model (notificationPreferences, streakData, lastActivityAt)
+  - Backend: Firebase Admin SDK entegrasyonu
+  - Backend: notification-service.ts (tüm bildirim fonksiyonları)
+  - Backend: /api/activity/daily (streak sync)
+  - Backend: /api/notifications/preferences (kullanıcı tercihleri)
+  - Backend: notification-cron.ts (zamanlı bildirimler)
+  - Flutter: navigatorKey ile bildirim navigasyonu
+  - Flutter: notification_settings_screen.dart
+  - Flutter: streak_service.dart backend sync
+- **Yeni Dosyalar (Backend - elyorumweb):**
+  - `src/lib/firebase-admin.ts`
+  - `src/lib/notification-service.ts`
+  - `src/workers/notification-cron.ts`
+  - `src/app/api/activity/daily/route.ts`
+  - `src/app/api/notifications/preferences/route.ts`
+- **Yeni Dosyalar (Flutter - elcizgisi):**
+  - `lib/services/notification_preferences_service.dart`
+  - `lib/screens/notification_settings_screen.dart`
 - **Güncellenmiş Dosyalar:**
-  - `lib/services/daily_reading_service.dart` - userId'li cache key + clearAllDailyReadingCache()
-  - `lib/services/auth_service.dart` - logout/signInWithGoogle'da cache temizleme
-  - `lib/widgets/styled_analysis_view.dart` - çift "Genel olarak" fix
-  - `lib/screens/personalized_daily_screen.dart` - refresh button kaldırıldı
-- **SONRAKI OTURUM - EN KRİTİK AŞAMA:**
-  - **Phase 15: Push Notification System**
-  - Firebase Cloud Messaging entegrasyonu
-  - APNs kurulumu (iOS)
-  - Günlük kişiselleştirilmiş bildirimler
-  - Streak hatırlatma bildirimleri
+  - `package.json` - firebase-admin, node-cron eklendi
+  - `src/models/User.ts` - notificationPreferences, streakData, lastActivityAt
+  - `lib/main.dart` - navigatorKey
+  - `lib/services/push_notification_service.dart` - gerçek navigasyon
+  - `lib/config/api_config.dart` - yeni endpoint'ler
+  - `lib/services/streak_service.dart` - backend sync
+  - `lib/screens/settings_screen.dart` - bildirim ayarları linki
+  - `lib/services/auth_service.dart` - streak temizleme
+
+- **DEPLOY ÖNCESİ GEREKLİ:**
+  1. Firebase Console'dan service account JSON indir
+  2. Base64 encode et: `base64 -i service-account.json | tr -d '\n'`
+  3. VPS .env'e ekle: `FIREBASE_SERVICE_ACCOUNT_BASE64=<base64>`
+  4. `npm install` çalıştır
+  5. PM2 ile notification worker'ı başlat
+
 - **Test için:**
   ```bash
+  # Flutter
   cd /Users/yusufkamil/Desktop/elcizgisi
   flutter clean && flutter pub get
   flutter build ios --simulator
+
+  # Backend (local test)
+  cd /Users/yusufkamil/Desktop/elyorumweb
+  npm install
+  npm run dev
   ```

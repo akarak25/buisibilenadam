@@ -5,6 +5,7 @@ import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/screens/profile_screen.dart';
 import 'package:palm_analysis/screens/language_settings_screen.dart';
+import 'package:palm_analysis/screens/notification_settings_screen.dart';
 import 'package:palm_analysis/services/auth_service.dart';
 import 'package:palm_analysis/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -156,6 +157,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     MaterialPageRoute(
                                       builder: (_) =>
                                           const LanguageSettingsScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              _buildSettingsTile(
+                                icon: Icons.notifications_rounded,
+                                title: Localizations.localeOf(context).languageCode == 'tr'
+                                    ? 'Bildirim Ayarlari'
+                                    : 'Notification Settings',
+                                subtitle: Localizations.localeOf(context).languageCode == 'tr'
+                                    ? 'Gunluk bildirimler ve hatirlatmalar'
+                                    : 'Daily notifications and reminders',
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const NotificationSettingsScreen(),
                                     ),
                                   );
                                 },

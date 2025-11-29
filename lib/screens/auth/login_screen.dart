@@ -227,20 +227,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 48),
 
                     // Login form
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.5),
-                        ),
-                        boxShadow: AppTheme.cardShadow,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.5),
+                            ),
+                            boxShadow: AppTheme.cardShadow,
+                          ),
                           child: Form(
                             key: _formKey,
                             child: Column(
@@ -282,11 +282,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                 // Email field
                                 Text(
-                                  'E-posta',
+                                  lang.email,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primaryIndigo,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -316,11 +316,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                 // Password field
                                 Text(
-                                  'Sifre',
+                                  lang.password,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primaryIndigo,
                                   ),
                                 ),
                                 const SizedBox(height: 8),

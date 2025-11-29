@@ -283,6 +283,8 @@ class LanguageTr implements AppLanguage {
   @override
   String get email => 'E-posta';
   @override
+  String get password => 'Şifre';
+  @override
   String get age => 'Yaş';
   @override
   String get gender => 'Cinsiyet';

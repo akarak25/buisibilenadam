@@ -7,6 +7,7 @@ import 'package:palm_analysis/models/user.dart';
 import 'package:palm_analysis/services/token_service.dart';
 import 'package:palm_analysis/services/daily_reading_service.dart';
 import 'package:palm_analysis/services/push_notification_service.dart';
+import 'package:palm_analysis/services/streak_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Authentication service for login, register, and user management
@@ -123,6 +124,9 @@ class AuthService {
 
     // CRITICAL: Clear daily reading cache to prevent data leaking to next user
     await _dailyReadingService.clearAllDailyReadingCache();
+
+    // Clear local streak data
+    await StreakService().clearLocalStreak();
 
     await _tokenService.clearAll();
     await _clearUserFromPrefs();

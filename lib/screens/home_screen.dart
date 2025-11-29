@@ -401,20 +401,20 @@ class _HomeScreenState extends State<HomeScreen>
     final isTurkish = Localizations.localeOf(context).languageCode == 'tr';
     final streakEmoji = _streakService.getStreakEmoji(_currentStreak);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.5),
-        ),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.5),
+            ),
+            boxShadow: AppTheme.cardShadow,
+          ),
           child: Row(
             children: [
               Container(

@@ -1,10 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:palm_analysis/config/api_config.dart';
 import 'package:palm_analysis/services/token_service.dart';
+import 'package:palm_analysis/main.dart' show navigatorKey;
+import 'package:palm_analysis/screens/home_screen.dart';
+import 'package:palm_analysis/screens/personalized_daily_screen.dart';
+import 'package:palm_analysis/screens/daily_astrology_screen.dart';
 
 /// Background message handler - must be top-level function
 @pragma('vm:entry-point')
@@ -175,18 +179,47 @@ class PushNotificationService {
   void _handleNotificationTap(Map<String, dynamic> data) {
     // Handle navigation based on notification data
     final type = data['type'];
+    final screen = data['screen'];
+    final navigator = navigatorKey.currentState;
 
-    switch (type) {
+    if (navigator == null) {
+      debugPrint('Navigator not available yet, scheduling navigation');
+      // Schedule navigation for when app is ready
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _handleNotificationTap(data);
+      });
+      return;
+    }
+
+    debugPrint('Handling notification tap: type=$type, screen=$screen');
+
+    // Navigate based on type or screen
+    switch (type ?? screen) {
       case 'daily_reading':
-        // Navigate to daily reading screen
-        debugPrint('Navigate to daily reading');
+      case 'PersonalizedDailyScreen':
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => const PersonalizedDailyScreen(),
+          ),
+        );
         break;
       case 'streak_reminder':
-        // Navigate to home screen
-        debugPrint('Navigate to home for streak');
+      case 'HomeScreen':
+        // For home screen, pop to root and ensure home is shown
+        navigator.popUntil((route) => route.isFirst);
+        break;
+      case 'special_event':
+      case 'DailyAstrologyScreen':
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => const DailyAstrologyScreen(hasAnalysis: true),
+          ),
+        );
         break;
       default:
         debugPrint('Unknown notification type: $type');
+        // Default: go to home
+        navigator.popUntil((route) => route.isFirst);
     }
   }
 

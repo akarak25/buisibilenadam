@@ -21,6 +21,10 @@ class ApiConfig {
 
   // Push notification endpoints
   static const String deviceTokenEndpoint = '/notifications/device-token';
+  static const String notificationPreferencesEndpoint = '/notifications/preferences';
+
+  // Activity endpoints
+  static const String activityDailyEndpoint = '/activity/daily';
 
   // User endpoints
   static const String userProfileEndpoint = '/user/profile';
