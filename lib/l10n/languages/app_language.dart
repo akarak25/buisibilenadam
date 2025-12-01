@@ -162,6 +162,7 @@ abstract class AppLanguage {
   String get login;
   String get orText;
   String get signInWithGoogle;
+  String get signInWithApple;
   String get continueWithoutLogin;
   String get dontHaveAccount;
   String get signUp;
@@ -169,6 +170,19 @@ abstract class AppLanguage {
   String get invalidEmail;
   String get passwordRequired;
   String get googleSignInFailed;
+  String get appleSignInFailed;
+
+  // Register screen
+  String get createAccount;
+  String get registerForFree;
+  String get namePlaceholder;
+  String get nameRequired;
+  String get nameTooShort;
+  String get passwordHint;
+  String get confirmPasswordHint;
+  String get confirmPasswordRequired;
+  String get register;
+  String get alreadyHaveAccount;
 
   // System prompt for Claude API requests
   String get systemPrompt;

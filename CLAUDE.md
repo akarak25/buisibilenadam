@@ -973,3 +973,55 @@ lib/
   flutter clean && flutter pub get
   flutter build ios --simulator
   ```
+
+### Phase 17: Sign in with Apple (2025-12-01) ✅ TAMAMLANDI
+**Amaç:** Apple App Store Guideline 4.8 uyumluluğu - 3. parti login kullanılıyorsa Sign in with Apple zorunlu
+
+**Apple Developer Console (Kullanıcı Tarafından):**
+- [x] App ID'ye Sign in with Apple capability eklendi
+- [x] Service ID oluşturuldu: `com.elcizgisi.auth.service`
+- [x] Private Key oluşturuldu: `2B8C87MHY6` (Palmify Apple SignIn Key)
+- [x] Firebase Console'da Apple provider etkinleştirildi
+
+**Flutter (elcizgisi):**
+- [x] `pubspec.yaml` - `sign_in_with_apple: ^6.1.4` ve `crypto: ^3.0.6` eklendi
+- [x] `ios/Runner/Runner.entitlements` - `com.apple.developer.applesignin` capability eklendi
+- [x] `lib/config/api_config.dart` - `appleAuthEndpoint` eklendi
+- [x] `lib/services/auth_service.dart` - `signInWithApple()` metodu eklendi
+  - Nonce generation (SHA256)
+  - Apple credential işleme
+  - Backend'e gönderme
+- [x] `lib/screens/auth/login_screen.dart` - Apple Sign In butonu eklendi (Google'ın üstüne, Apple guidelines gereği)
+- [x] `lib/l10n/languages/app_language.dart` - `signInWithApple`, `appleSignInFailed` eklendi
+- [x] `lib/l10n/languages/language_en.dart` - Apple string'leri eklendi
+- [x] `lib/l10n/languages/language_tr.dart` - Apple string'leri eklendi
+
+**Backend (elyorumweb):**
+- [x] `src/models/User.ts` - `provider` enum'a `'apple'` eklendi, `appleId` field eklendi
+- [x] `src/app/api/auth/apple/route.ts` - Apple Sign In endpoint oluşturuldu
+  - Apple public key'leri ile JWT verification
+  - JWK to PEM dönüşümü
+  - Kullanıcı oluşturma/birleştirme
+  - Private relay email desteği
+
+**DEPLOY GEREKLİ:**
+```bash
+# 1. Backend deploy (VPS)
+cd /var/www/elcizgisi
+git pull
+npm run build
+pm2 restart el-cizgisi-yorum
+
+# 2. Flutter build
+cd /Users/yusufkamil/Desktop/elcizgisi
+flutter clean
+flutter pub get
+cd ios && pod install && cd ..
+flutter build ios
+```
+
+**Test Notları:**
+- Sign in with Apple simülatörde ÇALIŞMAZ, gerçek cihaz gerekli
+- İlk giriş: Email ve isim Apple'dan alınır
+- Sonraki girişler: Sadece userIdentifier gelir (email/isim gelmez)
+- Private relay: Kullanıcı email'ini gizlerse `xxx@privaterelay.appleid.com` formatında gelir

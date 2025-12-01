@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
   bool _isGoogleLoading = false;
+  bool _isAppleLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
 
@@ -109,6 +110,40 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() {
           _isGoogleLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    setState(() {
+      _isAppleLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _authService.signInWithApple();
+
+      if (!mounted) return;
+
+      // Navigate to home
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } on ApiError catch (e) {
+      setState(() {
+        _errorMessage = e.error;
+      });
+    } catch (e) {
+      final lang = AppLocalizations.of(context).currentLanguage;
+      setState(() {
+        _errorMessage = lang.appleSignInFailed;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAppleLoading = false;
         });
       }
     }
@@ -402,6 +437,54 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
 
                                 const SizedBox(height: 20),
+
+                                // Apple Sign-In button (MUST be first per Apple guidelines)
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 52,
+                                  child: OutlinedButton(
+                                    onPressed: _isAppleLoading ? null : _signInWithApple,
+                                    style: OutlinedButton.styleFrom(
+                                      side: BorderSide.none,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      backgroundColor: Colors.black,
+                                    ),
+                                    child: _isAppleLoading
+                                        ? const SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                            ),
+                                          )
+                                        : Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(
+                                                Icons.apple,
+                                                size: 24,
+                                                color: Colors.white,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Text(
+                                                lang.signInWithApple,
+                                                style: GoogleFonts.inter(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
 
                                 // Google Sign-In button
                                 SizedBox(

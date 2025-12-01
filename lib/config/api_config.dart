@@ -9,6 +9,7 @@ class ApiConfig {
   static const String logoutEndpoint = '/auth/cikis';
   static const String profileEndpoint = '/auth/profil';
   static const String googleAuthEndpoint = '/auth/google';
+  static const String appleAuthEndpoint = '/auth/apple';
 
   // Analysis endpoint
   static const String analyzeEndpoint = '/analyze';

@@ -387,6 +387,8 @@ class LanguageEn implements AppLanguage {
   @override
   String get signInWithGoogle => 'Sign in with Google';
   @override
+  String get signInWithApple => 'Sign in with Apple';
+  @override
   String get continueWithoutLogin => 'Continue without login';
   @override
   String get dontHaveAccount => "Don't have an account? ";
@@ -400,6 +402,30 @@ class LanguageEn implements AppLanguage {
   String get passwordRequired => 'Password is required';
   @override
   String get googleSignInFailed => 'Google sign-in failed. Please try again.';
+  @override
+  String get appleSignInFailed => 'Apple sign-in failed. Please try again.';
+
+  // Register screen
+  @override
+  String get createAccount => 'Create Account';
+  @override
+  String get registerForFree => 'Sign up for free';
+  @override
+  String get namePlaceholder => 'Your Full Name';
+  @override
+  String get nameRequired => 'Name is required';
+  @override
+  String get nameTooShort => 'Name must be at least 2 characters';
+  @override
+  String get passwordHint => 'At least 6 characters';
+  @override
+  String get confirmPasswordHint => 'Re-enter your password';
+  @override
+  String get confirmPasswordRequired => 'Password confirmation is required';
+  @override
+  String get register => 'Sign Up';
+  @override
+  String get alreadyHaveAccount => 'Already have an account? ';
 
   // System prompt for Claude API requests
   @override

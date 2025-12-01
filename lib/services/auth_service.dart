@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:crypto/crypto.dart';
 import 'package:palm_analysis/config/api_config.dart';
 import 'package:palm_analysis/models/auth_response.dart';
 import 'package:palm_analysis/models/user.dart';
@@ -203,6 +206,104 @@ class AuthService {
     } catch (e) {
       if (e is ApiError) rethrow;
       throw ApiError(error: 'Google girisi basarisiz: $e', statusCode: 500);
+    }
+  }
+
+  /// Generate a random nonce for Apple Sign In
+  String _generateNonce([int length = 32]) {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+  }
+
+  /// Generate SHA256 hash of a string
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  /// Sign in with Apple
+  Future<AuthResponse> signInWithApple() async {
+    try {
+      // CRITICAL: Clear ALL caches before new login to prevent data leaking
+      await _dailyReadingService.clearAllDailyReadingCache();
+
+      // Clear previous session data before new login
+      await _tokenService.clearAll();
+      await _clearUserFromPrefs();
+      _currentUser = null;
+
+      debugPrint('Previous session cleared - starting fresh Apple Sign-In');
+
+      // Generate nonce for security
+      final rawNonce = _generateNonce();
+      final nonce = _sha256ofString(rawNonce);
+
+      // Trigger Apple Sign-In flow
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+
+      // Build display name from Apple credential
+      String? displayName;
+      if (credential.givenName != null || credential.familyName != null) {
+        displayName = [credential.givenName, credential.familyName]
+            .where((name) => name != null && name.isNotEmpty)
+            .join(' ');
+        if (displayName.isEmpty) displayName = null;
+      }
+
+      // Send to backend
+      final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appleAuthEndpoint}');
+
+      final response = await http
+          .post(
+            uri,
+            headers: ApiConfig.defaultHeaders,
+            body: jsonEncode({
+              'identityToken': credential.identityToken,
+              'authorizationCode': credential.authorizationCode,
+              'email': credential.email,
+              'name': displayName,
+              'userIdentifier': credential.userIdentifier,
+              'nonce': rawNonce,
+            }),
+          )
+          .timeout(ApiConfig.connectionTimeout);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonBody = utf8.decode(response.bodyBytes);
+        final data = jsonDecode(jsonBody);
+        final authResponse = AuthResponse.fromJson(data);
+
+        // Save token and user info
+        await _tokenService.saveToken(authResponse.token);
+        await _tokenService.saveUserId(authResponse.user.id);
+        await _saveUserToPrefs(authResponse.user);
+        _currentUser = authResponse.user;
+
+        // Register push notification token
+        await PushNotificationService.instance.registerTokenAfterLogin();
+
+        return authResponse;
+      } else {
+        final errorBody = utf8.decode(response.bodyBytes);
+        final errorData = jsonDecode(errorBody);
+        throw ApiError.fromJson(errorData, response.statusCode);
+      }
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        throw ApiError(error: 'Apple girisi iptal edildi', statusCode: 400);
+      }
+      throw ApiError(error: 'Apple girisi basarisiz: ${e.message}', statusCode: 500);
+    } catch (e) {
+      if (e is ApiError) rethrow;
+      throw ApiError(error: 'Apple girisi basarisiz: $e', statusCode: 500);
     }
   }
 

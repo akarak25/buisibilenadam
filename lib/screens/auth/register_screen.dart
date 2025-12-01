@@ -6,6 +6,7 @@ import 'package:palm_analysis/screens/home_screen.dart';
 import 'package:palm_analysis/services/auth_service.dart';
 import 'package:palm_analysis/models/auth_response.dart';
 import 'package:palm_analysis/widgets/common/gradient_button.dart';
+import 'package:palm_analysis/l10n/app_localizations.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -63,8 +64,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _errorMessage = e.error;
       });
     } catch (e) {
+      final lang = AppLocalizations.of(context).currentLanguage;
       setState(() {
-        _errorMessage = 'Bir hata olustu. Lutfen tekrar deneyin.';
+        _errorMessage = lang.generalError;
       });
     } finally {
       if (mounted) {
@@ -77,6 +79,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context).currentLanguage;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -161,7 +165,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               Rect.fromLTWH(0, 0, bounds.width, bounds.height),
                             ),
                             child: Text(
-                              'Hesap Olustur',
+                              lang.createAccount,
                               style: GoogleFonts.inter(
                                 fontSize: 32,
                                 fontWeight: FontWeight.w700,
@@ -170,7 +174,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Hemen ucretsiz kaydolun',
+                            lang.registerForFree,
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               color: AppTheme.textSecondary,
@@ -238,7 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                 // Name field
                                 Text(
-                                  'Ad Soyad',
+                                  lang.fullName,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -251,7 +255,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   textInputAction: TextInputAction.next,
                                   textCapitalization: TextCapitalization.words,
                                   decoration: InputDecoration(
-                                    hintText: 'Adiniz Soyadiniz',
+                                    hintText: lang.namePlaceholder,
                                     prefixIcon: Icon(
                                       Icons.person_outline_rounded,
                                       color: AppTheme.textMuted,
@@ -259,10 +263,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Ad soyad gerekli';
+                                      return lang.nameRequired;
                                     }
                                     if (value.length < 2) {
-                                      return 'Ad soyad en az 2 karakter olmali';
+                                      return lang.nameTooShort;
                                     }
                                     return null;
                                   },
@@ -272,7 +276,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                 // Email field
                                 Text(
-                                  'E-posta',
+                                  lang.email,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -285,7 +289,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   keyboardType: TextInputType.emailAddress,
                                   textInputAction: TextInputAction.next,
                                   decoration: InputDecoration(
-                                    hintText: 'ornek@email.com',
+                                    hintText: lang.emailPlaceholder,
                                     prefixIcon: Icon(
                                       Icons.email_outlined,
                                       color: AppTheme.textMuted,
@@ -293,10 +297,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'E-posta gerekli';
+                                      return lang.emailRequired;
                                     }
                                     if (!value.contains('@')) {
-                                      return 'Gecerli bir e-posta girin';
+                                      return lang.invalidEmail;
                                     }
                                     return null;
                                   },
@@ -306,7 +310,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                 // Password field
                                 Text(
-                                  'Sifre',
+                                  lang.password,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -319,7 +323,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   obscureText: _obscurePassword,
                                   textInputAction: TextInputAction.next,
                                   decoration: InputDecoration(
-                                    hintText: 'En az 6 karakter',
+                                    hintText: lang.passwordHint,
                                     prefixIcon: Icon(
                                       Icons.lock_outline_rounded,
                                       color: AppTheme.textMuted,
@@ -340,10 +344,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Sifre gerekli';
+                                      return lang.passwordRequired;
                                     }
                                     if (value.length < 6) {
-                                      return 'Sifre en az 6 karakter olmali';
+                                      return lang.passwordTooShort;
                                     }
                                     return null;
                                   },
@@ -353,7 +357,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                 // Confirm password field
                                 Text(
-                                  'Sifre Tekrar',
+                                  lang.confirmPassword,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -367,7 +371,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   textInputAction: TextInputAction.done,
                                   onFieldSubmitted: (_) => _register(),
                                   decoration: InputDecoration(
-                                    hintText: 'Sifrenizi tekrar girin',
+                                    hintText: lang.confirmPasswordHint,
                                     prefixIcon: Icon(
                                       Icons.lock_outline_rounded,
                                       color: AppTheme.textMuted,
@@ -389,10 +393,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Sifre tekrari gerekli';
+                                      return lang.confirmPasswordRequired;
                                     }
                                     if (value != _passwordController.text) {
-                                      return 'Sifreler eslesmiyor';
+                                      return lang.passwordsDontMatch;
                                     }
                                     return null;
                                   },
@@ -402,7 +406,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                 // Register button
                                 GradientButton(
-                                  text: 'Kayit Ol',
+                                  text: lang.register,
                                   onPressed: _register,
                                   isLoading: _isLoading,
                                 ),
@@ -421,7 +425,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Zaten hesabiniz var mi? ',
+                            lang.alreadyHaveAccount,
                             style: GoogleFonts.inter(
                               color: AppTheme.textSecondary,
                               fontSize: 14,
@@ -436,7 +440,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 Rect.fromLTWH(0, 0, bounds.width, bounds.height),
                               ),
                               child: Text(
-                                'Giris Yap',
+                                lang.login,
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,

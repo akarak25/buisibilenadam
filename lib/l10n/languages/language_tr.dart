@@ -387,6 +387,8 @@ class LanguageTr implements AppLanguage {
   @override
   String get signInWithGoogle => 'Google ile Giriş Yap';
   @override
+  String get signInWithApple => 'Apple ile Giriş Yap';
+  @override
   String get continueWithoutLogin => 'Giriş yapmadan devam et';
   @override
   String get dontHaveAccount => 'Hesabınız yok mu? ';
@@ -400,6 +402,30 @@ class LanguageTr implements AppLanguage {
   String get passwordRequired => 'Şifre gerekli';
   @override
   String get googleSignInFailed => 'Google girişi başarısız. Lütfen tekrar deneyin.';
+  @override
+  String get appleSignInFailed => 'Apple girişi başarısız. Lütfen tekrar deneyin.';
+
+  // Register screen
+  @override
+  String get createAccount => 'Hesap Oluştur';
+  @override
+  String get registerForFree => 'Hemen ücretsiz kaydolun';
+  @override
+  String get namePlaceholder => 'Adınız Soyadınız';
+  @override
+  String get nameRequired => 'Ad soyad gerekli';
+  @override
+  String get nameTooShort => 'Ad soyad en az 2 karakter olmalı';
+  @override
+  String get passwordHint => 'En az 6 karakter';
+  @override
+  String get confirmPasswordHint => 'Şifrenizi tekrar girin';
+  @override
+  String get confirmPasswordRequired => 'Şifre tekrarı gerekli';
+  @override
+  String get register => 'Kayıt Ol';
+  @override
+  String get alreadyHaveAccount => 'Zaten hesabınız var mı? ';
 
   // Claude API istekleri için sistem mesajı
   @override
