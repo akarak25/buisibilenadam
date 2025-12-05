@@ -8,6 +8,8 @@ import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
+// EvolutionException is imported from api_service.dart
+
 /// Evolution Analysis Screen
 /// Track how palm lines change over time by comparing analyses from different dates
 class EvolutionScreen extends StatefulWidget {
@@ -87,20 +89,46 @@ class _EvolutionScreenState extends State<EvolutionScreen>
     }
   }
 
+  bool _isDifferentPersonError = false;
+
   Future<void> _analyzeEvolution() async {
     if (_selectedOlder == null || _selectedNewer == null) return;
+
+    // Check if both analyses have valid image paths
+    if (_selectedOlder!.imagePath == null || _selectedNewer!.imagePath == null) {
+      setState(() {
+        _errorMessage = Localizations.localeOf(context).languageCode == 'tr'
+            ? 'Seçilen analizlerden birinin resmi bulunamadı. Lütfen başka analizler seçin.'
+            : 'Image not found for one of the selected analyses. Please select different analyses.';
+      });
+      return;
+    }
+
+    final olderImageFile = File(_selectedOlder!.imagePath!);
+    final newerImageFile = File(_selectedNewer!.imagePath!);
+
+    // Verify files exist
+    if (!await olderImageFile.exists() || !await newerImageFile.exists()) {
+      setState(() {
+        _errorMessage = Localizations.localeOf(context).languageCode == 'tr'
+            ? 'Resim dosyaları bulunamadı. Lütfen yeni analizler yapın.'
+            : 'Image files not found. Please create new analyses.';
+      });
+      return;
+    }
 
     setState(() {
       _isAnalyzing = true;
       _errorMessage = null;
       _evolutionResult = null;
+      _isDifferentPersonError = false;
     });
 
     try {
       final locale = Localizations.localeOf(context);
       final result = await _apiService.analyzeEvolution(
-        olderAnalysis: _selectedOlder!.analysis,
-        newerAnalysis: _selectedNewer!.analysis,
+        olderImageFile: olderImageFile,
+        newerImageFile: newerImageFile,
         olderDate: _formatDate(_selectedOlder!.createdAt),
         newerDate: _formatDate(_selectedNewer!.createdAt),
         language: locale.languageCode,
@@ -110,6 +138,15 @@ class _EvolutionScreenState extends State<EvolutionScreen>
         setState(() {
           _isAnalyzing = false;
           _evolutionResult = result;
+        });
+      }
+    } on EvolutionException catch (e) {
+      debugPrint('Evolution analysis error: ${e.errorCode} - ${e.message}');
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+          _isDifferentPersonError = e.isDifferentPerson;
+          _errorMessage = e.message;
         });
       }
     } catch (e) {
@@ -174,11 +211,13 @@ class _EvolutionScreenState extends State<EvolutionScreen>
                       ? _buildLoadingState()
                       : _analyses.length < 2
                           ? _buildNeedMoreAnalyses(lang)
-                          : _evolutionResult != null
-                              ? _buildResult(lang, isTurkish)
-                              : _isAnalyzing
-                                  ? _buildAnalyzingState(lang)
-                                  : _buildSelectionView(lang, isTurkish),
+                          : _errorMessage != null
+                              ? _buildErrorState(lang, isTurkish)
+                              : _evolutionResult != null
+                                  ? _buildResult(lang, isTurkish)
+                                  : _isAnalyzing
+                                      ? _buildAnalyzingState(lang)
+                                      : _buildSelectionView(lang, isTurkish),
                 ),
               ],
             ),
@@ -319,6 +358,175 @@ class _EvolutionScreenState extends State<EvolutionScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(dynamic lang, bool isTurkish) {
+    // Determine icon and color based on error type
+    final IconData errorIcon = _isDifferentPersonError
+        ? Icons.people_outline
+        : Icons.error_outline;
+    final Color errorColor = _isDifferentPersonError
+        ? const Color(0xFFF59E0B) // Amber for different person warning
+        : const Color(0xFFEF4444); // Red for other errors
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 40),
+
+          // Error icon
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: errorColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: errorColor.withValues(alpha: 0.3),
+                width: 2,
+              ),
+            ),
+            child: Icon(
+              errorIcon,
+              size: 56,
+              color: errorColor,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Error title
+          Text(
+            _isDifferentPersonError
+                ? (isTurkish ? 'Farklı Kişi Algılandı' : 'Different Person Detected')
+                : (isTurkish ? 'Hata Oluştu' : 'Error Occurred'),
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+
+          // Error message
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: errorColor.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Text(
+              _errorMessage ?? '',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.8),
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Tip card for different person error
+          if (_isDifferentPersonError) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF10B981).withValues(alpha: 0.2),
+                    const Color(0xFF22C55E).withValues(alpha: 0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.lightbulb_outline,
+                    color: Color(0xFF10B981),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      isTurkish
+                          ? 'İpucu: Kendi ellerinizin farklı zamanlarda çekilmiş fotoğraflarını seçin.'
+                          : 'Tip: Select photos of your own hands taken at different times.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedOlder = null;
+                      _selectedNewer = null;
+                      _errorMessage = null;
+                      _isDifferentPersonError = false;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF10B981), Color(0xFF22C55E)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.refresh,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isTurkish ? 'Farklı Analiz Seç' : 'Select Different Analyses',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
-import 'package:palm_analysis/services/palm_analysis_service.dart';
+import 'package:palm_analysis/services/palm_analysis_service.dart'; // includes AnalysisException
 import 'package:palm_analysis/services/api_service.dart';
 import 'package:palm_analysis/models/palm_analysis.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,35 +44,39 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Future<void> _analyzeImage() async {
+    // Get current locale from app's localization system
+    String deviceLanguage = 'tr';
     try {
-      // Get current locale from app's localization system
-      String deviceLanguage = 'tr';
-      try {
-        if (mounted) {
-          // First try to get from AppLocalizations
-          final appLoc = AppLocalizations.of(context);
-          deviceLanguage = appLoc.locale.languageCode;
-          debugPrint('Analysis language detected: $deviceLanguage');
-        }
-      } catch (e) {
-        debugPrint('Language detection error: $e');
-        // Fallback: try Localizations.localeOf
-        try {
-          final locale = Localizations.localeOf(context);
-          deviceLanguage = locale.languageCode;
-        } catch (_) {}
+      if (mounted) {
+        // First try to get from AppLocalizations
+        final appLoc = AppLocalizations.of(context);
+        deviceLanguage = appLoc.locale.languageCode;
+        debugPrint('Analysis language detected: $deviceLanguage');
       }
+    } catch (e) {
+      debugPrint('Language detection error: $e');
+      // Fallback: try Localizations.localeOf
+      try {
+        final locale = Localizations.localeOf(context);
+        deviceLanguage = locale.languageCode;
+      } catch (_) {}
+    }
 
-      // Store language for UI components
-      _languageCode = deviceLanguage;
+    // Store language for UI components
+    _languageCode = deviceLanguage;
 
+    try {
       // Analyze image via backend API
+      // This will throw AnalysisException on any error
       final analysis = await _analysisService.analyzeHandImage(
         widget.imageFile,
         locale: Locale(deviceLanguage),
       );
 
       if (!mounted) return;
+
+      // === SUCCESS PATH ONLY ===
+      // Save operations are ONLY executed if analyzeHandImage succeeds
 
       // Save image and analysis locally
       String imagePath = '';
@@ -106,14 +110,28 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           _analysis = analysis;
         });
       }
+    } on AnalysisException catch (e) {
+      // === ERROR PATH ===
+      // AnalysisException means the analysis failed
+      // DO NOT save anything - just show error in UI
+      debugPrint('Analysis failed: ${e.errorCode} - ${e.message}');
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+          _errorMessage = e.message;
+        });
+      }
+      // No save operations here - error stays in UI only
     } catch (e) {
-      debugPrint('Analysis error: $e');
+      // Unexpected error - also do not save
+      debugPrint('Unexpected analysis error: $e');
       if (mounted) {
         setState(() {
           _isAnalyzing = false;
           _errorMessage = e.toString();
         });
       }
+      // No save operations here either
     }
   }
 

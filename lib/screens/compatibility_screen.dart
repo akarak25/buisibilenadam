@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
@@ -88,20 +87,46 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
     }
   }
 
+  bool _isSamePersonError = false;
+
   Future<void> _analyzeCompatibility() async {
     if (_selectedFirst == null || _selectedSecond == null) return;
+
+    // Check if both analyses have valid image paths
+    if (_selectedFirst!.imagePath == null || _selectedSecond!.imagePath == null) {
+      setState(() {
+        _errorMessage = Localizations.localeOf(context).languageCode == 'tr'
+            ? 'Seçilen analizlerden birinin resmi bulunamadı. Lütfen başka analizler seçin.'
+            : 'Image not found for one of the selected analyses. Please select different analyses.';
+      });
+      return;
+    }
+
+    final image1File = File(_selectedFirst!.imagePath!);
+    final image2File = File(_selectedSecond!.imagePath!);
+
+    // Verify files exist
+    if (!await image1File.exists() || !await image2File.exists()) {
+      setState(() {
+        _errorMessage = Localizations.localeOf(context).languageCode == 'tr'
+            ? 'Resim dosyaları bulunamadı. Lütfen yeni analizler yapın.'
+            : 'Image files not found. Please create new analyses.';
+      });
+      return;
+    }
 
     setState(() {
       _isAnalyzing = true;
       _errorMessage = null;
       _compatibilityResult = null;
+      _isSamePersonError = false;
     });
 
     try {
       final locale = Localizations.localeOf(context);
       final result = await _apiService.analyzeCompatibility(
-        analysis1: _selectedFirst!.analysis,
-        analysis2: _selectedSecond!.analysis,
+        image1File: image1File,
+        image2File: image2File,
         language: locale.languageCode,
       );
 
@@ -109,6 +134,15 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
         setState(() {
           _isAnalyzing = false;
           _compatibilityResult = result;
+        });
+      }
+    } on CompatibilityException catch (e) {
+      debugPrint('Compatibility analysis error: ${e.errorCode} - ${e.message}');
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+          _isSamePersonError = e.isSamePerson;
+          _errorMessage = e.message;
         });
       }
     } catch (e) {
@@ -150,11 +184,13 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
                       ? _buildLoadingState()
                       : _analyses.length < 2
                           ? _buildNeedMoreAnalyses(lang)
-                          : _compatibilityResult != null
-                              ? _buildResult(lang, isTurkish)
-                              : _isAnalyzing
-                                  ? _buildAnalyzingState(lang)
-                                  : _buildSelectionView(lang, isTurkish),
+                          : _errorMessage != null
+                              ? _buildErrorState(lang, isTurkish)
+                              : _compatibilityResult != null
+                                  ? _buildResult(lang, isTurkish)
+                                  : _isAnalyzing
+                                      ? _buildAnalyzingState(lang)
+                                      : _buildSelectionView(lang, isTurkish),
                 ),
               ],
             ),
@@ -295,6 +331,175 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(dynamic lang, bool isTurkish) {
+    // Determine icon and color based on error type
+    final IconData errorIcon = _isSamePersonError
+        ? Icons.person_outline
+        : Icons.error_outline;
+    final Color errorColor = _isSamePersonError
+        ? const Color(0xFFF59E0B) // Amber for same person warning
+        : const Color(0xFFEF4444); // Red for other errors
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 40),
+
+          // Error icon
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: errorColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: errorColor.withValues(alpha: 0.3),
+                width: 2,
+              ),
+            ),
+            child: Icon(
+              errorIcon,
+              size: 56,
+              color: errorColor,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Error title
+          Text(
+            _isSamePersonError
+                ? (isTurkish ? 'Aynı Kişi Algılandı' : 'Same Person Detected')
+                : (isTurkish ? 'Hata Oluştu' : 'Error Occurred'),
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+
+          // Error message
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: errorColor.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Text(
+              _errorMessage ?? '',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.8),
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Tip card for same person error
+          if (_isSamePersonError) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF6366F1).withValues(alpha: 0.2),
+                    const Color(0xFFA855F7).withValues(alpha: 0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.lightbulb_outline,
+                    color: Color(0xFF6366F1),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      isTurkish
+                          ? 'İpucu: Partnerinizin avuç içi fotoğrafını çekerek tekrar deneyin.'
+                          : 'Tip: Take a photo of your partner\'s palm and try again.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedFirst = null;
+                      _selectedSecond = null;
+                      _errorMessage = null;
+                      _isSamePersonError = false;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFEC4899), Color(0xFFF43F5E)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFEC4899).withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.refresh,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isTurkish ? 'Farklı El Seç' : 'Select Different Palms',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

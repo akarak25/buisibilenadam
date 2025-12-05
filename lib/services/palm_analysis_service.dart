@@ -3,6 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:palm_analysis/models/auth_response.dart';
 import 'package:palm_analysis/services/api_service.dart';
 
+/// Custom exception for analysis errors
+/// This ensures errors are handled via flow control, not string matching
+class AnalysisException implements Exception {
+  final String message;
+  final String? errorCode;
+  final int? statusCode;
+
+  AnalysisException(this.message, {this.errorCode, this.statusCode});
+
+  @override
+  String toString() => message;
+}
+
 /// Palm analysis service that uses elcizgisi.com backend
 /// No direct OpenAI API calls - all analysis is done through the backend
 class PalmAnalysisService {
@@ -12,36 +25,53 @@ class PalmAnalysisService {
   PalmAnalysisService({this.context});
 
   /// Analyze palm image using backend API
-  /// Returns the analysis text or error message
+  /// Returns the analysis text on success
+  /// Throws AnalysisException on any error (for proper flow control)
   Future<String> analyzeHandImage(File imageFile, {Locale? locale}) async {
+    // Validate image file
+    if (!await imageFile.exists()) {
+      throw AnalysisException(
+        _getErrorMessage('file_not_found', locale),
+        errorCode: 'file_not_found',
+      );
+    }
+
+    final fileSize = await imageFile.length();
+    if (fileSize <= 0) {
+      throw AnalysisException(
+        _getErrorMessage('invalid_file', locale),
+        errorCode: 'invalid_file',
+      );
+    }
+
+    // Max 5MB check
+    if (fileSize > 5 * 1024 * 1024) {
+      throw AnalysisException(
+        _getErrorMessage('file_too_large', locale),
+        errorCode: 'file_too_large',
+      );
+    }
+
     try {
-      // Validate image file
-      if (!await imageFile.exists()) {
-        return _getErrorMessage('file_not_found', locale);
-      }
-
-      final fileSize = await imageFile.length();
-      if (fileSize <= 0) {
-        return _getErrorMessage('invalid_file', locale);
-      }
-
-      // Max 5MB check
-      if (fileSize > 5 * 1024 * 1024) {
-        return _getErrorMessage('file_too_large', locale);
-      }
-
       // Call backend API with language preference
       final languageCode = locale?.languageCode ?? 'tr';
       final response = await _apiService.analyzeImage(imageFile, language: languageCode);
 
-      // Return the analysis text
+      // Return the analysis text only on success
       return response.analysis;
     } on ApiError catch (e) {
       debugPrint('API Error: ${e.error}');
-      return _getApiErrorMessage(e, locale);
+      throw AnalysisException(
+        _getApiErrorMessage(e, locale),
+        errorCode: 'api_error',
+        statusCode: e.statusCode,
+      );
     } catch (e) {
       debugPrint('Analysis error: $e');
-      return _getErrorMessage('generic_error', locale);
+      throw AnalysisException(
+        _getErrorMessage('generic_error', locale),
+        errorCode: 'generic_error',
+      );
     }
   }
 

@@ -1,12 +1,46 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:palm_analysis/config/api_config.dart';
 import 'package:palm_analysis/models/auth_response.dart';
 import 'package:palm_analysis/models/query.dart';
 import 'package:palm_analysis/services/token_service.dart';
+
+/// Custom exception for compatibility analysis errors
+class CompatibilityException implements Exception {
+  final String message;
+  final String errorCode;
+  final bool isSamePerson;
+
+  CompatibilityException(
+    this.message, {
+    required this.errorCode,
+    this.isSamePerson = false,
+  });
+
+  @override
+  String toString() => message;
+}
+
+/// Custom exception for evolution analysis errors
+class EvolutionException implements Exception {
+  final String message;
+  final String errorCode;
+  final bool isDifferentPerson;
+
+  EvolutionException(
+    this.message, {
+    required this.errorCode,
+    this.isDifferentPerson = false,
+  });
+
+  @override
+  String toString() => message;
+}
 
 /// Main API service for elcizgisi.com backend
 class ApiService {
@@ -247,18 +281,63 @@ class ApiService {
     }
   }
 
-  /// Analyze compatibility between two palm analyses
+  /// Compress and encode image to Base64 for API
+  /// Max dimension: 1024px, Quality: 75%
+  Future<String> _compressAndEncodeImage(File imageFile) async {
+    try {
+      // Read file as bytes
+      final Uint8List originalBytes = await imageFile.readAsBytes();
+
+      // Compress the image
+      final Uint8List? compressedBytes = await FlutterImageCompress.compressWithList(
+        originalBytes,
+        minWidth: 1024,
+        minHeight: 1024,
+        quality: 75,
+        format: CompressFormat.jpeg,
+      );
+
+      if (compressedBytes == null || compressedBytes.isEmpty) {
+        // Fallback to original if compression fails
+        debugPrint('Image compression failed, using original');
+        final base64 = base64Encode(originalBytes);
+        return 'data:image/jpeg;base64,$base64';
+      }
+
+      debugPrint('Image compressed: ${originalBytes.length} -> ${compressedBytes.length} bytes');
+
+      // Convert to Base64 with data URL prefix
+      final base64 = base64Encode(compressedBytes);
+      return 'data:image/jpeg;base64,$base64';
+    } catch (e) {
+      debugPrint('Image compression error: $e');
+      // Fallback: read and encode original
+      final bytes = await imageFile.readAsBytes();
+      final base64 = base64Encode(bytes);
+      final mimeType = _getMimeType(imageFile.path);
+      return 'data:$mimeType;base64,$base64';
+    }
+  }
+
+  /// Analyze compatibility between two palm images (Visual Comparison)
+  /// Uses Gemini multimodal to analyze both images simultaneously
+  /// Throws CompatibilityException if same person detected or other errors
   Future<String> analyzeCompatibility({
-    required String analysis1,
-    required String analysis2,
+    required File image1File,
+    required File image2File,
     String language = 'tr',
   }) async {
     try {
+      // Compress and encode both images
+      debugPrint('Compressing images for compatibility analysis...');
+      final image1Base64 = await _compressAndEncodeImage(image1File);
+      final image2Base64 = await _compressAndEncodeImage(image2File);
+
       final response = await post(
         ApiConfig.compatibilityEndpoint,
         body: {
-          'analysis1': analysis1,
-          'analysis2': analysis2,
+          'image1Base64': image1Base64,
+          'image2Base64': image2Base64,
           'language': language,
         },
       );
@@ -270,28 +349,56 @@ class ApiService {
       } else {
         final errorBody = utf8.decode(response.bodyBytes);
         final errorData = jsonDecode(errorBody);
-        throw ApiError.fromJson(errorData, response.statusCode);
+
+        // Check for specific error codes
+        final errorCode = errorData['errorCode'] ?? 'UNKNOWN_ERROR';
+        final isSamePerson = errorData['isSamePerson'] == true;
+        final errorMessage = errorData['error'] ?? 'Analysis failed';
+
+        throw CompatibilityException(
+          errorMessage,
+          errorCode: errorCode,
+          isSamePerson: isSamePerson,
+        );
       }
+    } on CompatibilityException {
+      rethrow;
     } catch (e) {
       debugPrint('Compatibility analysis error: $e');
-      rethrow;
+      if (e is ApiError) {
+        throw CompatibilityException(
+          e.error,
+          errorCode: 'API_ERROR',
+        );
+      }
+      throw CompatibilityException(
+        e.toString(),
+        errorCode: 'UNKNOWN_ERROR',
+      );
     }
   }
 
-  /// Analyze evolution of palm lines over time
+  /// Analyze evolution of palm lines over time (Visual Comparison)
+  /// Uses Gemini multimodal to compare palm images from different dates
+  /// Throws EvolutionException if different person detected or other errors
   Future<String> analyzeEvolution({
-    required String olderAnalysis,
-    required String newerAnalysis,
+    required File olderImageFile,
+    required File newerImageFile,
     required String olderDate,
     required String newerDate,
     String language = 'tr',
   }) async {
     try {
+      // Compress and encode both images
+      debugPrint('Compressing images for evolution analysis...');
+      final olderImageBase64 = await _compressAndEncodeImage(olderImageFile);
+      final newerImageBase64 = await _compressAndEncodeImage(newerImageFile);
+
       final response = await post(
         ApiConfig.evolutionEndpoint,
         body: {
-          'olderAnalysis': olderAnalysis,
-          'newerAnalysis': newerAnalysis,
+          'olderImageBase64': olderImageBase64,
+          'newerImageBase64': newerImageBase64,
           'olderDate': olderDate,
           'newerDate': newerDate,
           'language': language,
@@ -305,11 +412,32 @@ class ApiService {
       } else {
         final errorBody = utf8.decode(response.bodyBytes);
         final errorData = jsonDecode(errorBody);
-        throw ApiError.fromJson(errorData, response.statusCode);
+
+        // Check for specific error codes
+        final errorCode = errorData['errorCode'] ?? 'UNKNOWN_ERROR';
+        final isDifferentPerson = errorData['isDifferentPerson'] == true;
+        final errorMessage = errorData['error'] ?? 'Analysis failed';
+
+        throw EvolutionException(
+          errorMessage,
+          errorCode: errorCode,
+          isDifferentPerson: isDifferentPerson,
+        );
       }
+    } on EvolutionException {
+      rethrow;
     } catch (e) {
       debugPrint('Evolution analysis error: $e');
-      rethrow;
+      if (e is ApiError) {
+        throw EvolutionException(
+          e.error,
+          errorCode: 'API_ERROR',
+        );
+      }
+      throw EvolutionException(
+        e.toString(),
+        errorCode: 'UNKNOWN_ERROR',
+      );
     }
   }
 
