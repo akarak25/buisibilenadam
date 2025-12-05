@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,45 +15,80 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  late AnimationController _scanLineController;
+  late AnimationController _pulseController;
+  late AnimationController _rotateController;
+  late Animation<double> _scanLineAnimation;
+  late Animation<double> _pulseAnimation;
+
   final List<OnboardingData> _pages = [
     OnboardingData(
-      icon: Icons.back_hand_rounded,
-      iconGradient: const LinearGradient(
-        colors: [Color(0xFF6366F1), Color(0xFFA855F7)],
-      ),
+      icon: Icons.fingerprint,
+      accentColor: AppTheme.primaryIndigo,
     ),
     OnboardingData(
-      icon: Icons.camera_alt_rounded,
-      iconGradient: const LinearGradient(
-        colors: [Color(0xFF0EA5E9), Color(0xFF6366F1)],
-      ),
+      icon: Icons.document_scanner_outlined,
+      accentColor: const Color(0xFF0EA5E9),
     ),
     OnboardingData(
-      icon: Icons.psychology_rounded,
-      iconGradient: const LinearGradient(
-        colors: [Color(0xFFA855F7), Color(0xFFEC4899)],
-      ),
+      icon: Icons.psychology_outlined,
+      accentColor: AppTheme.primaryPurple,
     ),
     OnboardingData(
-      icon: Icons.auto_awesome_rounded,
-      iconGradient: const LinearGradient(
-        colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
-      ),
+      icon: Icons.insights_outlined,
+      accentColor: const Color(0xFF10B981),
     ),
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _initAnimations();
+  }
+
+  void _initAnimations() {
+    _scanLineController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+    _scanLineAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _scanLineController, curve: Curves.easeInOut),
+    );
+    _scanLineController.repeat(reverse: true);
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+    _pulseController.repeat(reverse: true);
+
+    _rotateController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    );
+    _rotateController.repeat();
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
+    _scanLineController.dispose();
+    _pulseController.dispose();
+    _rotateController.dispose();
     super.dispose();
   }
 
   void _nextPage() {
-    final content = AppLocalizations.of(context).currentLanguage.onboardingContent;
+    final content =
+        AppLocalizations.of(context).currentLanguage.onboardingContent;
     if (_currentPage < content.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
@@ -64,13 +100,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finishOnboarding() async {
-    // Save onboarding completed
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_completed', true);
 
     if (!mounted) return;
 
-    // Navigate to login/register or home
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
@@ -89,52 +123,67 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final content = AppLocalizations.of(context).currentLanguage.onboardingContent;
+    final content =
+        AppLocalizations.of(context).currentLanguage.onboardingContent;
     final lang = AppLocalizations.of(context).currentLanguage;
+    final isTurkish =
+        AppLocalizations.of(context).locale.languageCode == 'tr';
 
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: AppTheme.backgroundGradient,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0A0E1A),
+              Color(0xFF1A1F35),
+              Color(0xFF0A0E1A),
+            ],
+          ),
         ),
         child: Stack(
           children: [
-            // Soft overlay
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.95),
-                    Colors.white.withValues(alpha: 0.90),
-                  ],
+            // Animated grid background
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _GridBackgroundPainter(
+                  color: AppTheme.primaryIndigo.withValues(alpha: 0.1),
                 ),
               ),
             ),
 
-            // Decorative elements
+            // Rotating outer ring
             Positioned(
-              top: -100,
-              right: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryIndigo.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -80,
-              left: -80,
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryPurple.withValues(alpha: 0.06),
-                  shape: BoxShape.circle,
+              top: MediaQuery.of(context).size.height * 0.15,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: _rotateController,
+                  builder: (context, child) {
+                    return Transform.rotate(
+                      angle: _rotateController.value * 2 * math.pi,
+                      child: Container(
+                        width: 280,
+                        height: 280,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.primaryIndigo.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: CustomPaint(
+                          painter: _DashedCirclePainter(
+                            color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
+                            dashLength: 10,
+                            gapLength: 10,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -143,19 +192,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             SafeArea(
               child: Column(
                 children: [
-                  // Skip button
+                  // Top bar
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // Logo/Brand
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.fingerprint,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'PALMIFY',
+                              style: GoogleFonts.orbitron(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Skip button
                         TextButton(
                           onPressed: _skipOnboarding,
                           child: Text(
                             lang.skip,
                             style: GoogleFonts.inter(
-                              color: AppTheme.textSecondary,
+                              color: Colors.white60,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -178,6 +255,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           data: _pages[index % _pages.length],
                           title: content[index]['title']!,
                           description: content[index]['description']!,
+                          stepNumber: index + 1,
+                          totalSteps: content.length,
+                          scanLineAnimation: _scanLineAnimation,
+                          pulseAnimation: _pulseAnimation,
                         );
                       },
                     ),
@@ -188,7 +269,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       children: [
-                        // Page indicators
+                        // Progress indicators
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(
@@ -196,7 +277,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             (index) => AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               margin: const EdgeInsets.symmetric(horizontal: 4),
-                              width: _currentPage == index ? 28 : 8,
+                              width: _currentPage == index ? 32 : 8,
                               height: 8,
                               decoration: BoxDecoration(
                                 gradient: _currentPage == index
@@ -204,8 +285,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     : null,
                                 color: _currentPage == index
                                     ? null
-                                    : AppTheme.borderLight,
+                                    : Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
+                                boxShadow: _currentPage == index
+                                    ? [
+                                        BoxShadow(
+                                          color: AppTheme.primaryIndigo
+                                              .withValues(alpha: 0.5),
+                                          blurRadius: 10,
+                                        ),
+                                      ]
+                                    : null,
                               ),
                             ),
                           ),
@@ -214,15 +304,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         const SizedBox(height: 32),
 
                         // Next/Start button
-                        GradientButton(
-                          text: _currentPage == content.length - 1
-                              ? lang.takePicture
-                              : lang.analyzeHand,
-                          onPressed: _nextPage,
-                          icon: _currentPage == content.length - 1
-                              ? Icons.arrow_forward_rounded
-                              : null,
-                        ),
+                        _buildActionButton(content, isTurkish),
 
                         const SizedBox(height: 16),
                       ],
@@ -236,15 +318,59 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
+
+  Widget _buildActionButton(List<Map<String, String>> content, bool isTurkish) {
+    final isLast = _currentPage == content.length - 1;
+
+    return GestureDetector(
+      onTap: _nextPage,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: AppTheme.primaryGradient,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryIndigo.withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              isLast
+                  ? (isTurkish ? 'Başlat' : 'Get Started')
+                  : (isTurkish ? 'Devam' : 'Continue'),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              isLast ? Icons.rocket_launch_outlined : Icons.arrow_forward,
+              color: Colors.white,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class OnboardingData {
   final IconData icon;
-  final LinearGradient iconGradient;
+  final Color accentColor;
 
   OnboardingData({
     required this.icon,
-    required this.iconGradient,
+    required this.accentColor,
   });
 }
 
@@ -252,11 +378,19 @@ class _OnboardingPage extends StatelessWidget {
   final OnboardingData data;
   final String title;
   final String description;
+  final int stepNumber;
+  final int totalSteps;
+  final Animation<double> scanLineAnimation;
+  final Animation<double> pulseAnimation;
 
   const _OnboardingPage({
     required this.data,
     required this.title,
     required this.description,
+    required this.stepNumber,
+    required this.totalSteps,
+    required this.scanLineAnimation,
+    required this.pulseAnimation,
   });
 
   @override
@@ -266,61 +400,44 @@ class _OnboardingPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon with glassmorphism card
+          // Futuristic icon container
+          _buildIconContainer(),
+
+          const SizedBox(height: 48),
+
+          // Step indicator
           Container(
-            width: 180,
-            height: 180,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              shape: BoxShape.circle,
+              color: data.accentColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
-                width: 2,
+                color: data.accentColor.withValues(alpha: 0.3),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-                BoxShadow(
-                  color: AppTheme.primaryIndigo.withValues(alpha: 0.1),
-                  blurRadius: 40,
-                  offset: const Offset(0, 20),
-                ),
-              ],
             ),
-            child: ClipOval(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Center(
-                  child: ShaderMask(
-                    blendMode: BlendMode.srcIn,
-                    shaderCallback: (bounds) => data.iconGradient.createShader(
-                      Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-                    ),
-                    child: Icon(
-                      data.icon,
-                      size: 80,
-                    ),
-                  ),
-                ),
+            child: Text(
+              'STEP $stepNumber OF $totalSteps',
+              style: GoogleFonts.orbitron(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: data.accentColor,
+                letterSpacing: 2,
               ),
             ),
           ),
 
-          const SizedBox(height: 48),
+          const SizedBox(height: 24),
 
-          // Title with gradient
+          // Title
           ShaderMask(
             blendMode: BlendMode.srcIn,
-            shaderCallback: (bounds) => AppTheme.primaryGradient.createShader(
-              Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-            ),
+            shaderCallback: (bounds) => LinearGradient(
+              colors: [Colors.white, data.accentColor],
+            ).createShader(bounds),
             child: Text(
               title,
               style: GoogleFonts.inter(
-                fontSize: 28,
+                fontSize: 26,
                 fontWeight: FontWeight.w700,
                 height: 1.2,
               ),
@@ -334,8 +451,8 @@ class _OnboardingPage extends StatelessWidget {
           Text(
             description,
             style: GoogleFonts.inter(
-              fontSize: 16,
-              color: AppTheme.textSecondary,
+              fontSize: 15,
+              color: Colors.white60,
               height: 1.6,
             ),
             textAlign: TextAlign.center,
@@ -344,4 +461,276 @@ class _OnboardingPage extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildIconContainer() {
+    return SizedBox(
+      width: 200,
+      height: 200,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Outer glow ring
+          AnimatedBuilder(
+            animation: pulseAnimation,
+            builder: (context, child) {
+              return Container(
+                width: 180 * pulseAnimation.value,
+                height: 180 * pulseAnimation.value,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: data.accentColor.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // Middle ring
+          Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: data.accentColor.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+          ),
+
+          // Inner container with icon
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  data.accentColor.withValues(alpha: 0.2),
+                  data.accentColor.withValues(alpha: 0.05),
+                ],
+              ),
+              border: Border.all(
+                color: data.accentColor.withValues(alpha: 0.4),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: data.accentColor.withValues(alpha: 0.3),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Center(
+                  child: ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) => LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white,
+                        data.accentColor,
+                      ],
+                    ).createShader(bounds),
+                    child: Icon(
+                      data.icon,
+                      size: 56,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Scan line effect
+          AnimatedBuilder(
+            animation: scanLineAnimation,
+            builder: (context, child) {
+              return Positioned(
+                top: 40 + (scanLineAnimation.value * 120),
+                child: Container(
+                  width: 100,
+                  height: 2,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        data.accentColor,
+                        Colors.transparent,
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: data.accentColor.withValues(alpha: 0.8),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // Corner accents
+          ..._buildCornerAccents(),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildCornerAccents() {
+    const size = 16.0;
+    const offset = 85.0;
+
+    return [
+      Positioned(
+        top: 100 - offset,
+        left: 100 - offset,
+        child: _CornerAccent(size: size, color: data.accentColor),
+      ),
+      Positioned(
+        top: 100 - offset,
+        right: 100 - offset,
+        child: Transform.rotate(
+          angle: math.pi / 2,
+          child: _CornerAccent(size: size, color: data.accentColor),
+        ),
+      ),
+      Positioned(
+        bottom: 100 - offset,
+        left: 100 - offset,
+        child: Transform.rotate(
+          angle: -math.pi / 2,
+          child: _CornerAccent(size: size, color: data.accentColor),
+        ),
+      ),
+      Positioned(
+        bottom: 100 - offset,
+        right: 100 - offset,
+        child: Transform.rotate(
+          angle: math.pi,
+          child: _CornerAccent(size: size, color: data.accentColor),
+        ),
+      ),
+    ];
+  }
+}
+
+class _CornerAccent extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _CornerAccent({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _CornerPainter(color: color),
+      ),
+    );
+  }
+}
+
+class _CornerPainter extends CustomPainter {
+  final Color color;
+
+  _CornerPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final path = Path()
+      ..moveTo(0, size.height)
+      ..lineTo(0, 0)
+      ..lineTo(size.width, 0);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _GridBackgroundPainter extends CustomPainter {
+  final Color color;
+
+  _GridBackgroundPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 0.5;
+
+    const spacing = 30.0;
+
+    for (var x = 0.0; x < size.width; x += spacing) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+
+    for (var y = 0.0; y < size.height; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _DashedCirclePainter extends CustomPainter {
+  final Color color;
+  final double dashLength;
+  final double gapLength;
+
+  _DashedCirclePainter({
+    required this.color,
+    required this.dashLength,
+    required this.gapLength,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    final circumference = 2 * math.pi * radius;
+    final dashCount = (circumference / (dashLength + gapLength)).floor();
+    final anglePerDash = 2 * math.pi / dashCount;
+
+    for (var i = 0; i < dashCount; i++) {
+      final startAngle = i * anglePerDash;
+      final sweepAngle = anglePerDash * (dashLength / (dashLength + gapLength));
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        false,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

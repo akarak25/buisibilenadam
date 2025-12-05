@@ -687,8 +687,8 @@ class _DailyAstrologyScreenState extends State<DailyAstrologyScreen>
           const SizedBox(height: 16),
           Text(
             isTurkish
-                ? 'Kişisel El Çizgisi Yorumunuz'
-                : 'Your Personal Palm Reading',
+                ? 'Kişisel El Çizgisi Analiziniz'
+                : 'Your Personal Palm Analysis',
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,

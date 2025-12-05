@@ -1,6 +1,6 @@
 class Constants {
   static const String appName = 'El Çizgisi Analizi';
-  static const String appDescription = 'Avuç içi çizgilerinizden geleceğinizi keşfedin';
+  static const String appDescription = 'Yapay zeka destekli el çizgisi analizi ile kendinizi keşfedin';
   
   // El çizgisi türleri
   static const String heartLine = 'Kalp Çizgisi';
@@ -45,20 +45,20 @@ Yanıtını kısa ve öz tut, gereksiz uzatma. El çizgisinin özellikleri ve bu
   // Onboarding ekranı için metinler
   static const List<Map<String, String>> onboardingContent = [
     {
-      'title': 'El Çizginizi Keşfedin',
-      'description': 'Avuç içi çizgilerinizden kişiliğinizi, geçmişinizi ve geleceğinizi keşfedin.',
+      'title': 'Gelişmiş Biyometrik Analiz',
+      'description': 'Son teknoloji yapay zeka, avuç içi geometrinizi tarar ve analiz eder.',
     },
     {
-      'title': 'Fotoğrafını Çek',
-      'description': 'Avuç içinizin net bir fotoğrafını çekin veya galeriden yükleyin.',
+      'title': 'Hassas Tarama',
+      'description': 'Avuç yüzeyinizden yüksek doğrulukla detaylı biyometrik veri yakalar.',
     },
     {
-      'title': 'Yapay Zeka Analizi',
-      'description': 'Yapay zeka teknolojisi çizgilerinizi analiz ederek kişiselleştirilmiş yorumlar sunar.',
+      'title': 'Gemini 2.5 AI Motoru',
+      'description': 'Google yapay zekası ile karmaşık çizgi örüntüleri ve geometrik ilişkiler işlenir.',
     },
     {
-      'title': 'Hayatınıza Işık Tut',
-      'description': 'Aşk, kariyer, sağlık ve zenginlik çizgilerinizde saklı olan bilgileri öğrenin.',
+      'title': 'Kişiselleştirilmiş İçgörüler',
+      'description': 'Benzersiz biyometrik verilerinize dayalı karakter analizi ve kendini keşfetme rehberliği.',
     },
   ];
 }

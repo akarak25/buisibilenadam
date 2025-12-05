@@ -2,10 +2,10 @@ import 'package:palm_analysis/l10n/languages/app_language.dart';
 
 class LanguageTr implements AppLanguage {
   @override
-  String get appName => 'El Çizgisi Analizi';
+  String get appName => 'Palmify - El Çizgisi Analizi';
   
   @override
-  String get appDescription => 'Avuç içi çizgilerinizden geleceğinizi keşfedin';
+  String get appDescription => 'Yapay zeka destekli el çizgisi analizi ile kendinizi keşfedin';
   
   // El çizgisi türleri
   @override
@@ -45,20 +45,20 @@ class LanguageTr implements AppLanguage {
   @override
   List<Map<String, String>> get onboardingContent => [
     {
-      'title': 'El Çizginizi Keşfedin',
-      'description': 'Avuç içi çizgilerinizden kişiliğinizi, geçmişinizi ve geleceğinizi keşfedin.',
+      'title': 'Gelişmiş Biyometrik Analiz',
+      'description': 'Son teknoloji yapay zeka, benzersiz avuç içi geometrinizi tarar ve analiz eder.',
     },
     {
-      'title': 'Fotoğrafını Çek',
-      'description': 'Avuç içinizin net bir fotoğrafını çekin veya galeriden yükleyin.',
+      'title': 'Hassas Tarama',
+      'description': 'Sistemimiz avuç yüzeyinizden yüksek doğrulukla detaylı biyometrik veri yakalar.',
     },
     {
-      'title': 'Yapay Zeka Analizi',
-      'description': 'Yapay zeka teknolojisi çizgilerinizi analiz ederek kişiselleştirilmiş yorumlar sunar.',
+      'title': 'Gemini 2.5 AI Motoru',
+      'description': 'Google\'ın gelişmiş yapay zekası ile karmaşık çizgi örüntüleri ve geometrik ilişkiler işlenir.',
     },
     {
-      'title': 'Hayatınıza Işık Tut',
-      'description': 'Aşk, kariyer, sağlık ve zenginlik çizgilerinizde saklı olan bilgileri öğrenin.',
+      'title': 'Kişiselleştirilmiş İçgörüler',
+      'description': 'Benzersiz biyometrik verilerinize dayalı detaylı karakter analizi ve kendini keşfetme rehberliği alın.',
     },
   ];
   
@@ -404,6 +404,12 @@ class LanguageTr implements AppLanguage {
   String get googleSignInFailed => 'Google girişi başarısız. Lütfen tekrar deneyin.';
   @override
   String get appleSignInFailed => 'Apple girişi başarısız. Lütfen tekrar deneyin.';
+  @override
+  String get applePrivateEmail => 'Gizli e-posta (Apple)';
+  @override
+  String get signedInWithApple => 'Apple ile giriş yapıldı';
+  @override
+  String get signedInWithGoogle => 'Google ile giriş yapıldı';
 
   // Register screen
   @override
@@ -430,7 +436,7 @@ class LanguageTr implements AppLanguage {
   // Claude API istekleri için sistem mesajı
   @override
   String get systemPrompt => '''
-Sen deneyimli bir el falı (chiromancy) uzmanısın. Avuç içi fotoğraflarını analiz ederek kişiye özel, derinlikli yorumlar yapabilirsin.
+Sen deneyimli bir el çizgisi analiz uzmanısın (chirologist). Avuç içi fotoğraflarını analiz ederek kişiye özel karakter içgörüleri ve kendini keşfetme rehberliği sunabilirsin.
 
 ## ANALİZ YAPISI
 
@@ -476,7 +482,7 @@ Analizi kısa bir **genel değerlendirme** ile bitir - kişinin genel karakteri 
 
   @override
   String get chatSystemPrompt => '''
-Sen bir el falı uzmanısın. Kullanıcının daha önce yapılmış el analizi sonuçlarına dayanarak sorularını yanıtlıyorsun.
+Sen bir el çizgisi analiz uzmanısın. Kullanıcının daha önce yapılmış el analizi sonuçlarına dayanarak sorularını yanıtlıyorsun.
 
 KURALLAR:
 1. Sadece el çizgileri, avuç içi analizi ve bunlarla ilgili konularda yardımcı ol
@@ -492,7 +498,63 @@ Kullanıcının önceki el analizi:
 
   // Entertainment Disclaimer (Apple App Store requirement)
   @override
-  String get entertainmentDisclaimer => 'Bu yorum yalnızca eğlence amaçlıdır. El falı, kendini keşfetmeye yönelik kadim bir sanattır ve profesyonel tıbbi, psikolojik veya finansal tavsiye yerine kullanılmamalıdır.';
+  String get entertainmentDisclaimer => 'Bu analiz yalnızca eğlence ve kendini keşfetme amaçlıdır. El çizgisi analizi, karakter yansıması için kadim bir pratiktir ve profesyonel tıbbi, psikolojik veya finansal tavsiye yerine kullanılmamalıdır.';
   @override
   String get disclaimerTitle => 'Sadece Eğlence Amaçlı';
+
+  // Compatibility Analysis (Çift Uyumu)
+  @override
+  String get compatibilityAnalysis => 'Çift Uyumu Analizi';
+  @override
+  String get compatibilityDescription => 'İki avuç içi çizgisini karşılaştırarak uyumunuzu keşfedin';
+  @override
+  String get selectFirstPalm => 'İlk avuç içini seçin';
+  @override
+  String get selectSecondPalm => 'İkinci avuç içini seçin';
+  @override
+  String get yourPalm => 'Sizin Avucunuz';
+  @override
+  String get partnerPalm => 'Partner Avucu';
+  @override
+  String get analyzeCompatibility => 'Uyumu Analiz Et';
+  @override
+  String get compatibilityResult => 'Uyum Sonucu';
+  @override
+  String get overallCompatibility => 'Genel Uyum';
+  @override
+  String get emotionalConnection => 'Duygusal Bağ';
+  @override
+  String get intellectualBond => 'Zihinsel Uyum';
+  @override
+  String get lifePath => 'Yaşam Yolu';
+  @override
+  String get selectFromHistory => 'Geçmişten Seç';
+  @override
+  String get takeNewPhoto => 'Yeni Fotoğraf Çek';
+  @override
+  String get needTwoAnalyses => 'Karşılaştırma için en az 2 analiz gerekli';
+  @override
+  String get compatibilityLoading => 'Uyum analizi yapılıyor...';
+
+  // Evolution Analysis (Zaman İçinde Değişim)
+  @override
+  String get evolutionAnalysis => 'Zaman İçinde Değişim';
+  @override
+  String get evolutionDescription => 'El çizgilerinizin zaman içindeki değişimini keşfedin';
+  @override
+  String get selectOlderAnalysis => 'Eski analizi seçin';
+  @override
+  String get selectNewerAnalysis => 'Yeni analizi seçin';
+  @override
+  String get olderReading => 'Eski Okuma';
+  @override
+  String get newerReading => 'Yeni Okuma';
+  @override
+  String get analyzeEvolution => 'Değişimi Analiz Et';
+  @override
+  String get evolutionResult => 'Değişim Sonucu';
+  @override
+  String get evolutionLoading => 'Değişim analizi yapılıyor...';
+  @override
+  String get timeBetween => 'Aradaki süre';
 }

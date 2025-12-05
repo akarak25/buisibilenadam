@@ -217,7 +217,7 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              isTurkish ? 'Günlük El Çizgisi Yorumunuz' : 'Your Daily Palm Reading',
+              isTurkish ? 'Günlük El Çizgisi Analiziniz' : 'Your Daily Palm Analysis',
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,

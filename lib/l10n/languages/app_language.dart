@@ -171,6 +171,9 @@ abstract class AppLanguage {
   String get passwordRequired;
   String get googleSignInFailed;
   String get appleSignInFailed;
+  String get applePrivateEmail;
+  String get signedInWithApple;
+  String get signedInWithGoogle;
 
   // Register screen
   String get createAccount;
@@ -191,4 +194,34 @@ abstract class AppLanguage {
   // Entertainment Disclaimer (Apple App Store requirement)
   String get entertainmentDisclaimer;
   String get disclaimerTitle;
+
+  // Compatibility Analysis (Çift Uyumu)
+  String get compatibilityAnalysis;
+  String get compatibilityDescription;
+  String get selectFirstPalm;
+  String get selectSecondPalm;
+  String get yourPalm;
+  String get partnerPalm;
+  String get analyzeCompatibility;
+  String get compatibilityResult;
+  String get overallCompatibility;
+  String get emotionalConnection;
+  String get intellectualBond;
+  String get lifePath;
+  String get selectFromHistory;
+  String get takeNewPhoto;
+  String get needTwoAnalyses;
+  String get compatibilityLoading;
+
+  // Evolution Analysis (Zaman İçinde Değişim)
+  String get evolutionAnalysis;
+  String get evolutionDescription;
+  String get selectOlderAnalysis;
+  String get selectNewerAnalysis;
+  String get olderReading;
+  String get newerReading;
+  String get analyzeEvolution;
+  String get evolutionResult;
+  String get evolutionLoading;
+  String get timeBetween;
 }

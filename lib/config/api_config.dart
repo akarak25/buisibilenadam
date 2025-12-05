@@ -17,6 +17,12 @@ class ApiConfig {
   // Chat endpoint (mobile-specific endpoint)
   static const String chatEndpoint = '/chat/mobile';
 
+  // Compatibility analysis endpoint
+  static const String compatibilityEndpoint = '/compatibility';
+
+  // Evolution analysis endpoint
+  static const String evolutionEndpoint = '/evolution';
+
   // Queries endpoints
   static const String queriesEndpoint = '/queries';
 

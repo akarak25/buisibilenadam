@@ -14,6 +14,8 @@ import 'package:palm_analysis/services/streak_service.dart';
 import 'package:palm_analysis/services/daily_reading_service.dart';
 import 'package:palm_analysis/screens/daily_astrology_screen.dart';
 import 'package:palm_analysis/screens/personalized_daily_screen.dart';
+import 'package:palm_analysis/screens/compatibility_screen.dart';
+import 'package:palm_analysis/screens/evolution_screen.dart';
 import 'package:palm_analysis/models/user.dart';
 import 'package:palm_analysis/models/daily_reading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -367,6 +369,66 @@ class _HomeScreenState extends State<HomeScreen>
                                 ),
                               )
                                   .then((_) => _loadData());
+                            },
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Compatibility Analysis Card
+                          _buildFeatureCard(
+                            icon: Icons.favorite_rounded,
+                            title: lang.compatibilityAnalysis,
+                            subtitle: lang.compatibilityDescription,
+                            trailing: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFEC4899), Color(0xFFF43F5E)],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.compare_arrows_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const CompatibilityScreen(),
+                                ),
+                              );
+                            },
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Evolution Analysis Card
+                          _buildFeatureCard(
+                            icon: Icons.timeline_rounded,
+                            title: lang.evolutionAnalysis,
+                            subtitle: lang.evolutionDescription,
+                            trailing: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF10B981), Color(0xFF22C55E)],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.trending_up_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const EvolutionScreen(),
+                                ),
+                              );
                             },
                           ),
 
@@ -805,7 +867,7 @@ class _HomeScreenState extends State<HomeScreen>
                       Row(
                         children: [
                           Text(
-                            isTurkish ? 'Günlük El Çizgisi Yorumunuz' : 'Your Daily Palm Reading',
+                            isTurkish ? 'Günlük El Çizgisi Analiziniz' : 'Your Daily Palm Analysis',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,

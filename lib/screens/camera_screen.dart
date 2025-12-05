@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/services/camera_service.dart';
 import 'package:palm_analysis/screens/analysis_screen.dart';
+import 'package:palm_analysis/screens/palm_tracing_screen.dart';
 import 'package:palm_analysis/widgets/camera_guide_overlay.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 
@@ -148,7 +149,7 @@ class _CameraScreenState extends State<CameraScreen>
       if (imageFile != null && mounted) {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => AnalysisScreen(imageFile: imageFile),
+            builder: (_) => PalmTracingScreen(imageFile: imageFile),
           ),
         );
       }
@@ -182,7 +183,7 @@ class _CameraScreenState extends State<CameraScreen>
       if (imageFile != null && mounted) {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => AnalysisScreen(imageFile: imageFile),
+            builder: (_) => PalmTracingScreen(imageFile: imageFile),
           ),
         );
       }

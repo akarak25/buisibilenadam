@@ -247,6 +247,72 @@ class ApiService {
     }
   }
 
+  /// Analyze compatibility between two palm analyses
+  Future<String> analyzeCompatibility({
+    required String analysis1,
+    required String analysis2,
+    String language = 'tr',
+  }) async {
+    try {
+      final response = await post(
+        ApiConfig.compatibilityEndpoint,
+        body: {
+          'analysis1': analysis1,
+          'analysis2': analysis2,
+          'language': language,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonBody = utf8.decode(response.bodyBytes);
+        final data = jsonDecode(jsonBody);
+        return data['compatibility'] ?? data['result'] ?? data['response'] ?? '';
+      } else {
+        final errorBody = utf8.decode(response.bodyBytes);
+        final errorData = jsonDecode(errorBody);
+        throw ApiError.fromJson(errorData, response.statusCode);
+      }
+    } catch (e) {
+      debugPrint('Compatibility analysis error: $e');
+      rethrow;
+    }
+  }
+
+  /// Analyze evolution of palm lines over time
+  Future<String> analyzeEvolution({
+    required String olderAnalysis,
+    required String newerAnalysis,
+    required String olderDate,
+    required String newerDate,
+    String language = 'tr',
+  }) async {
+    try {
+      final response = await post(
+        ApiConfig.evolutionEndpoint,
+        body: {
+          'olderAnalysis': olderAnalysis,
+          'newerAnalysis': newerAnalysis,
+          'olderDate': olderDate,
+          'newerDate': newerDate,
+          'language': language,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonBody = utf8.decode(response.bodyBytes);
+        final data = jsonDecode(jsonBody);
+        return data['evolution'] ?? data['result'] ?? data['response'] ?? '';
+      } else {
+        final errorBody = utf8.decode(response.bodyBytes);
+        final errorData = jsonDecode(errorBody);
+        throw ApiError.fromJson(errorData, response.statusCode);
+      }
+    } catch (e) {
+      debugPrint('Evolution analysis error: $e');
+      rethrow;
+    }
+  }
+
   /// Get headers with optional auth token
   Future<Map<String, String>> _getHeaders(bool requiresAuth) async {
     if (requiresAuth) {

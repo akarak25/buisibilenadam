@@ -2,10 +2,10 @@ import 'package:palm_analysis/l10n/languages/app_language.dart';
 
 class LanguageEn implements AppLanguage {
   @override
-  String get appName => 'Palm Reading Analysis';
+  String get appName => 'Palmify - Palm Analysis';
   
   @override
-  String get appDescription => 'Discover your future from your palm lines';
+  String get appDescription => 'AI-powered palm analysis for self-discovery and character insights';
   
   // Palm line types
   @override
@@ -45,20 +45,20 @@ class LanguageEn implements AppLanguage {
   @override
   List<Map<String, String>> get onboardingContent => [
     {
-      'title': 'Discover Your Palm Lines',
-      'description': 'Discover your personality, past, and future from your palm lines.',
+      'title': 'Advanced Biometric Analysis',
+      'description': 'State-of-the-art AI technology scans and analyzes your unique palm geometry.',
     },
     {
-      'title': 'Take a Photo',
-      'description': 'Take a clear photo of your palm or upload from gallery.',
+      'title': 'Precision Scanning',
+      'description': 'Our system captures detailed biometric data from your palm surface with high accuracy.',
     },
     {
-      'title': 'AI Analysis',
-      'description': 'AI technology analyzes your lines and provides personalized interpretations.',
+      'title': 'Gemini 2.5 AI Engine',
+      'description': 'Powered by Google\'s advanced AI, we process complex line patterns and geometric relationships.',
     },
     {
-      'title': 'Illuminate Your Life',
-      'description': 'Learn the hidden information in your love, career, health, and wealth lines.',
+      'title': 'Personalized Insights',
+      'description': 'Receive detailed character analysis and self-discovery guidance based on your unique biometrics.',
     },
   ];
   
@@ -201,7 +201,7 @@ class LanguageEn implements AppLanguage {
   String get analysisDetail => 'Analysis Details';
   
   @override
-  String get palmReadingAnalysis => 'Palm Reading Analysis';
+  String get palmReadingAnalysis => 'Palm Line Analysis';
   
   // Camera guide overlay
   @override
@@ -404,6 +404,12 @@ class LanguageEn implements AppLanguage {
   String get googleSignInFailed => 'Google sign-in failed. Please try again.';
   @override
   String get appleSignInFailed => 'Apple sign-in failed. Please try again.';
+  @override
+  String get applePrivateEmail => 'Private email (Apple)';
+  @override
+  String get signedInWithApple => 'Signed in with Apple';
+  @override
+  String get signedInWithGoogle => 'Signed in with Google';
 
   // Register screen
   @override
@@ -430,7 +436,7 @@ class LanguageEn implements AppLanguage {
   // System prompt for Claude API requests
   @override
   String get systemPrompt => '''
-You are an experienced palmistry (chiromancy) expert. You can analyze palm photographs and provide personalized, in-depth interpretations.
+You are an experienced palm line analysis expert (chirologist). You analyze palm photographs to provide personalized character insights and self-discovery guidance.
 
 ## ANALYSIS STRUCTURE
 
@@ -476,15 +482,15 @@ End the analysis with a brief **overall assessment** - 2-3 sentences about the p
 
   @override
   String get chatSystemPrompt => '''
-You are a palm reading expert. You answer user questions based on their previous palm analysis results.
+You are a palm line analysis expert. You answer user questions based on their previous palm analysis results.
 
 RULES:
 1. Only help with palm lines, palm analysis, and related topics
 2. Keep your answers short and concise (100-200 words)
-3. Use a mystical but friendly tone
+3. Use a friendly and insightful tone
 4. Reference the user's previous analysis
 5. Respond in Markdown format
-6. Politely redirect off-topic questions to palm reading
+6. Politely redirect off-topic questions to palm analysis
 
 User's previous palm analysis:
 {analysis}
@@ -492,7 +498,63 @@ User's previous palm analysis:
 
   // Entertainment Disclaimer (Apple App Store requirement)
   @override
-  String get entertainmentDisclaimer => 'This reading is for entertainment purposes only. Palm reading is an ancient art of self-reflection and should not be used as a substitute for professional medical, psychological, or financial advice.';
+  String get entertainmentDisclaimer => 'This analysis is for entertainment and self-discovery purposes only. Palm line analysis is an ancient practice for character reflection and should not be used as a substitute for professional medical, psychological, or financial advice.';
   @override
   String get disclaimerTitle => 'Entertainment Only';
+
+  // Compatibility Analysis
+  @override
+  String get compatibilityAnalysis => 'Compatibility Analysis';
+  @override
+  String get compatibilityDescription => 'Compare two palm analyses to discover your compatibility';
+  @override
+  String get selectFirstPalm => 'Select first palm';
+  @override
+  String get selectSecondPalm => 'Select second palm';
+  @override
+  String get yourPalm => 'Your Palm';
+  @override
+  String get partnerPalm => 'Partner Palm';
+  @override
+  String get analyzeCompatibility => 'Analyze Compatibility';
+  @override
+  String get compatibilityResult => 'Compatibility Result';
+  @override
+  String get overallCompatibility => 'Overall Compatibility';
+  @override
+  String get emotionalConnection => 'Emotional Connection';
+  @override
+  String get intellectualBond => 'Intellectual Bond';
+  @override
+  String get lifePath => 'Life Path';
+  @override
+  String get selectFromHistory => 'Select from History';
+  @override
+  String get takeNewPhoto => 'Take New Photo';
+  @override
+  String get needTwoAnalyses => 'You need at least 2 analyses to compare';
+  @override
+  String get compatibilityLoading => 'Analyzing compatibility...';
+
+  // Evolution Analysis (Time-based Changes)
+  @override
+  String get evolutionAnalysis => 'Evolution Over Time';
+  @override
+  String get evolutionDescription => 'Discover how your palm lines have changed over time';
+  @override
+  String get selectOlderAnalysis => 'Select older analysis';
+  @override
+  String get selectNewerAnalysis => 'Select newer analysis';
+  @override
+  String get olderReading => 'Older Reading';
+  @override
+  String get newerReading => 'Newer Reading';
+  @override
+  String get analyzeEvolution => 'Analyze Evolution';
+  @override
+  String get evolutionResult => 'Evolution Result';
+  @override
+  String get evolutionLoading => 'Analyzing evolution...';
+  @override
+  String get timeBetween => 'Time between';
 }

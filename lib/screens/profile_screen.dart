@@ -439,13 +439,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  _currentUser?.email ?? '',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
+                // Show provider badge instead of private relay email
+                if (_getProviderBadge(lang) != null && _isApplePrivateRelayEmail(_currentUser?.email))
+                  Text(
+                    _getProviderBadge(lang)!,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  )
+                else
+                  Text(
+                    _currentUser?.email ?? '',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
                   ),
-                ),
                 const SizedBox(height: 8),
                 // Free badge (since all users are free)
                 Container(
@@ -577,7 +587,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildInfoRow(
                 icon: Icons.email_outlined,
                 label: lang.email,
-                value: _currentUser?.email ?? '-',
+                value: _getDisplayEmail(lang),
               ),
             ],
           ),
@@ -714,5 +724,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return '$days';
     }
     return '-';
+  }
+
+  /// Check if email is Apple private relay
+  bool _isApplePrivateRelayEmail(String? email) {
+    if (email == null) return false;
+    return email.endsWith('@privaterelay.appleid.com');
+  }
+
+  /// Get display email based on provider and email type
+  String _getDisplayEmail(dynamic lang) {
+    final email = _currentUser?.email;
+    final provider = _currentUser?.provider;
+
+    if (_isApplePrivateRelayEmail(email)) {
+      return lang.applePrivateEmail;
+    }
+
+    return email ?? '-';
+  }
+
+  /// Get provider badge text
+  String? _getProviderBadge(dynamic lang) {
+    final provider = _currentUser?.provider;
+    if (provider == 'apple') {
+      return lang.signedInWithApple;
+    } else if (provider == 'google') {
+      return lang.signedInWithGoogle;
+    }
+    return null;
   }
 }

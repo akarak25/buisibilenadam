@@ -8,7 +8,7 @@ import 'package:palm_analysis/services/api_service.dart';
 import 'package:palm_analysis/models/palm_analysis.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:palm_analysis/widgets/shimmer_loading.dart';
+import 'package:palm_analysis/widgets/biometric_scan_loading.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
@@ -496,26 +496,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Widget _buildLoadingCard(dynamic lang) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.5),
-        ),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: ShimmerLoading(
-            loadingText: lang.analyzingPalm,
-          ),
-        ),
-      ),
-    );
+    return const BiometricScanLoading();
   }
 
   Widget _buildErrorCard(dynamic lang) {
