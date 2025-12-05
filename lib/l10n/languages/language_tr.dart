@@ -202,7 +202,31 @@ class LanguageTr implements AppLanguage {
   
   @override
   String get palmReadingAnalysis => 'El Çizgisi Analizi';
-  
+
+  // History screen tabs
+  @override
+  String get palmAnalysisTab => 'El Analizi';
+  @override
+  String get compatibilityTab => 'Çift Uyumu';
+  @override
+  String get evolutionTab => 'Değişim';
+  @override
+  String get chatHistoryTab => 'Sohbetler';
+  @override
+  String get noCompatibilityYet => 'Henüz çift uyumu analizi yapmadınız';
+  @override
+  String get noEvolutionYet => 'Henüz değişim analizi yapmadınız';
+  @override
+  String get noChatHistoryYet => 'Henüz sohbet geçmişi yok';
+  @override
+  String get goToCompatibilityScreen => 'Çift Uyumu Analizine Git';
+  @override
+  String get goToEvolutionScreen => 'Değişim Analizine Git';
+  @override
+  String get goToChatScreen => 'Soru Sormaya Başla';
+  @override
+  String get you => 'Sen';
+
   // Camera guide overlay
   @override
   String get handDetection => 'El Algılama';

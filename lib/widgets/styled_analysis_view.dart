@@ -582,6 +582,96 @@ class StyledAnalysisView extends StatelessWidget {
       );
     }
 
+    // === COMPATIBILITY SECTIONS ===
+
+    // Overall Compatibility / Genel Uyum
+    if (keyLower.contains('genel uyum') || keyLower.contains('overall compatibility') || keyLower.contains('uyum skoru')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Overall Compatibility' : 'Genel Uyum',
+        subtitle: isEnglish ? '' : 'Overall Compatibility',
+        icon: Icons.favorite_rounded,
+        color: const Color(0xFFEC4899),
+        emoji: '💕',
+      );
+    }
+
+    // Emotional Connection / Duygusal Bağ
+    if (keyLower.contains('duygusal') || keyLower.contains('emotional')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Emotional Connection' : 'Duygusal Bağ',
+        subtitle: isEnglish ? '' : 'Emotional Connection',
+        icon: Icons.volunteer_activism_rounded,
+        color: const Color(0xFFE53935),
+        emoji: '💗',
+      );
+    }
+
+    // Communication / İletişim
+    if (keyLower.contains('iletişim') || keyLower.contains('communication')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Communication' : 'İletişim',
+        subtitle: isEnglish ? '' : 'Communication',
+        icon: Icons.chat_bubble_rounded,
+        color: const Color(0xFF2196F3),
+        emoji: '💬',
+      );
+    }
+
+    // Physical Attraction / Fiziksel Çekim
+    if (keyLower.contains('fiziksel') || keyLower.contains('physical') || keyLower.contains('çekim') || keyLower.contains('attraction')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Physical Attraction' : 'Fiziksel Çekim',
+        subtitle: isEnglish ? '' : 'Physical Attraction',
+        icon: Icons.whatshot_rounded,
+        color: const Color(0xFFFF5722),
+        emoji: '🔥',
+      );
+    }
+
+    // Long-term Potential / Uzun Vadeli
+    if (keyLower.contains('uzun vadeli') || keyLower.contains('long-term') || keyLower.contains('long term') || keyLower.contains('gelecek')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Long-term Potential' : 'Uzun Vadeli Potansiyel',
+        subtitle: isEnglish ? '' : 'Long-term Potential',
+        icon: Icons.all_inclusive_rounded,
+        color: const Color(0xFF9C27B0),
+        emoji: '♾️',
+      );
+    }
+
+    // Challenges / Zorluklar
+    if (keyLower.contains('zorluk') || keyLower.contains('challenge') || keyLower.contains('dikkat')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Challenges' : 'Zorluklar',
+        subtitle: isEnglish ? '' : 'Challenges',
+        icon: Icons.warning_amber_rounded,
+        color: const Color(0xFFFF9800),
+        emoji: '⚠️',
+      );
+    }
+
+    // Advice / Öneriler
+    if (keyLower.contains('öneri') || keyLower.contains('advice') || keyLower.contains('tavsiye')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Advice' : 'Öneriler',
+        subtitle: isEnglish ? '' : 'Advice',
+        icon: Icons.lightbulb_rounded,
+        color: const Color(0xFF4CAF50),
+        emoji: '💡',
+      );
+    }
+
+    // Summary / Özet
+    if (keyLower.contains('özet') || keyLower.contains('summary') || keyLower.contains('sonuç')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Summary' : 'Özet',
+        subtitle: isEnglish ? '' : 'Summary',
+        icon: Icons.summarize_rounded,
+        color: const Color(0xFF673AB7),
+        emoji: '📋',
+      );
+    }
+
     // Default
     return _SectionInfo(
       title: _capitalizeFirst(key),

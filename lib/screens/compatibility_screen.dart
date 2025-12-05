@@ -5,6 +5,7 @@ import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/models/palm_analysis.dart';
 import 'package:palm_analysis/services/api_service.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
+import 'package:palm_analysis/widgets/styled_analysis_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -26,6 +27,7 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
   bool _isAnalyzing = false;
   String? _compatibilityResult;
   String? _errorMessage;
+  bool _resultModalShown = false;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -102,10 +104,23 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
       return;
     }
 
-    final image1File = File(_selectedFirst!.imagePath!);
-    final image2File = File(_selectedSecond!.imagePath!);
+    // Resolve relative paths to absolute paths (iOS UUID fix)
+    final image1ResolvedPath = await PalmAnalysis.resolveImagePath(_selectedFirst!.imagePath);
+    final image2ResolvedPath = await PalmAnalysis.resolveImagePath(_selectedSecond!.imagePath);
 
-    // Verify files exist
+    if (image1ResolvedPath == null || image2ResolvedPath == null) {
+      setState(() {
+        _errorMessage = Localizations.localeOf(context).languageCode == 'tr'
+            ? 'Resim dosyaları bulunamadı. Lütfen yeni analizler yapın.'
+            : 'Image files not found. Please create new analyses.';
+      });
+      return;
+    }
+
+    final image1File = File(image1ResolvedPath);
+    final image2File = File(image2ResolvedPath);
+
+    // Verify files exist (double check)
     if (!await image1File.exists() || !await image2File.exists()) {
       setState(() {
         _errorMessage = Localizations.localeOf(context).languageCode == 'tr'
@@ -135,6 +150,8 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
           _isAnalyzing = false;
           _compatibilityResult = result;
         });
+        // Save the compatibility analysis to history
+        await _saveCompatibilityAnalysis(result);
       }
     } on CompatibilityException catch (e) {
       debugPrint('Compatibility analysis error: ${e.errorCode} - ${e.message}');
@@ -153,6 +170,28 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
           _errorMessage = e.toString();
         });
       }
+    }
+  }
+
+  /// Save compatibility analysis to SharedPreferences
+  Future<void> _saveCompatibilityAnalysis(String result) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final analysisListJson = prefs.getStringList('analyses') ?? [];
+
+      final newAnalysis = PalmAnalysis(
+        analysis: result,
+        analysisType: AnalysisType.compatibility,
+        imagePath: _selectedFirst?.imagePath,
+        secondaryImagePath: _selectedSecond?.imagePath,
+      );
+
+      analysisListJson.add(jsonEncode(newAnalysis.toJson()));
+      await prefs.setStringList('analyses', analysisListJson);
+
+      debugPrint('Compatibility analysis saved to history');
+    } catch (e) {
+      debugPrint('Failed to save compatibility analysis: $e');
     }
   }
 
@@ -832,25 +871,58 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
   ) {
     return Stack(
       children: [
-        // Image preview
+        // Image preview - resolve path async (iOS UUID fix)
         if (analysis.imagePath != null)
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
-            child: Image.file(
-              File(analysis.imagePath!),
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: color.withValues(alpha: 0.1),
-                  child: Center(
-                    child: Icon(
-                      Icons.back_hand_rounded,
-                      size: 48,
-                      color: color.withValues(alpha: 0.5),
+            child: FutureBuilder<String?>(
+              future: PalmAnalysis.resolveImagePath(analysis.imagePath),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    color: color.withValues(alpha: 0.1),
+                    child: Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                        ),
+                      ),
                     ),
-                  ),
+                  );
+                }
+                final resolvedPath = snapshot.data;
+                if (resolvedPath == null) {
+                  return Container(
+                    color: color.withValues(alpha: 0.1),
+                    child: Center(
+                      child: Icon(
+                        Icons.back_hand_rounded,
+                        size: 48,
+                        color: color.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  );
+                }
+                return Image.file(
+                  File(resolvedPath),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: color.withValues(alpha: 0.1),
+                      child: Center(
+                        child: Icon(
+                          Icons.back_hand_rounded,
+                          size: 48,
+                          color: color.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -1018,26 +1090,58 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
                         ),
                         child: Row(
                           children: [
-                            // Thumbnail
+                            // Thumbnail - resolve path async (iOS UUID fix)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: analysis.imagePath != null
-                                  ? Image.file(
-                                      File(analysis.imagePath!),
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Container(
+                                  ? FutureBuilder<String?>(
+                                      future: PalmAnalysis.resolveImagePath(analysis.imagePath),
+                                      builder: (ctx, snapshot) {
+                                        if (snapshot.connectionState == ConnectionState.waiting) {
+                                          return Container(
+                                            width: 60,
+                                            height: 60,
+                                            color: AppTheme.primaryIndigo.withValues(alpha: 0.1),
+                                            child: const Center(
+                                              child: SizedBox(
+                                                width: 16,
+                                                height: 16,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryIndigo),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        final resolvedPath = snapshot.data;
+                                        if (resolvedPath == null) {
+                                          return Container(
+                                            width: 60,
+                                            height: 60,
+                                            color: AppTheme.primaryIndigo.withValues(alpha: 0.1),
+                                            child: const Icon(
+                                              Icons.back_hand_rounded,
+                                              color: AppTheme.primaryIndigo,
+                                            ),
+                                          );
+                                        }
+                                        return Image.file(
+                                          File(resolvedPath),
                                           width: 60,
                                           height: 60,
-                                          color: AppTheme.primaryIndigo
-                                              .withValues(alpha: 0.1),
-                                          child: const Icon(
-                                            Icons.back_hand_rounded,
-                                            color: AppTheme.primaryIndigo,
-                                          ),
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              width: 60,
+                                              height: 60,
+                                              color: AppTheme.primaryIndigo.withValues(alpha: 0.1),
+                                              child: const Icon(
+                                                Icons.back_hand_rounded,
+                                                color: AppTheme.primaryIndigo,
+                                              ),
+                                            );
+                                          },
                                         );
                                       },
                                     )
@@ -1203,7 +1307,209 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
     );
   }
 
+  /// Shows the compatibility result in a modal bottom sheet with white background
+  /// for proper text readability (StyledAnalysisView requires light background)
+  void _showResultModal(dynamic lang, bool isTurkish) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      enableDrag: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.92,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        builder: (_, scrollController) => Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white,
+                Colors.white.withValues(alpha: 0.98),
+              ],
+            ),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Header with title and close button
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFEC4899), Color(0xFFA855F7)],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.favorite,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lang.compatibilityResult,
+                            style: GoogleFonts.inter(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                          Text(
+                            isTurkish ? 'Analiz tamamlandı' : 'Analysis complete',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      icon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          size: 18,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Dual palm images (smaller in modal)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      // First palm image
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            bottomLeft: Radius.circular(16),
+                          ),
+                          child: _buildResultImage(_selectedFirst?.imagePath),
+                        ),
+                      ),
+                      // Center heart icon
+                      Container(
+                        width: 50,
+                        color: const Color(0xFFF8FAFC),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFEC4899), Color(0xFFF43F5E)],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFEC4899).withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.favorite, color: Colors.white, size: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Second palm image
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topRight: Radius.circular(16),
+                            bottomRight: Radius.circular(16),
+                          ),
+                          child: _buildResultImage(_selectedSecond?.imagePath),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Scrollable content with StyledAnalysisView
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: StyledAnalysisView(
+                    analysisText: _compatibilityResult ?? '',
+                    languageCode: isTurkish ? 'tr' : 'en',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildResult(dynamic lang, bool isTurkish) {
+    // Auto-show modal when result is ready (only once)
+    if (_compatibilityResult != null && !_resultModalShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_resultModalShown) {
+          _resultModalShown = true;
+          _showResultModal(lang, isTurkish);
+        }
+      });
+    }
+
+    // Show preview on dark background with "View Result" button
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1269,37 +1575,122 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
 
           const SizedBox(height: 20),
 
-          // Result content
+          // Dual palm images
           Container(
-            padding: const EdgeInsets.all(16),
+            height: 160,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: Text(
-              _compatibilityResult ?? '',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.9),
-                height: 1.6,
+            child: Row(
+              children: [
+                // First palm image
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      bottomLeft: Radius.circular(20),
+                    ),
+                    child: _buildResultImage(_selectedFirst?.imagePath),
+                  ),
+                ),
+                // Center heart icon
+                Container(
+                  width: 60,
+                  color: const Color(0xFF0A0E1A),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFEC4899), Color(0xFFF43F5E)],
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFEC4899).withValues(alpha: 0.4),
+                              blurRadius: 15,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.favorite, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'VS',
+                        style: GoogleFonts.orbitron(
+                          fontSize: 12,
+                          color: Colors.white60,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Second palm image
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                    child: _buildResultImage(_selectedSecond?.imagePath),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // View Result button (opens modal)
+          GestureDetector(
+            onTap: () => _showResultModal(lang, isTurkish),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFEC4899), Color(0xFFA855F7)],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFEC4899).withValues(alpha: 0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.visibility_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isTurkish ? 'Sonucu Görüntüle' : 'View Result',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
 
           // New analysis button
           GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedFirst = null;
-                _selectedSecond = null;
-                _compatibilityResult = null;
-              });
-            },
+            onTap: _resetSelection,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1332,6 +1723,58 @@ class _CompatibilityScreenState extends State<CompatibilityScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _resetSelection() {
+    setState(() {
+      _selectedFirst = null;
+      _selectedSecond = null;
+      _compatibilityResult = null;
+      _resultModalShown = false;
+    });
+  }
+
+  Widget _buildResultImage(String? imagePath) {
+    if (imagePath == null) return _buildImagePlaceholder();
+
+    return FutureBuilder<String?>(
+      future: PalmAnalysis.resolveImagePath(imagePath),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+          );
+        }
+        final resolvedPath = snapshot.data;
+        if (resolvedPath == null) return _buildImagePlaceholder();
+
+        return Image.file(
+          File(resolvedPath),
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+        );
+      },
+    );
+  }
+
+  Widget _buildImagePlaceholder() {
+    return Container(
+      color: Colors.white.withValues(alpha: 0.05),
+      child: Center(
+        child: Icon(
+          Icons.back_hand_rounded,
+          size: 48,
+          color: Colors.white.withValues(alpha: 0.3),
+        ),
       ),
     );
   }

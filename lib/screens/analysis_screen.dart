@@ -27,6 +27,7 @@ class AnalysisScreen extends StatefulWidget {
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
   bool _isAnalyzing = true;
+  bool _apiComplete = false; // API tamamlandığında true olur
   String _analysis = '';
   String? _errorMessage;
   String _languageCode = 'tr';
@@ -106,6 +107,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
       if (mounted) {
         setState(() {
+          _apiComplete = true; // API tamamlandı
           _isAnalyzing = false;
           _analysis = analysis;
         });
@@ -135,10 +137,27 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
   }
 
+  /// Resmi kaydet ve RELATIVE path döndür (iOS UUID değişimi için kritik!)
+  /// Dönen format: "palm_images/palm_123456789.jpg"
   Future<String> _saveImageFile(File imageFile) async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final palmImagesDir = Directory('${appDir.path}/palm_images');
+
+    // Dosya zaten palm_images klasöründe mi kontrol et
+    final imagePath = imageFile.path;
+    if (imagePath.contains('palm_images')) {
+      // Dosya zaten doğru klasörde
+      if (await imageFile.exists()) {
+        // Sadece dosya adını çıkar ve relative path olarak döndür
+        final fileName = imagePath.split('/').last;
+        final relativePath = 'palm_images/$fileName';
+        debugPrint('Image already in permanent storage, returning relative: $relativePath');
+        return relativePath;
+      }
+    }
+
+    // Dosya başka bir yerde, palm_images'a kopyala
     try {
-      final appDir = await getApplicationDocumentsDirectory();
-      final palmImagesDir = Directory('${appDir.path}/palm_images');
       if (!await palmImagesDir.exists()) {
         await palmImagesDir.create(recursive: true);
       }
@@ -147,11 +166,25 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       final fileName = 'palm_$timestamp.jpg';
       final savedImagePath = path.join(palmImagesDir.path, fileName);
 
-      final savedImage = await imageFile.copy(savedImagePath);
-      return savedImage.path;
+      await imageFile.copy(savedImagePath);
+
+      // RELATIVE path döndür (iOS UUID değişiminden etkilenmez)
+      final relativePath = 'palm_images/$fileName';
+      debugPrint('Image saved, returning relative path: $relativePath');
+      return relativePath;
     } catch (e) {
       debugPrint('Image save error: $e');
-      return imageFile.path;
+      // Orijinal dosya hala mevcutsa, dosya adını çıkar
+      if (await imageFile.exists()) {
+        final fileName = imagePath.split('/').last;
+        // Eğer palm_images içindeyse relative döndür, değilse absolute (eski davranış)
+        if (imagePath.contains('palm_images')) {
+          return 'palm_images/$fileName';
+        }
+        debugPrint('Using original path as fallback: $imagePath');
+        return imagePath;
+      }
+      throw Exception('Failed to save image: $e');
     }
   }
 
@@ -321,6 +354,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                               onPressed: () {
                                 setState(() {
                                   _isAnalyzing = true;
+                                  _apiComplete = false;
                                   _errorMessage = null;
                                   _analysis = '';
                                 });
@@ -514,7 +548,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Widget _buildLoadingCard(dynamic lang) {
-    return const BiometricScanLoading();
+    return BiometricScanLoading(isApiComplete: _apiComplete);
   }
 
   Widget _buildErrorCard(dynamic lang) {

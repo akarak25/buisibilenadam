@@ -88,16 +88,20 @@ class CameraService {
       await controller!.setFocusMode(_focusMode);
       await controller!.setExposureMode(_exposureMode);
       
-      // Fotoğrafı kaydet
+      // Fotoğrafı kalıcı olarak kaydet (benzersiz dosya adıyla)
       final Directory appDir = await getApplicationDocumentsDirectory();
-      final String fileName = path.basename(file.path);
-      final File savedImage = File('${appDir.path}/$fileName');
-      
-      if (await savedImage.exists()) {
-        await savedImage.delete();
+      final palmImagesDir = Directory('${appDir.path}/palm_images');
+      if (!await palmImagesDir.exists()) {
+        await palmImagesDir.create(recursive: true);
       }
-      
+
+      // Benzersiz dosya adı oluştur (timestamp + random)
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final String fileName = 'camera_$timestamp.jpg';
+      final File savedImage = File('${palmImagesDir.path}/$fileName');
+
       await File(file.path).copy(savedImage.path);
+      debugPrint('Camera image saved to: ${savedImage.path}');
       return savedImage;
     } catch (e) {
       throw Exception('Fotoğraf çekilemedi: $e');
@@ -114,15 +118,20 @@ class CameraService {
 
       if (pickedFile == null) return null;
 
+      // Fotoğrafı kalıcı olarak kaydet (benzersiz dosya adıyla)
       final Directory appDir = await getApplicationDocumentsDirectory();
-      final String fileName = path.basename(pickedFile.path);
-      final File savedImage = File('${appDir.path}/$fileName');
-      
-      if (await savedImage.exists()) {
-        await savedImage.delete();
+      final palmImagesDir = Directory('${appDir.path}/palm_images');
+      if (!await palmImagesDir.exists()) {
+        await palmImagesDir.create(recursive: true);
       }
-      
+
+      // Benzersiz dosya adı oluştur (timestamp)
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final String fileName = 'gallery_$timestamp.jpg';
+      final File savedImage = File('${palmImagesDir.path}/$fileName');
+
       await File(pickedFile.path).copy(savedImage.path);
+      debugPrint('Gallery image saved to: ${savedImage.path}');
       return savedImage;
     } catch (e) {
       throw Exception('Galeriden resim seçilemedi: $e');

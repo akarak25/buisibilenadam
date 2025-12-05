@@ -202,7 +202,31 @@ class LanguageEn implements AppLanguage {
   
   @override
   String get palmReadingAnalysis => 'Palm Line Analysis';
-  
+
+  // History screen tabs
+  @override
+  String get palmAnalysisTab => 'Palm Analysis';
+  @override
+  String get compatibilityTab => 'Compatibility';
+  @override
+  String get evolutionTab => 'Evolution';
+  @override
+  String get chatHistoryTab => 'Chats';
+  @override
+  String get noCompatibilityYet => 'No compatibility analyses yet';
+  @override
+  String get noEvolutionYet => 'No evolution analyses yet';
+  @override
+  String get noChatHistoryYet => 'No chat history yet';
+  @override
+  String get goToCompatibilityScreen => 'Go to Compatibility Analysis';
+  @override
+  String get goToEvolutionScreen => 'Go to Evolution Analysis';
+  @override
+  String get goToChatScreen => 'Start Asking Questions';
+  @override
+  String get you => 'You';
+
   // Camera guide overlay
   @override
   String get handDetection => 'Hand Detection';

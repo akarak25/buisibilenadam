@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/services/api_service.dart';
+import 'package:palm_analysis/services/chat_storage_service.dart';
+import 'package:palm_analysis/models/chat_conversation.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 /// Chat message model
@@ -37,8 +39,10 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ApiService _apiService = ApiService();
+  final ChatStorageService _storageService = ChatStorageService();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
+  String? _conversationId;
 
   @override
   void dispose() {
@@ -75,6 +79,9 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add(ChatMessage(content: response, isUser: false));
         _isLoading = false;
       });
+
+      // Save conversation
+      await _saveConversation();
     } catch (e) {
       final lang = AppLocalizations.of(context).currentLanguage;
       setState(() {
@@ -101,12 +108,37 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  Future<void> _saveConversation() async {
+    if (_messages.isEmpty) return;
+
+    // Create or update conversation ID
+    _conversationId ??= ChatStorageService.generateId();
+
+    // Convert ChatMessage to ChatMessageLocal
+    final localMessages = _messages.map((m) => ChatMessageLocal(
+      content: m.content,
+      isUser: m.isUser,
+      timestamp: m.timestamp,
+    )).toList();
+
+    final conversation = ChatConversation(
+      id: _conversationId!,
+      analysisPreview: ChatStorageService.createPreview(widget.analysisResult),
+      messages: localMessages,
+      updatedAt: DateTime.now(),
+    );
+
+    await _storageService.saveConversation(conversation);
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context).currentLanguage;
 
-    return Scaffold(
-      body: Container(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: Container(
         decoration: const BoxDecoration(
           gradient: AppTheme.backgroundGradient,
         ),
@@ -166,6 +198,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

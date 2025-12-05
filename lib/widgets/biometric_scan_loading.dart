@@ -8,11 +8,13 @@ import 'package:palm_analysis/utils/theme.dart';
 class BiometricScanLoading extends StatefulWidget {
   final String? imagePath;
   final VoidCallback? onComplete;
+  final bool isApiComplete; // API tamamlandığında true olur
 
   const BiometricScanLoading({
     super.key,
     this.imagePath,
     this.onComplete,
+    this.isApiComplete = false,
   });
 
   @override
@@ -96,14 +98,33 @@ class _BiometricScanLoadingState extends State<BiometricScanLoading>
         if (mounted && _currentStep < _steps.length) {
           _advanceStep();
         } else if (mounted && _currentStep == _steps.length) {
-          // Mark last step as completed
-          setState(() {
-            _steps[_currentStep - 1] = _steps[_currentStep - 1].copyWith(
-              status: StepStatus.completed,
-            );
-          });
+          // Son adım: API tamamlanana kadar processing'de kal
+          if (widget.isApiComplete) {
+            setState(() {
+              _steps[_currentStep - 1] = _steps[_currentStep - 1].copyWith(
+                status: StepStatus.completed,
+              );
+            });
+          }
+          // API bitmeden completed işaretleme - didUpdateWidget'ta kontrol edilecek
         }
       });
+    }
+  }
+
+  @override
+  void didUpdateWidget(BiometricScanLoading oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // API tamamlandığında son adımı completed yap
+    if (widget.isApiComplete && !oldWidget.isApiComplete) {
+      if (_steps.isNotEmpty && _currentStep == _steps.length) {
+        setState(() {
+          _steps[_currentStep - 1] = _steps[_currentStep - 1].copyWith(
+            status: StepStatus.completed,
+          );
+        });
+      }
     }
   }
 
@@ -145,7 +166,7 @@ class _BiometricScanLoadingState extends State<BiometricScanLoading>
         ScanStep(
           icon: Icons.psychology_outlined,
           title: 'AI Raporu Oluşturuluyor',
-          subtitle: 'Gemini 2.5 analiz tamamlanıyor...',
+          subtitle: 'Yapay zeka analizi tamamlanıyor...',
           duration: 2500,
         ),
       ];
@@ -178,7 +199,7 @@ class _BiometricScanLoadingState extends State<BiometricScanLoading>
         ScanStep(
           icon: Icons.psychology_outlined,
           title: 'Generating AI Report',
-          subtitle: 'Gemini 2.5 analysis completing...',
+          subtitle: 'AI analysis completing...',
           duration: 2500,
         ),
       ];
@@ -202,7 +223,12 @@ class _BiometricScanLoadingState extends State<BiometricScanLoading>
     }
 
     final completedSteps = _steps.where((s) => s.status == StepStatus.completed).length;
-    final progress = _steps.isEmpty ? 0.0 : completedSteps / _steps.length;
+    double progress = _steps.isEmpty ? 0.0 : completedSteps / _steps.length;
+
+    // API tamamlanana kadar %95'te tut
+    if (progress >= 1.0 && !widget.isApiComplete) {
+      progress = 0.95;
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -294,7 +320,7 @@ class _BiometricScanLoadingState extends State<BiometricScanLoading>
               ),
             ),
             Text(
-              isTurkish ? 'Gemini 2.5 Flash AI' : 'Powered by Gemini 2.5 Flash',
+              isTurkish ? 'Yapay Zeka Destekli' : 'Powered by AI',
               style: GoogleFonts.inter(
                 fontSize: 11,
                 color: AppTheme.primaryIndigo,

@@ -73,6 +73,19 @@ abstract class AppLanguage {
   String get analysisSaved;
   String get analysisDetail;
   String get palmReadingAnalysis;
+
+  // History screen tabs
+  String get palmAnalysisTab;
+  String get compatibilityTab;
+  String get evolutionTab;
+  String get chatHistoryTab;
+  String get noCompatibilityYet;
+  String get noEvolutionYet;
+  String get noChatHistoryYet;
+  String get goToCompatibilityScreen;
+  String get goToEvolutionScreen;
+  String get goToChatScreen;
+  String get you;
   
   // Camera guide overlay
   String get handDetection;

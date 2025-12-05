@@ -90,6 +90,7 @@ class _EvolutionScreenState extends State<EvolutionScreen>
   }
 
   bool _isDifferentPersonError = false;
+  bool _isDateError = false;
 
   Future<void> _analyzeEvolution() async {
     if (_selectedOlder == null || _selectedNewer == null) return;
@@ -104,10 +105,23 @@ class _EvolutionScreenState extends State<EvolutionScreen>
       return;
     }
 
-    final olderImageFile = File(_selectedOlder!.imagePath!);
-    final newerImageFile = File(_selectedNewer!.imagePath!);
+    // Resolve relative paths to absolute paths (iOS UUID fix)
+    final olderResolvedPath = await PalmAnalysis.resolveImagePath(_selectedOlder!.imagePath);
+    final newerResolvedPath = await PalmAnalysis.resolveImagePath(_selectedNewer!.imagePath);
 
-    // Verify files exist
+    if (olderResolvedPath == null || newerResolvedPath == null) {
+      setState(() {
+        _errorMessage = Localizations.localeOf(context).languageCode == 'tr'
+            ? 'Resim dosyaları bulunamadı. Lütfen yeni analizler yapın.'
+            : 'Image files not found. Please create new analyses.';
+      });
+      return;
+    }
+
+    final olderImageFile = File(olderResolvedPath);
+    final newerImageFile = File(newerResolvedPath);
+
+    // Verify files exist (double check)
     if (!await olderImageFile.exists() || !await newerImageFile.exists()) {
       setState(() {
         _errorMessage = Localizations.localeOf(context).languageCode == 'tr'
@@ -117,11 +131,25 @@ class _EvolutionScreenState extends State<EvolutionScreen>
       return;
     }
 
+    // Check minimum date difference (at least 30 days)
+    final daysDifference = _selectedNewer!.createdAt.difference(_selectedOlder!.createdAt).inDays;
+    if (daysDifference < 30) {
+      setState(() {
+        _isDateError = true;
+        _isDifferentPersonError = false;
+        _errorMessage = Localizations.localeOf(context).languageCode == 'tr'
+            ? 'Değişim analizi için iki fotoğraf arasında en az 30 gün fark olmalıdır. Mevcut fark: $daysDifference gün.'
+            : 'For evolution analysis, there must be at least 30 days between two photos. Current difference: $daysDifference days.';
+      });
+      return;
+    }
+
     setState(() {
       _isAnalyzing = true;
       _errorMessage = null;
       _evolutionResult = null;
       _isDifferentPersonError = false;
+      _isDateError = false;
     });
 
     try {
@@ -139,6 +167,8 @@ class _EvolutionScreenState extends State<EvolutionScreen>
           _isAnalyzing = false;
           _evolutionResult = result;
         });
+        // Save the evolution analysis to history
+        await _saveEvolutionAnalysis(result);
       }
     } on EvolutionException catch (e) {
       debugPrint('Evolution analysis error: ${e.errorCode} - ${e.message}');
@@ -157,6 +187,30 @@ class _EvolutionScreenState extends State<EvolutionScreen>
           _errorMessage = e.toString();
         });
       }
+    }
+  }
+
+  /// Save evolution analysis to SharedPreferences
+  Future<void> _saveEvolutionAnalysis(String result) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final analysisListJson = prefs.getStringList('analyses') ?? [];
+
+      final newAnalysis = PalmAnalysis(
+        analysis: result,
+        analysisType: AnalysisType.evolution,
+        imagePath: _selectedOlder?.imagePath,
+        secondaryImagePath: _selectedNewer?.imagePath,
+        firstAnalysisDate: _selectedOlder?.createdAt,
+        secondAnalysisDate: _selectedNewer?.createdAt,
+      );
+
+      analysisListJson.add(jsonEncode(newAnalysis.toJson()));
+      await prefs.setStringList('analyses', analysisListJson);
+
+      debugPrint('Evolution analysis saved to history');
+    } catch (e) {
+      debugPrint('Failed to save evolution analysis: $e');
     }
   }
 
@@ -364,12 +418,16 @@ class _EvolutionScreenState extends State<EvolutionScreen>
 
   Widget _buildErrorState(dynamic lang, bool isTurkish) {
     // Determine icon and color based on error type
-    final IconData errorIcon = _isDifferentPersonError
-        ? Icons.people_outline
-        : Icons.error_outline;
-    final Color errorColor = _isDifferentPersonError
-        ? const Color(0xFFF59E0B) // Amber for different person warning
-        : const Color(0xFFEF4444); // Red for other errors
+    final IconData errorIcon = _isDateError
+        ? Icons.calendar_month_outlined
+        : _isDifferentPersonError
+            ? Icons.people_outline
+            : Icons.error_outline;
+    final Color errorColor = _isDateError
+        ? const Color(0xFF3B82F6) // Blue for date warning
+        : _isDifferentPersonError
+            ? const Color(0xFFF59E0B) // Amber for different person warning
+            : const Color(0xFFEF4444); // Red for other errors
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -399,9 +457,11 @@ class _EvolutionScreenState extends State<EvolutionScreen>
 
           // Error title
           Text(
-            _isDifferentPersonError
-                ? (isTurkish ? 'Farklı Kişi Algılandı' : 'Different Person Detected')
-                : (isTurkish ? 'Hata Oluştu' : 'Error Occurred'),
+            _isDateError
+                ? (isTurkish ? 'Yetersiz Zaman Aralığı' : 'Insufficient Time Gap')
+                : _isDifferentPersonError
+                    ? (isTurkish ? 'Farklı Kişi Algılandı' : 'Different Person Detected')
+                    : (isTurkish ? 'Hata Oluştu' : 'Error Occurred'),
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -432,6 +492,47 @@ class _EvolutionScreenState extends State<EvolutionScreen>
             ),
           ),
           const SizedBox(height: 24),
+
+          // Tip card for date error
+          if (_isDateError) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                    const Color(0xFF6366F1).withValues(alpha: 0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.lightbulb_outline,
+                    color: Color(0xFF3B82F6),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      isTurkish
+                          ? 'İpucu: El çizgilerindeki değişimlerin görünür olması için en az 1 ay beklemeniz önerilir.'
+                          : 'Tip: It is recommended to wait at least 1 month for changes in palm lines to become visible.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
 
           // Tip card for different person error
           if (_isDifferentPersonError) ...[
@@ -485,6 +586,7 @@ class _EvolutionScreenState extends State<EvolutionScreen>
                       _selectedNewer = null;
                       _errorMessage = null;
                       _isDifferentPersonError = false;
+                      _isDateError = false;
                     });
                   },
                   child: Container(
@@ -878,25 +980,58 @@ class _EvolutionScreenState extends State<EvolutionScreen>
   ) {
     return Stack(
       children: [
-        // Image preview
+        // Image preview - resolve path async (iOS UUID fix)
         if (analysis.imagePath != null)
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
-            child: Image.file(
-              File(analysis.imagePath!),
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: color.withValues(alpha: 0.1),
-                  child: Center(
-                    child: Icon(
-                      Icons.back_hand_rounded,
-                      size: 48,
-                      color: color.withValues(alpha: 0.5),
+            child: FutureBuilder<String?>(
+              future: PalmAnalysis.resolveImagePath(analysis.imagePath),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    color: color.withValues(alpha: 0.1),
+                    child: Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                        ),
+                      ),
                     ),
-                  ),
+                  );
+                }
+                final resolvedPath = snapshot.data;
+                if (resolvedPath == null) {
+                  return Container(
+                    color: color.withValues(alpha: 0.1),
+                    child: Center(
+                      child: Icon(
+                        Icons.back_hand_rounded,
+                        size: 48,
+                        color: color.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  );
+                }
+                return Image.file(
+                  File(resolvedPath),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: color.withValues(alpha: 0.1),
+                      child: Center(
+                        child: Icon(
+                          Icons.back_hand_rounded,
+                          size: 48,
+                          color: color.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -1095,26 +1230,58 @@ class _EvolutionScreenState extends State<EvolutionScreen>
                         ),
                         child: Row(
                           children: [
-                            // Thumbnail
+                            // Thumbnail - resolve path async (iOS UUID fix)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: analysis.imagePath != null
-                                  ? Image.file(
-                                      File(analysis.imagePath!),
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Container(
+                                  ? FutureBuilder<String?>(
+                                      future: PalmAnalysis.resolveImagePath(analysis.imagePath),
+                                      builder: (ctx, snapshot) {
+                                        if (snapshot.connectionState == ConnectionState.waiting) {
+                                          return Container(
+                                            width: 60,
+                                            height: 60,
+                                            color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                            child: const Center(
+                                              child: SizedBox(
+                                                width: 16,
+                                                height: 16,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        final resolvedPath = snapshot.data;
+                                        if (resolvedPath == null) {
+                                          return Container(
+                                            width: 60,
+                                            height: 60,
+                                            color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                            child: const Icon(
+                                              Icons.back_hand_rounded,
+                                              color: Color(0xFF10B981),
+                                            ),
+                                          );
+                                        }
+                                        return Image.file(
+                                          File(resolvedPath),
                                           width: 60,
                                           height: 60,
-                                          color: const Color(0xFF10B981)
-                                              .withValues(alpha: 0.1),
-                                          child: const Icon(
-                                            Icons.back_hand_rounded,
-                                            color: Color(0xFF10B981),
-                                          ),
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              width: 60,
+                                              height: 60,
+                                              color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                              child: const Icon(
+                                                Icons.back_hand_rounded,
+                                                color: Color(0xFF10B981),
+                                              ),
+                                            );
+                                          },
                                         );
                                       },
                                     )
