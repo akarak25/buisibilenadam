@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/screens/auth/login_screen.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
-import 'package:palm_analysis/widgets/common/gradient_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -428,34 +427,42 @@ class _OnboardingPage extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Title
-          ShaderMask(
-            blendMode: BlendMode.srcIn,
-            shaderCallback: (bounds) => LinearGradient(
-              colors: [Colors.white, data.accentColor],
-            ).createShader(bounds),
-            child: Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 26,
-                fontWeight: FontWeight.w700,
-                height: 1.2,
+          // Title - fixed height to ensure consistent layout across all steps
+          Container(
+            constraints: const BoxConstraints(minHeight: 70),
+            alignment: Alignment.center,
+            child: ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [Colors.white, data.accentColor],
+              ).createShader(bounds),
+              child: Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
 
           const SizedBox(height: 16),
 
-          // Description
-          Text(
-            description,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              color: Colors.white60,
-              height: 1.6,
+          // Description - fixed height to ensure consistent layout across all steps
+          Container(
+            constraints: const BoxConstraints(minHeight: 80),
+            alignment: Alignment.center,
+            child: Text(
+              description,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                color: Colors.white60,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
