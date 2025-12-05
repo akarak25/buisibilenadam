@@ -475,6 +475,8 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
   }
 
   Widget _buildGreetingCard(DailyReading reading, bool isTurkish, dynamic lang) {
+    final dailyFocus = reading.dailyFocus;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -498,6 +500,49 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
       ),
       child: Column(
         children: [
+          // Daily Theme Badge (if available)
+          if (dailyFocus != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFEC4899).withValues(alpha: 0.9),
+                    const Color(0xFFF43F5E).withValues(alpha: 0.9),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFEC4899).withValues(alpha: 0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${isTurkish ? "Günün Teması" : "Today's Theme"}: ${dailyFocus.theme.name}',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // Moon icon animated
           AnimatedBuilder(
             animation: _pulseAnimation,
@@ -549,6 +594,59 @@ class _PersonalizedDailyScreenState extends State<PersonalizedDailyScreen>
             ),
             textAlign: TextAlign.center,
           ),
+
+          // Numerology meaning (if available)
+          if (dailyFocus != null && dailyFocus.numerology.meaning.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFFD700).withValues(alpha: 0.9),
+                          const Color(0xFFFFA500).withValues(alpha: 0.9),
+                        ],
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${dailyFocus.numerology.number}',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      dailyFocus.numerology.meaning,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

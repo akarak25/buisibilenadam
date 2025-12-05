@@ -18,10 +18,10 @@ class DailyReadingService {
   // Cache key prefix for daily readings
   static const String _cacheKeyPrefix = 'daily_reading_';
 
-  // Cache key - NOW INCLUDES USER ID for privacy isolation
-  String _getCacheKey(String userId) {
+  // Cache key - INCLUDES USER ID + LANG for proper isolation
+  String _getCacheKey(String userId, String lang) {
     final today = DateTime.now().toIso8601String().split('T')[0];
-    return '${_cacheKeyPrefix}${userId}_$today';
+    return '${_cacheKeyPrefix}${userId}_${today}_$lang';
   }
 
   /// Clear all daily reading cache for current user (called on logout)
@@ -55,10 +55,10 @@ class DailyReadingService {
         return null;
       }
 
-      // Check cache first (with userId isolation)
-      final cached = await _getCachedReading(userId);
+      // Check cache first (with userId + lang isolation)
+      final cached = await _getCachedReading(userId, lang);
       if (cached != null) {
-        debugPrint('Returning cached daily reading for user: $userId');
+        debugPrint('Returning cached daily reading for user: $userId, lang: $lang');
         return cached;
       }
 
@@ -77,8 +77,8 @@ class DailyReadingService {
 
         if (data['success'] == true) {
           final reading = DailyReading.fromJson(data);
-          // Cache the reading (with userId isolation)
-          await _cacheReading(userId, data);
+          // Cache the reading (with userId + lang isolation)
+          await _cacheReading(userId, lang, data);
           return reading;
         } else {
           debugPrint('Daily reading API returned success: false');
@@ -141,8 +141,8 @@ class DailyReadingService {
 
       if (response.statusCode == 200) {
         debugPrint('Palm profile saved successfully');
-        // Clear daily reading cache to get fresh personalized reading
-        await _clearCache(userId);
+        // Clear daily reading cache for all languages to get fresh personalized reading
+        await _clearAllLangCache(userId);
         return true;
       }
       return false;
@@ -152,11 +152,11 @@ class DailyReadingService {
     }
   }
 
-  /// Get cached reading for today (with user isolation)
-  Future<DailyReading?> _getCachedReading(String userId) async {
+  /// Get cached reading for today (with user + lang isolation)
+  Future<DailyReading?> _getCachedReading(String userId, String lang) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cacheKey = _getCacheKey(userId);
+      final cacheKey = _getCacheKey(userId, lang);
       final cachedJson = prefs.getString(cacheKey);
 
       if (cachedJson != null) {
@@ -170,27 +170,41 @@ class DailyReadingService {
     }
   }
 
-  /// Cache reading for today (with user isolation)
-  Future<void> _cacheReading(String userId, Map<String, dynamic> data) async {
+  /// Cache reading for today (with user + lang isolation)
+  Future<void> _cacheReading(String userId, String lang, Map<String, dynamic> data) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cacheKey = _getCacheKey(userId);
+      final cacheKey = _getCacheKey(userId, lang);
       await prefs.setString(cacheKey, jsonEncode(data));
-      debugPrint('Cached daily reading for user: $userId');
+      debugPrint('Cached daily reading for user: $userId, lang: $lang');
     } catch (e) {
       debugPrint('Cache write error: $e');
     }
   }
 
-  /// Clear cache for specific user (used when palm profile is updated)
-  Future<void> _clearCache(String userId) async {
+  /// Clear cache for specific user and lang (used when palm profile is updated)
+  Future<void> _clearCache(String userId, String lang) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cacheKey = _getCacheKey(userId);
+      final cacheKey = _getCacheKey(userId, lang);
       await prefs.remove(cacheKey);
-      debugPrint('Cleared cache for user: $userId');
+      debugPrint('Cleared cache for user: $userId, lang: $lang');
     } catch (e) {
       debugPrint('Cache clear error: $e');
+    }
+  }
+
+  /// Clear cache for all languages (used when palm profile is updated)
+  Future<void> _clearAllLangCache(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now().toIso8601String().split('T')[0];
+      // Clear both TR and EN cache
+      await prefs.remove('${_cacheKeyPrefix}${userId}_${today}_tr');
+      await prefs.remove('${_cacheKeyPrefix}${userId}_${today}_en');
+      debugPrint('Cleared all lang cache for user: $userId');
+    } catch (e) {
+      debugPrint('Cache clear all lang error: $e');
     }
   }
 
@@ -199,7 +213,7 @@ class DailyReadingService {
     try {
       final userId = await _tokenService.getUserId();
       if (userId != null) {
-        await _clearCache(userId);
+        await _clearCache(userId, lang);
       }
       return getDailyReading(lang: lang);
     } catch (e) {

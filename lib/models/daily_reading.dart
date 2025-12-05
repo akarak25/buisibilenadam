@@ -1,9 +1,70 @@
+/// Daily Focus Engine data - Theme and Numerology
+class DailyFocus {
+  final DailyTheme theme;
+  final Numerology numerology;
+
+  DailyFocus({
+    required this.theme,
+    required this.numerology,
+  });
+
+  factory DailyFocus.fromJson(Map<String, dynamic> json) {
+    return DailyFocus(
+      theme: DailyTheme.fromJson(json['theme'] ?? {}),
+      numerology: Numerology.fromJson(json['numerology'] ?? {}),
+    );
+  }
+}
+
+/// Daily theme information
+class DailyTheme {
+  final String id;
+  final String name;
+  final String focus;
+  final String lineEmphasis;
+
+  DailyTheme({
+    required this.id,
+    required this.name,
+    required this.focus,
+    required this.lineEmphasis,
+  });
+
+  factory DailyTheme.fromJson(Map<String, dynamic> json) {
+    return DailyTheme(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      focus: json['focus'] ?? '',
+      lineEmphasis: json['lineEmphasis'] ?? '',
+    );
+  }
+}
+
+/// Numerology data for the day
+class Numerology {
+  final int number;
+  final String meaning;
+
+  Numerology({
+    required this.number,
+    required this.meaning,
+  });
+
+  factory Numerology.fromJson(Map<String, dynamic> json) {
+    return Numerology(
+      number: json['number'] ?? 0,
+      meaning: json['meaning'] ?? '',
+    );
+  }
+}
+
 /// Daily reading model for personalized palm + astrology readings
 class DailyReading {
   final bool success;
   final bool hasPalmProfile;
   final String date;
   final Astronomy astronomy;
+  final DailyFocus? dailyFocus;
   final ReadingContent reading;
   final String userName;
 
@@ -12,6 +73,7 @@ class DailyReading {
     required this.hasPalmProfile,
     required this.date,
     required this.astronomy,
+    this.dailyFocus,
     required this.reading,
     required this.userName,
   });
@@ -22,6 +84,9 @@ class DailyReading {
       hasPalmProfile: json['hasPalmProfile'] ?? false,
       date: json['date'] ?? '',
       astronomy: Astronomy.fromJson(json['astronomy'] ?? {}),
+      dailyFocus: json['dailyFocus'] != null
+          ? DailyFocus.fromJson(json['dailyFocus'])
+          : null,
       reading: ReadingContent.fromJson(json['reading'] ?? {}),
       userName: json['userName'] ?? '',
     );
