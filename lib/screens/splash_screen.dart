@@ -253,53 +253,80 @@ class _SplashScreenState extends State<SplashScreen>
                     position: _textSlide,
                     child: FadeTransition(
                       opacity: _textOpacity,
-                      child: Column(
-                        children: [
-                          ShaderMask(
-                            blendMode: BlendMode.srcIn,
-                            shaderCallback: (bounds) => AppTheme.primaryGradient
-                                .createShader(Rect.fromLTWH(
-                                    0, 0, bounds.width, bounds.height)),
-                            child: Text(
-                              AppLocalizations.of(context)
-                                  .currentLanguage
-                                  .appName,
-                              style: GoogleFonts.inter(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w700,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Column(
+                          children: [
+                            ShaderMask(
+                              blendMode: BlendMode.srcIn,
+                              shaderCallback: (bounds) => AppTheme.primaryGradient
+                                  .createShader(Rect.fromLTWH(
+                                      0, 0, bounds.width, bounds.height)),
+                              child: Text(
+                                AppLocalizations.of(context)
+                                    .currentLanguage
+                                    .appName,
+                                style: GoogleFonts.inter(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            AppLocalizations.of(context)
-                                .currentLanguage
-                                .appDescription,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              color: AppTheme.textSecondary,
-                              fontWeight: FontWeight.w400,
+                            const SizedBox(height: 12),
+                            Text(
+                              AppLocalizations.of(context)
+                                  .currentLanguage
+                                  .appDescription,
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                color: AppTheme.textSecondary,
+                                fontWeight: FontWeight.w400,
+                                height: 1.4,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 56),
 
-                  // Loading indicator
+                  // Elegant loading indicator with pulsing dots
                   FadeTransition(
                     opacity: _textOpacity,
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppTheme.primaryIndigo.withValues(alpha: 0.7),
-                        ),
-                      ),
+                    child: AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, child) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(3, (index) {
+                            final delay = index * 0.2;
+                            final animValue = (_pulseAnimation.value - 0.3) / 0.3;
+                            final scale = 0.6 + (0.4 * ((animValue + delay) % 1.0));
+                            return Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: AppTheme.primaryGradient,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primaryIndigo.withValues(alpha: 0.3 * scale),
+                                    blurRadius: 8 * scale,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              transform: Matrix4.identity()..scale(scale),
+                            );
+                          }),
+                        );
+                      },
                     ),
                   ),
                 ],
