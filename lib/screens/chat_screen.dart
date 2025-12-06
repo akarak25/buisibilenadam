@@ -5,7 +5,7 @@ import 'package:palm_analysis/l10n/app_localizations.dart';
 import 'package:palm_analysis/services/api_service.dart';
 import 'package:palm_analysis/services/chat_storage_service.dart';
 import 'package:palm_analysis/models/chat_conversation.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:palm_analysis/widgets/styled_analysis_view.dart';
 
 /// Chat message model
 class ChatMessage {
@@ -133,7 +133,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = AppLocalizations.of(context).currentLanguage;
+    final appLoc = AppLocalizations.of(context);
+    final lang = appLoc.currentLanguage;
+    final languageCode = appLoc.locale.languageCode;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -188,7 +190,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: _messages.isEmpty
                         ? _buildEmptyState(lang)
-                        : _buildMessagesList(),
+                        : _buildMessagesList(languageCode),
                   ),
 
                   // Input area
@@ -319,7 +321,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildMessagesList() {
+  Widget _buildMessagesList(String languageCode) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -328,55 +330,46 @@ class _ChatScreenState extends State<ChatScreen> {
         if (index == _messages.length && _isLoading) {
           return _buildTypingIndicator();
         }
-        return _buildMessageBubble(_messages[index]);
+        return _buildMessageBubble(_messages[index], languageCode);
       },
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: 12,
-        left: message.isUser ? 50 : 0,
-        right: message.isUser ? 0 : 50,
-      ),
-      child: Align(
-        alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: message.isUser ? AppTheme.primaryGradient : null,
-            color: message.isUser ? null : Colors.white.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(20).copyWith(
-              bottomRight: message.isUser ? const Radius.circular(4) : null,
-              bottomLeft: !message.isUser ? const Radius.circular(4) : null,
+  Widget _buildMessageBubble(ChatMessage message, String languageCode) {
+    // User message - gradient bubble on the right
+    if (message.isUser) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12, left: 50),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(20).copyWith(
+                bottomRight: const Radius.circular(4),
+              ),
+              boxShadow: AppTheme.cardShadow,
             ),
-            boxShadow: AppTheme.cardShadow,
+            child: Text(
+              message.content,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                color: Colors.white,
+                height: 1.5,
+              ),
+            ),
           ),
-          child: message.isUser
-              ? Text(
-                  message.content,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    color: Colors.white,
-                    height: 1.5,
-                  ),
-                )
-              : MarkdownBody(
-                  data: message.content,
-                  styleSheet: MarkdownStyleSheet(
-                    p: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: AppTheme.textPrimary,
-                      height: 1.5,
-                    ),
-                    strong: GoogleFonts.inter(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.primaryIndigo,
-                    ),
-                  ),
-                ),
         ),
+      );
+    }
+
+    // AI message - styled analysis view on the left
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, right: 16),
+      child: StyledAnalysisView(
+        analysisText: message.content,
+        languageCode: languageCode,
       ),
     );
   }
