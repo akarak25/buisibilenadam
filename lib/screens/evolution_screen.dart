@@ -5,6 +5,7 @@ import 'package:palm_analysis/utils/theme.dart';
 import 'package:palm_analysis/models/palm_analysis.dart';
 import 'package:palm_analysis/services/api_service.dart';
 import 'package:palm_analysis/l10n/app_localizations.dart';
+import 'package:palm_analysis/widgets/styled_analysis_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -1499,24 +1500,10 @@ class _EvolutionScreenState extends State<EvolutionScreen>
 
           const SizedBox(height: 20),
 
-          // Result content
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
-            ),
-            child: Text(
-              _evolutionResult ?? '',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.9),
-                height: 1.6,
-              ),
-            ),
+          // Result content - styled like analysis results
+          StyledAnalysisView(
+            analysisText: _evolutionResult ?? '',
+            languageCode: isTurkish ? 'tr' : 'en',
           ),
 
           const SizedBox(height: 20),

@@ -48,6 +48,8 @@ class StyledAnalysisView extends StatelessWidget {
 
     // Common section patterns (Turkish & English)
     final sectionPatterns = [
+      // Numbered headings: #### 1. Title veya ### 1. Title (Compatibility & Evolution format)
+      RegExp(r'(?:^|\n)#{2,4}\s*\d+\.?\s*[^\n#]+', caseSensitive: false),
       // Turkish
       RegExp(r'(?:^|\n)\**\s*Yaşam Çizgisi[^:]*:\**\s*', caseSensitive: false),
       RegExp(r'(?:^|\n)\**\s*Kalp Çizgisi[^:]*:\**\s*', caseSensitive: false),
@@ -165,6 +167,9 @@ class StyledAnalysisView extends StatelessWidget {
 
   String _cleanText(String text) {
     String result = text;
+
+    // Remove markdown headings (##, ###, ####) and numbered prefixes (1., 2., etc.)
+    result = result.replaceAll(RegExp(r'^#{2,4}\s*\d*\.?\s*', multiLine: true), '');
 
     // Remove markdown bold formatting (**text** or __text__)
     result = result.replaceAllMapped(
@@ -669,6 +674,96 @@ class StyledAnalysisView extends StatelessWidget {
         icon: Icons.summarize_rounded,
         color: const Color(0xFF673AB7),
         emoji: '📋',
+      );
+    }
+
+    // Intellectual / Zihinsel (for Compatibility)
+    if (keyLower.contains('intellectual') || keyLower.contains('zihinsel')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Intellectual Bond' : 'Zihinsel Bağ',
+        subtitle: isEnglish ? '' : 'Intellectual Bond',
+        icon: Icons.psychology_rounded,
+        color: const Color(0xFF3F51B5),
+        emoji: '🧠',
+      );
+    }
+
+    // Life Path / Yaşam Yolu (for Compatibility)
+    if (keyLower.contains('life path') || keyLower.contains('yaşam yolu')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Life Path Harmony' : 'Yaşam Yolu Uyumu',
+        subtitle: isEnglish ? '' : 'Life Path Harmony',
+        icon: Icons.timeline_rounded,
+        color: const Color(0xFF9C27B0),
+        emoji: '🛤️',
+      );
+    }
+
+    // === EVOLUTION SECTIONS ===
+
+    // Changes / Değişimler
+    if (keyLower.contains('change') || keyLower.contains('değişim') || keyLower.contains('değişiklik')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Changes Over Time' : 'Zaman İçinde Değişimler',
+        subtitle: isEnglish ? '' : 'Changes Over Time',
+        icon: Icons.compare_arrows_rounded,
+        color: const Color(0xFF2196F3),
+        emoji: '🔄',
+      );
+    }
+
+    // Growth / Gelişim
+    if (keyLower.contains('growth') || keyLower.contains('gelişim') || keyLower.contains('ilerleme')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Growth Areas' : 'Gelişim Alanları',
+        subtitle: isEnglish ? '' : 'Growth Areas',
+        icon: Icons.trending_up_rounded,
+        color: const Color(0xFF4CAF50),
+        emoji: '📈',
+      );
+    }
+
+    // Patterns / Örüntüler
+    if (keyLower.contains('pattern') || keyLower.contains('örüntü') || keyLower.contains('trend')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Patterns' : 'Örüntüler',
+        subtitle: isEnglish ? '' : 'Patterns',
+        icon: Icons.auto_graph_rounded,
+        color: const Color(0xFF673AB7),
+        emoji: '📊',
+      );
+    }
+
+    // Recommendations / Öneriler (for Evolution)
+    if (keyLower.contains('recommendation') || keyLower.contains('suggestion')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Recommendations' : 'Öneriler',
+        subtitle: isEnglish ? '' : 'Recommendations',
+        icon: Icons.lightbulb_rounded,
+        color: const Color(0xFF4CAF50),
+        emoji: '💡',
+      );
+    }
+
+    // Observation / Gözlem
+    if (keyLower.contains('observation') || keyLower.contains('gözlem')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Observations' : 'Gözlemler',
+        subtitle: isEnglish ? '' : 'Observations',
+        icon: Icons.visibility_rounded,
+        color: const Color(0xFF00BCD4),
+        emoji: '👁️',
+      );
+    }
+
+    // Comparison / Karşılaştırma
+    if (keyLower.contains('comparison') || keyLower.contains('karşılaştırma') || keyLower.contains('fark')) {
+      return _SectionInfo(
+        title: isEnglish ? 'Comparison' : 'Karşılaştırma',
+        subtitle: isEnglish ? '' : 'Comparison',
+        icon: Icons.compare_rounded,
+        color: const Color(0xFF607D8B),
+        emoji: '⚖️',
       );
     }
 
